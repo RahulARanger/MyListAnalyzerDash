@@ -1,0 +1,6 @@
+.idea
+.vscode
+*.env
+venv
+build
+MyListAnalyzer_Dash.egg-info
