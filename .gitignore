@@ -3,4 +3,4 @@
 *.env
 venv
 build
-MyListAnalyzer_Dash.egg-info
+MyListAnalyzerDash.egg-info

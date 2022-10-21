@@ -1,6 +1,6 @@
 import typing
-from dash import register_page, Input, Output, callback, dcc, html, clientside_callback, ClientsideFunction, State, \
-    no_update, callback_context, ALL, MATCH, ctx, get_app
+from dash import Input, Output, callback, dcc, html, clientside_callback, ClientsideFunction, State, \
+    no_update, callback_context, ALL, MATCH, ctx, get_app, register_page
 import dash_mantine_components as dmc
 from MyListAnalyzer.utils import get_mapping, starry_bg
 from MyListAnalyzer.Components.malCreds import MalCredsModal
@@ -18,8 +18,6 @@ class HomePage:
         self.about = ModalManager(main_app.about)
         self.paper_height = 250
         self.transparent = {"backgroundColor": "transparent"}
-
-        register_page(__name__, path=home_page.url, title=home_page.name, description=home_page.description)
 
         self.mal_creds.init()
         self.add_routes()
