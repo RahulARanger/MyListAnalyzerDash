@@ -1,7 +1,7 @@
 import logging
 import os
 from MyListAnalyzer import __name__ as name
-from dash import Dash, page_container
+from dash import Dash, page_container, dcc, clientside_callback, ClientsideFunction, Input, Output
 import dash_mantine_components as dmc
 from dotenv import load_dotenv
 
@@ -26,6 +26,12 @@ class MainApplication:
             ]
         )
 
+        clientside_callback(
+            ClientsideFunction(namespace='handleData', function_name='getTimezone'),
+            Output("timezone", "data"),
+            Input("timezone", "id")
+        )  # called only once
+
         self.set_layout()
 
     @property
@@ -36,7 +42,9 @@ class MainApplication:
         self.app.layout = dmc.MantineProvider(
             theme={"colorScheme": "dark", "fontFamily": "'segoe ui', 'Inter', sans-serif"},
             children=[
-                page_container
+                page_container,
+                dcc.Store(id="timezone", storage_type="memory"),
+                dcc.Store(id="pipe", storage_type="memory", data="http://127.0.0.1:6966")
             ]
         )
 

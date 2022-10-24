@@ -210,7 +210,7 @@ button.mantine-ActionIcon-root{
 }
 
 
-#ask-name{
+#ask-user-name{
     color: #e66500;
     background-color: #171917;
     padding: 6px;
@@ -220,10 +220,10 @@ button.mantine-ActionIcon-root{
     flex-grow: 1;
 }
 
-#ask-name:not(:invalid):focus{
+#ask-user-name:not(:invalid):focus{
     border-color: dodgerblue;
 }
 
-#ask-name:invalid{
+#ask-user-name:invalid{
     color: red;
 }

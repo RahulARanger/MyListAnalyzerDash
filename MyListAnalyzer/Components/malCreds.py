@@ -7,7 +7,7 @@ from MyListAnalyzer.mappings.enums import mal_creds_modal, css_classes
 from MyListAnalyzer.mal_api_handler import VerySimpleMALSession
 from MyListAnalyzer.Components.notifications import show_notifications
 from MyListAnalyzer.utils import CookieHandler, get_a_proper_url
-from MyListAnalyzer.Components.ModalManager import ModalManager, for_time
+from MyListAnalyzer.Components.ModalManager import make_modal_alive, get_modal, for_time
 from MyListAnalyzer.Components.buttons import image_button
 from MyListAnalyzer.Components.layout import expanding_layout
 
@@ -17,10 +17,6 @@ from MyListAnalyzer.Components.layout import expanding_layout
 
 
 class MalCredsModal(CookieHandler, VerySimpleMALSession):
-    def __init__(self):
-        super().__init__()
-        self.modal = ModalManager(mal_creds_modal.triggerId, add=True)
-
     @property
     def inside(self) -> html.Section:
         body = html.Section(
@@ -58,9 +54,10 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
             ]
         )
 
-        return self.modal(mal_creds_modal.title, body, ease_close=False)
+        return get_modal(mal_creds_modal.triggerId, mal_creds_modal.title, body, ease_close=False)
 
     def init(self) -> typing.NoReturn:
+        make_modal_alive(mal_creds_modal.triggerId)
         callback(
             [
                 Output(mal_creds_modal.notify, "children"),
@@ -133,6 +130,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                 action.note = show_notifications(
                     "Failed to get tokens, please refer error below: ",
                     dmc.Code(note))
+                return
 
         return self.set_things(note, self.settings, action)
 

@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 import requests
@@ -49,7 +50,7 @@ class CoreMALSession(AbtMAL):
     def tokens_to_cookies_show_2(self):
         raw = request.args
 
-        response = make_response(redirect(url_for("/")))
+        response = make_response(redirect("/MLA"))
 
         if raw.get("state", "") != self.session_state or raw.get("error", ""):
             response.set_cookie(self.error, raw.get("error", "Invalid State, Request for auth failed"))
@@ -77,6 +78,7 @@ class CoreMALSession(AbtMAL):
             return True, response
 
         except Exception as error:
+            logging.exception("Failed to authorize", exc_info=True)
             return False, repr(error)
 
     def about_me(self, raw: typing.Dict, session: typing.Optional[requests.Session]) -> typing.Dict:

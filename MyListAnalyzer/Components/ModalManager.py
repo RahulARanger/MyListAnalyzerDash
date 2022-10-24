@@ -1,42 +1,39 @@
+import typing
+
 from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback
 import dash_mantine_components as dmc
 
 
-class ModalManager:
-    id_prefix = "_modal_"
+def modal_basic_check(clicked, is_opened):
+    return False if not clicked else not is_opened
 
-    # id_prefix is the main reason why it's a class not a function
-    # so don't convert it
 
-    @classmethod
-    def check(cls, clicked, opened):
-        if not clicked:
-            return False
-        return not opened
+def get_modal_id(id_prefix):
+    return id_prefix + "_modal_"
 
-    def __init__(self, prop_id, prop_action="n_clicks", add=False):
-        self.prop_id = prop_id
-        new_modal_id = ModalManager.id_prefix + self.prop_id
 
-        if add:
-            get_app().clientside_callback(
-                ClientsideFunction(
-                    namespace="modal",
-                    function_name="decide_modal"
-                ),
-                Output(new_modal_id, "opened"),
-                Input(prop_id, prop_action),
-                # Since prop action can be different we don't have pattern matching callbacks
-                State(new_modal_id, "opened")
-            )
+def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None):
+    modal_id = get_modal_id(prop_id) if not modal_id else modal_id
 
-    def __call__(self, title, *children, closeable=True, ease_close=True, size="md", z_index=200):
-        return dmc.Modal(
-            id=ModalManager.id_prefix + self.prop_id,
-            title=title, centered=True, children=children, overflow="outside", size=size,
-            closeOnClickOutside=closeable and ease_close,
-            closeOnEscape=closeable and ease_close, withCloseButton=closeable, zIndex=z_index
-        )
+    get_app().clientside_callback(
+        ClientsideFunction(
+            namespace="modal",
+            function_name="decide_modal"
+        ),
+        Output(modal_id, "opened"),
+        Input(prop_id, prop_action),
+        # Since prop action can be different we don't have pattern matching callbacks
+        State(modal_id, "opened")
+    )
+
+
+def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md", z_index=200):
+    return dmc.Modal(
+        id=get_modal_id(id_),
+        title=title, centered=True, children=children, overflow="outside", size=size,
+        closeOnClickOutside=closeable and ease_close,
+        closeOnEscape=closeable and ease_close, withCloseButton=closeable, zIndex=z_index
+    )
 
 
 def for_time(display_time_in, then="lineClamp", other=None):
@@ -48,4 +45,31 @@ def for_time(display_time_in, then="lineClamp", other=None):
         ),
         Output(display_time_in, "children"),
         Input(display_time_in if not other else other, then)
+    )
+
+
+def enter_to_click(text_id, button_id, action="n_submit"):
+    clientside_callback(
+        ClientsideFunction(
+            namespace="eventListenerThings",
+            function_name="enterToClick"
+        ),
+        Output(button_id, "id"),
+        Input(text_id, action),
+        [
+            State(text_id, "id"),
+            State(button_id, "id"),
+        ]
+    )
+
+
+def invalid_to_disable(text_id: str, button_id: str, action: str = "value") -> typing.NoReturn:
+    clientside_callback(
+        ClientsideFunction(
+            namespace="eventListenerThings",
+            function_name="invalidToDisable"
+        ),
+        Output(button_id, "disabled"),
+        Input(text_id, action),
+        State(text_id, "id")
     )

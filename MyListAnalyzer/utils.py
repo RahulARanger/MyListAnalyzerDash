@@ -87,7 +87,7 @@ class CookieHandler:
 
 
 def get_a_proper_url(url, path="", query="", fragment=""):
-    raw = urllib.parse.urlsplit(url)
+    raw = urllib.parse.urlsplit(url if url else "/MLA")
     raw = raw._replace(path=path, query=query, fragment=fragment)
     new_url: str = raw.geturl()
     return new_url[: -1] if new_url.endswith("/") else new_url

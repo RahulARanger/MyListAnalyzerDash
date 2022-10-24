@@ -1,7 +1,9 @@
+import typing
+
 import dash_mantine_components as dmc
 
 
-def image_button(img_url, id_, class_name="action-icon", is_text=False):
+def image_button(img_url, id_: typing.Union[str, dict], class_name="action-icon", is_text=False):
     return dmc.ActionIcon(dmc.Text(img_url) if is_text else dmc.Image(src=img_url), class_name=class_name, id=id_)
 
 

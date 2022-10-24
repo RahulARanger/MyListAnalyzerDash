@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
 import pathlib
+from MyListAnalyzer import __version__
 
 here = pathlib.Path(__file__).parent
 req = here / "requirements.txt"
 setup(
     name="MyListAnalyzerDash",
-    version="0.0.3",
+    version=__version__,
     description="A sample Python project",
     url="https://github.com/RahulARanger/MyListAnalyzer-Dash.git",
     author="RahulARanger",
@@ -20,5 +21,8 @@ setup(
     ],
     packages=find_packages(where=str(here)),
     python_requires=">=3.7, <4",
-    install_requires=req.read_text()
+    install_requires=req.read_text(),
+    package_data={
+        "": ["scripts/*"]
+    }
 )

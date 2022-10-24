@@ -1,19 +1,11 @@
 from collections import namedtuple
 
-askName = namedtuple("AskName", [
-    "askName", "getName", "backToView", "search", "note", "resultForSearch",
-])(
-    "ask-name", "getName", "back-to-view",
-    "https://api.iconify.design/flat-color-icons/search.svg",
-    "Enter valid user name whose status was set to public. but do note that if either user name was invalid or status "
-    "was not set to public. You will be asked to enter the username again",
-    "result-for-search")
 
 main_app = namedtuple("MainApplication", [
-    "loadApp", "loadingProps", "about", "repo", "body", "me"
+    "loadApp", "loadingProps", "about", "repo", "body", "me", "collections"
 ])(
     "__app_load", {"variant": "bars", "color": "orange", "size": "xl"},
-    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user"
+    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user", "user-collections-mla"
 )
 
 home_page = namedtuple("HomePage", [
@@ -24,7 +16,7 @@ home_page = namedtuple("HomePage", [
     "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", [
         "Logged in MAL", "Are MAL Tokens valid ?"], "test", "test-area", "Allow MyListAnalyzer to access your,",
     "test-results", "test-filter", "https://api.iconify.design/carbon/rule-test.svg", [
-        ["View Dashboard", "/view/", "Dashboard for MyAnimeList Users"]
+        ["View Dashboard", "/MLA/view/", "Dashboard for MyAnimeList Users"]
     ]
 )
 
@@ -56,10 +48,17 @@ main_page_view = namedtuple(
 
 view_header = namedtuple(
     "ViewHeader",
-    ["collection", "settings", "askName", "getName", "requestDetails", "re_fetch", "genresCount", "studiosCount"]
+    [
+        "collection", "settings", "askName", "getName", "requestDetails",
+        "re_fetch", "genresCount", "studiosCount", "collectionImage", "addUser", "giveName", "appName", "short_name",
+        "home", "show_name", "resultForSearch", "validateNote"
+    ]
 )(
     "view-board-table-details", "view-settings", "ask-user-name", "get-user-name", "request-details",
-    "data-descriptive-fetch", "genres-count", "studios-count"
+    "data-descriptive-fetch", "genres-count", "studios-count",
+    "https://api.iconify.design/flat-color-icons/database.svg",
+    'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer", "MLA",
+    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check"
 )
 
 dashboard = namedtuple(
