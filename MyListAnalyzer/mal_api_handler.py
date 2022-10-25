@@ -107,11 +107,13 @@ class VerySimpleMALSession(CoreMALSession):
         return self.api_url + fix + "/" + "/".join(then)
 
     def validate_user(self, user_name):
-        return sanity_check(
+        result = sanity_check(
             requests.get(
                 self.postfix(user_name, "animelist"), headers=self.client_auth, params={
                     "offset": 0, "limit": 1, "sort": "list_updated_at"
                 }))
+
+        return "No Recent Animes found" if not result["data"] else result["data"][-1]["node"]["title"]
 
     def about_me(self, raw=None, session=None):
         session = session or requests.session()

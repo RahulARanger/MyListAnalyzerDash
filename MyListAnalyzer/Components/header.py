@@ -1,16 +1,17 @@
 import dash_mantine_components as dmc
 from MyListAnalyzer.Components.layout import expanding_layout
 import typing
-from dash import dcc
+from dash import dcc, clientside_callback, Input, Output
 from MyListAnalyzer.mappings.enums import view_header
 from MyListAnalyzer.Components.collection import add_user
+from MyListAnalyzer.Components.tooltip import set_tooltip
 
 
 class CommonHeaderComponent:
     def __init__(self):
         self.queries = ...
 
-    def inside_header(self) -> typing.Tuple[typing.Any]:
+    def inside_header(self, *args) -> typing.Tuple[typing.Any]:
         ...
 
     def handle_callbacks(self):
@@ -29,9 +30,8 @@ class CommonHeaderComponent:
     def _menu(self):
         return dmc.Menu(self.menu_items)
 
-    @property
-    def layout(self):
-        inside_header = self.inside_header()
+    def layout(self, *args):
+        inside_header = self.inside_header(*args)
         return dmc.Header(expanding_layout(
 
             *header_link(self.queries.appName, self.queries.short_name, self.queries.home),
@@ -60,14 +60,17 @@ class ViewHeaderComponent(CommonHeaderComponent):
         ]
 
     def handle_callbacks(self):
-        add_user(add=True)
+        return add_user(add=True)
 
     @property
     def modals(self) -> typing.Sequence[dmc.Modal]:
         yield add_user()
 
-    def inside_header(self) -> typing.Tuple[typing.Any]:
-        return dmc.Badge(color="orange", children="---", id=view_header.show_name),
+    def inside_header(self, user_name="") -> typing.Tuple[typing.Any]:
+        link = view_header.show_name + '-link'
+        return dcc.Link(
+            dmc.Badge(color="orange", id=view_header.show_name), href="", id=link, target="_blank"
+        ),
 
 
 def header_link(title, short, url):
