@@ -51,14 +51,14 @@ view_header = namedtuple(
     [
         "collection", "settings", "askName", "getName", "requestDetails",
         "re_fetch", "genresCount", "studiosCount", "collectionImage", "addUser", "giveName", "appName", "short_name",
-        "home", "show_name", "resultForSearch", "validateNote"
+        "home", "show_name", "resultForSearch", "validateNote", "collectionTabs"
     ]
 )(
     "view-board-table-details", "view-settings", "ask-user-name", "get-user-name", "request-details",
     "data-descriptive-fetch", "genres-count", "studios-count",
     "https://api.iconify.design/flat-color-icons/database.svg",
     'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer", "MLA",
-    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check"
+    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-collection-tabs"
 )
 
 dashboard = namedtuple(
@@ -69,14 +69,17 @@ view_dashboard = namedtuple(
     "viewDashBoard",
     [
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
-        "startDetails", "tabs", "stop_note", "start_note", "storedName"
+        "startDetails", "tabs", "stop_note", "start_note", "storedName", "startButt", "stopButt", "paging",
+        "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
     "start-details-fetch-view", "view-dashboard-tabs",
-    "Please note, you will seeing the results of the limited data, please view the Data Collection, to see how much "
-    "was collected",
-    "Starting Timer...", "user-stored-name"
+    "Please Note, When Stopped, we will be deleting everything that was collected before",
+    "Starting Timer...", "user-stored-name",
+    "https://api.iconify.design/codicon/run-above.svg?color=green",
+    "https://api.iconify.design/codicon/run-errors.svg?color=red",
+    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view"
 )
 
 creds_modal = namedtuple(
@@ -108,6 +111,6 @@ mal_creds_modal = creds_modal(
         "logo": "https://image.myanimelist.net/ui/OK6W_koKDTOqqqLDbIoPAiC8a86sHufn_jOI-JGtoCQ"
     })
 
-css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card"])(
-    "do-jump", "custom-butt", "home_card"
+css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card", "request_details"])(
+    "do-jump", "custom-butt", "home_card", "request-details"
 )

@@ -6,7 +6,7 @@ import string
 from MyListAnalyzer.utils import set_timestamp
 
 
-def show_notifications(title, *message, auto_close: typing.Union[bool, int] = False, color="red"):
+def show_notifications(title: object, *message: object, auto_close: typing.Union[bool, int] = False, color: object = "red") -> object:
     return dmc.Notification(
         title=set_timestamp(title),
         color=color,

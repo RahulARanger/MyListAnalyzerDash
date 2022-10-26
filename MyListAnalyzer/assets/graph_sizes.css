@@ -79,7 +79,7 @@ article.expanding-row{
  
 .embla {
     overflow: hidden;
-    box-shadow: var(--hard-chocolate);
+    /* box-shadow: var(--hard-chocolate); */
     flex-grow: 1;
     padding: 12px;
 }
@@ -91,6 +91,7 @@ article.expanding-row{
     flex: 0 0 100%;
     box-shadow: var(--bottom-lift);
     border: 1px dotted var(--dark-black);
+    width: 100%;
 }
   
 .embla__viewport {
@@ -118,6 +119,5 @@ article.expanding-row{
   .embla__slide {
     position: relative;
     min-width: 100%;
-    margin-right: 6px;
     overflow: hidden;
   }

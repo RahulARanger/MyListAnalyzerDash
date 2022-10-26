@@ -5,23 +5,18 @@ import typing
 import plotly.graph_objects as go
 
 
-# @dataclass
-# class DataCollectionProto1:
-#     disable_start: bool = no_update
-#     disable_stop: bool = no_update
-#     yes_next: int = 0
-#     interval: bool = no_update
-#     offset: int = no_update
-#     note: dmc.Notification = no_update
-#     result: typing.Dict[str, typing.Union[typing.Dict[str, str], str]] = no_update
-#     timer: bool = no_update
-#     details: go.Figure = no_update
-#     perf: typing.Optional[typing.Dict[str, int]] = None
-#     drip: typing.Optional[DataDrip] = None
-#     meta: typing.Tuple[int] = (no_update,) * 3
-#     implement_safe: typing.List[int] = (no_update,)
-#     status_color: str = "gray"
-#     status_text: str = "😴"
+@dataclass
+class DataCollectionProto1:
+    disable_start: bool = no_update
+    disable_stop: bool = no_update
+    max_intervals: bool = no_update
+    paging: str = no_update
+    note: dmc.Notification = no_update
+    result: typing.Union[tuple, list] = tuple()
+    disable_timer: bool = no_update
+    perf_details: go.Figure = no_update
+    status_color: str = "gray"
+    status_text: str = "😴"
 
 
 @dataclass

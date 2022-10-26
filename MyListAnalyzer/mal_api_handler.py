@@ -6,6 +6,7 @@ import typing
 from flask import request, redirect, url_for, make_response
 from MyListAnalyzer.utils import CookieHandler
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 
 def sanity_check(response: requests.Response):
@@ -14,6 +15,21 @@ def sanity_check(response: requests.Response):
         raise ConnectionRefusedError(raw.get("error"))
     response.raise_for_status()
     return raw
+
+
+def extract_perf(
+        response: requests.Response) -> typing.Tuple[typing.Dict[str, typing.Union[int, datetime]], requests.Response]:
+    header = response.headers
+    called = datetime.now()
+
+    try:
+        called = datetime.strptime(header["Date"], "%a, %d %b %Y %H:%M:%S %Z")
+    except ValueError:
+        ...
+    except KeyError:
+        ...
+
+    return {"taken": response.elapsed.total_seconds(), "called": called.replace(tzinfo=timezone.utc)}, response
 
 
 def abt_user(raw):
@@ -127,3 +143,32 @@ class VerySimpleMALSession(CoreMALSession):
 
         raw.update(abt)
         return raw
+
+    def anime_list(self, session, embed_url=None, user_name="@me", sort_order="list_updated_at", offset=0, limit=10):
+        fields = "genres,list_status{start_date,finish_date,num_times_rewatched,rewatch_value,priority,score}," \
+                 "start_date,end_date,mean,rank,popularity,created_at,updated_at,num_episodes,media_type,source," \
+                 "average_episode_duration,rating,studios,start_season,num_list_users,num_scoring_users,nsfw,status," \
+                 "broadcast"
+
+        stats, response = extract_perf(session.get(
+            self.postfix(user_name, "animelist"), params={
+                "sort": sort_order,
+                "fields": fields,
+                "offset": offset,
+                "limit": limit
+            }
+        ) if not embed_url else session.get(embed_url))
+
+        return stats, sanity_check(response)
+
+    def peg(self, user_name, next_page=None, limit=1000):
+        with requests.Session() as session:
+            session.headers.update(self.client_auth)
+
+            _perf, _raw = self.anime_list(
+                session, user_name=user_name, offset=0, limit=limit, embed_url=next_page
+            )
+            next_page = _raw.get("paging", {}).get("next", "")
+            _raw = _raw.get("data", [])
+
+        return _raw, _perf, next_page, next_page == ""

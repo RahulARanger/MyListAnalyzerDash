@@ -2,7 +2,7 @@ import typing
 import dash_mantine_components as dmc
 from MyListAnalyzer.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzer.Components.coreGraph import core_graph
-from MyListAnalyzer.utils import css_classes
+from MyListAnalyzer.mappings.enums import css_classes
 from dash import html, dcc
 import logging
 import math
@@ -31,6 +31,7 @@ def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
         expanding_layout(*children, **__),
         class_name=as_card if as_card else css_classes.home_card
     )
+
 
 def no_data(directions):
     return home_card(dmc.Image(
@@ -94,15 +95,6 @@ def number_card_format_1(
             label=" ".join(label.capitalize().split("_")), color=color, labelPosition="center",
             style={"opacity": 0.8, "width": "100%"}
         ), class_name=f"number-card {class_name}")
-
-
-def flip_card(front_card, back_card, class_name=""):
-    return html.Article([
-        html.Section([
-            html.Div(front_card, className="front"), html.Div(back_card, className="back")
-        ], className="flip"),
-        dmc.Checkbox(color="red", class_name="flip-switch")
-    ], className=f"flip-card {class_name}")
 
 
 def slides(x):
