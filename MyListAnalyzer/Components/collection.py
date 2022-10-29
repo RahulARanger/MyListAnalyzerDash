@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph
 from MyListAnalyzer.Components.cards import graph_two_cards
 import typing
+from MyListAnalyzer.Plots.requestDetails import request_details
 
 
 def add_user(index=0, prop=False, add=False) -> typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]:
@@ -80,7 +81,7 @@ def collections(prop=False, add=False):
                 embla_s[tab_index] && enablePlainEmbla(embla_s[tab_index]);
                 return window.dash_clientside.no_update;
             }
-            """ % (css_classes.request_details, ),
+            """ % (css_classes.request_details,),
             Output(view_header.collectionTabs, "id"),
             [
                 Input(view_header.collectionTabs, "active"),
@@ -114,18 +115,40 @@ def collections(prop=False, add=False):
 
     figure = BeautifyMyGraph().handle_subject(go.Figure())
     graph = graph_two_cards(
-        figure, is_resp=True, fig_class=css_classes.request_details, class_name=css_classes.request_details)
+        figure, is_resp=True, fig_class=css_classes.request_details, class_name=css_classes.request_details,
+        second_card=dmc.Image(src="/assets/index.svg"))
 
     tab_1 = dmc.Tab(children=expanding_layout(
-            row_1,
+        row_1,
+        dmc.Divider(color="orange"),
+        graph,
+        dmc.Divider(color="orange"),
+        row_3
+    ), label="User Detail")
+
+    s_row_1 = expanding_layout(
+        dmc.Switch(
+            label="Open This Modal", offLabel="No", onLabel="Yes", color="orange", checked=True,
+            persistence="true", persistence_type="local"
+        ),
+        dmc.Switch(
+            label="Auto Run the User Detail", offLabel="No", onLabel="Yes", color="orange", checked=True,
+            persistence="true", persistence_type="local"
+        ),
+        direction="row"
+    )
+
+    settings = dmc.Paper(
+        expanding_layout(
+            dmc.Text("At Every Visit"),
             dmc.Divider(color="orange"),
-            graph,
-            dmc.Divider(color="orange"),
-            row_3
-        ), label="User Detail")
+            s_row_1,
+        )
+    )
 
     return get_modal(
         view_header.collection,
         "Collections 🫙",
-        dmc.Tabs([tab_1], color="orange", id=view_header.collectionTabs), ease_close=False, size="lg"
+        dmc.Tabs([tab_1, dmc.Tab(settings, label="Settings")], color="orange", id=view_header.collectionTabs),
+        ease_close=False, size="lg"
     )

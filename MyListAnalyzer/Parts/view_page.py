@@ -157,7 +157,7 @@ class ViewPage:
             proto.paging = ""
             proto.status_text = "started"
             proto.status_color = "orange"
-            proto.result = tuple() # deleting previous results
+            proto.result = tuple()  # deleting previous results
             return
 
         limit = 1000  # limit for each round is 100 animes

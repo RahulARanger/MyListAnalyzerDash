@@ -122,7 +122,7 @@ def one_card_at_a_time(gives_slides):
 
 @one_card_at_a_time
 @slides
-def graph_two_cards(fig, fig_class="", index=0, animate=True, is_resp=False, class_name=""):
+def graph_two_cards(fig, fig_class="", index=0, animate=True, is_resp=False, class_name="", second_card=html.Section("Not yet Implemented")):
     return dcc.Graph(
         figure=fig,
         className=fig_class,
@@ -130,4 +130,4 @@ def graph_two_cards(fig, fig_class="", index=0, animate=True, is_resp=False, cla
         config=dict(),
         responsive="auto" if is_resp is None else is_resp,
         id=dict(index=index, type=class_name)
-    ), html.Section("There")
+    ), second_card

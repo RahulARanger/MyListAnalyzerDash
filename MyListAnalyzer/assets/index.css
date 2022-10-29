@@ -210,20 +210,3 @@ button.mantine-ActionIcon-root{
 }
 
 
-#ask-user-name{
-    color: #e66500;
-    background-color: #171917;
-    padding: 6px;
-    font-size: 1rem;
-    border: 3px ridge transparent;
-    text-align: center;
-    flex-grow: 1;
-}
-
-#ask-user-name:not(:invalid):focus{
-    border-color: dodgerblue;
-}
-
-#ask-user-name:invalid{
-    color: red;
-}

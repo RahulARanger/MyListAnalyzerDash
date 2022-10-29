@@ -23,6 +23,6 @@ setup(
     python_requires=">=3.7, <4",
     install_requires=req.read_text(),
     package_data={
-        "": ["scripts/*"]
+        "": ["assets/MAL/*"]
     }
 )

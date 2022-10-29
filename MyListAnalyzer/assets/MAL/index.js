@@ -149,7 +149,7 @@ function enablePlainEmbla(tabIndex) {
         const viewPort = wrap.querySelector(".embla__viewport");
         const prevBtn = wrap.querySelector(".embla__button--prev");
         const nextBtn = wrap.querySelector(".embla__button--next");
-        const embla = EmblaCarousel(viewPort, { loop: true });
+        const embla = EmblaCarousel(viewPort, { loop: true});
     });
 
     return window.dash_clientside.no_update;
