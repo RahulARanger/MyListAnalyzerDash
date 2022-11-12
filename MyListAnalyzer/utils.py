@@ -106,3 +106,8 @@ def get_profile_link(name, id_):
         dmc.Badge("" if name else name, id=id_),
         href="" if not name else f"https://myanimelist.net/profile/{name}", target="_blank",
         style={"textDecoration": "none", "color": "white"})
+
+
+def from_css(file_name, path="/MLA/assets/"):
+    return html.Link(href=path + file_name, rel="stylesheet")
+

@@ -1,0 +1,100 @@
+
+.frenzy{
+    height: 35px;
+}
+
+.request-details{
+    height: 200px;
+    width: 100%;
+}
+
+.area-fix{
+    min-height: 100px;
+    margin-right: 10px;
+}
+
+.user-dash-general-lt-1{
+    margin-left: 1.3rem;
+    margin-right: 1.3rem;
+}
+
+.number-card{
+    padding: 15px 20px;
+    min-width: 2vw;
+    min-height: calc(1vh + 69px - 1vh);
+    flex-flow: column nowrap !important;
+    justify-content: flex-start !important;
+    
+    border: 1px solid var(--dark-black);
+    background-color: transparent;
+    flex-grow: 1;
+    box-shadow: var(--hard-chocolate);
+    margin: 0.4%;
+    align-items: center;
+    align-content: center;
+}
+
+.number-card-label{
+    font-size: 0.69rem;
+    font-style: italic;
+    text-align: center;
+}
+
+  
+.percent-number {
+    font: 690 20px system-ui;
+}
+
+.indicator-number{
+    font-size: 0.6rem;
+}
+
+
+article.expanding-row{
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 1;
+    flex-flow: row wrap;
+    align-items: stretch;
+    row-gap: 6%;
+    column-gap: 3px;
+    align-content: center;
+}
+
+.no-data{
+    width: 25vw;
+    margin-top: 5vw;
+}
+
+.number-card-label{
+    font-size: 0.69rem;
+    font-style: italic;
+    text-align: center;
+}
+
+  
+.percent-number {
+    font: 690 20px system-ui;
+}
+
+.indicator-number{
+    font-size: 0.6rem;
+}
+
+
+div.Overview-graphs{
+    height: calc(100vh - 43vh - 69px);
+}    
+
+div.Overview-graphs[id^='{"index":1']{
+    flex-grow: 2;
+    min-width: 40vw;
+}
+
+div.Overview-graphs[id^='{"index":2'],div.Overview-graphs[id^='{"index":3']{
+    /* current airing pie */
+    min-width: calc(100px + 7vw);
+    flex-grow: 1;
+    box-sizing: border-box;
+}
+  

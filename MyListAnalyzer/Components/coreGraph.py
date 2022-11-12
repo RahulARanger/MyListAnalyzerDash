@@ -44,7 +44,7 @@ class Config:
 
 @with_slimmer
 def core_graph(
-        fig: go.Figure, prefix: str, index: typing.Union[bool, str] = False,
+        fig: go.Figure, prefix: str, index: typing.Union[bool, str, int] = False,
         responsive: bool = "auto", class_name=None, config: Config = None, apply_shimmer=True, animate=True):
     config = config if config else Config()
 

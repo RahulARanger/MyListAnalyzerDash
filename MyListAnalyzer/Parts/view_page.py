@@ -1,5 +1,5 @@
+import logging
 import typing
-
 from MyListAnalyzer.Components.header import ViewHeaderComponent
 import dash_mantine_components as dmc
 from dash import html, dcc, ctx, callback, Output, Input, State, no_update
@@ -8,6 +8,7 @@ from MyListAnalyzer.mappings.callback_proto import ValidateName, DataCollectionP
 from MyListAnalyzer.Components.notifications import provider, show_notifications
 from MyListAnalyzer.utils import starry_bg
 from MyListAnalyzer.mal_api_handler import VerySimpleMALSession
+from MyListAnalyzer.Parts.view_dashboard import ViewDashboard
 
 
 class ViewPage:
@@ -15,6 +16,7 @@ class ViewPage:
         self.header = ViewHeaderComponent()
         self.user_name = ""
         self.mal_session = VerySimpleMALSession()
+        self.dashboard = ViewDashboard()
 
     def connect_callbacks(self):
         id_, modal_id = self.header.handle_callbacks()
@@ -52,7 +54,8 @@ class ViewPage:
                 Output(view_dashboard.intervalAsk, "disabled"),
                 Output(view_dashboard.fetchStatus, "color"),
                 Output(view_dashboard.fetchStatus, "children"),
-                Output(view_dashboard.paging + "-display", "children")
+                Output(view_dashboard.paging + "-display", "children"),
+                Output(view_dashboard.collectThings, "data")
             ],
             [
                 Input(view_header.show_name, "children"),
@@ -67,24 +70,28 @@ class ViewPage:
             prevent_initial_call=True
         )(self.fetch_things)
 
+        self.dashboard.connect_callbacks()
+
     def layout(self, user_name=""):
-        return [dcc.Store(storage_type="memory", id=view_dashboard.collectThings),
-                dcc.Store(storage_type="memory", id=view_dashboard.storedName),
-                dcc.Store(storage_type="memory", id=view_dashboard.userDetailsJobResult),
-                dcc.Store(storage_type="memory", id=view_dashboard.paging),
+        return [dcc.Store(id=view_dashboard.collectThings),
+                dcc.Store(id=view_dashboard.storedName),
+                dcc.Store(id=view_dashboard.userDetailsJobResult),
+                dcc.Store(id=view_dashboard.paging),
                 dcc.Location(id=view_dashboard.locationChange, refresh=False),
-                dcc.Interval(id=view_dashboard.intervalAsk, disabled=True, n_intervals=0, max_intervals=0, interval=500)
-            , *starry_bg(),
+                dcc.Interval(
+                    id=view_dashboard.intervalAsk, disabled=True, n_intervals=0, max_intervals=0, interval=500),
+                *starry_bg(),
                 dmc.Affix(self.header.layout(user_name), position={"top": 0, "left": 0}),
                 dmc.LoadingOverlay([
-                    # dmc.LoadingOverlay(
-                    #     dmc.ScrollArea(self.dashboard.layout, type="auto", id=main_app.body),
-                    #     id=main_app.loadApp, loaderProps=main_app.loadingProps, style={"padding": "0px"}),
-
-                ], id="home", loaderProps=main_app.loadingProps),
+                    dmc.ScrollArea(self.dashboard.layout(), type="auto", class_name="home half-elf"),
+                    dcc.Store(id={"type": view_dashboard.tabs, "index": 0}),
+                    dcc.Store(id={"type": view_dashboard.tabs, "index": 1})
+                ], loaderProps=main_app.loadingProps),
                 html.Section(list(self.modals), id="modals"),
                 html.Aside(id=view_dashboard.tempDataStore),
-                provider(view_dashboard.startDetails, view_header.resultForSearch, view_header.validateNote)]
+                provider(
+                    view_dashboard.startDetails, view_header.resultForSearch,
+                    view_header.validateNote, view_dashboard.userJobDetailsNote)]
 
     @property
     def modals(self):
@@ -117,9 +124,11 @@ class ViewPage:
                         color="green", auto_close=5000
                     )
                 except Exception as _:
+                    logging.exception("Failed to validate a user %s", now_name, exc_info=True)
+
                     proto.openModal = True
                     proto.note = show_notifications(
-                        f"User {user_name} does not exist",
+                        f"User {now_name} does not exist",
                         f"Error Received: {_}, Please try again", color="red", auto_close=7000
                     )
 
@@ -141,7 +150,8 @@ class ViewPage:
         return (
             proto.disable_start, proto.disable_stop, proto.max_intervals, proto.paging, proto.note,
             proto.result, proto.disable_timer,
-            proto.status_color, proto.status_text, len(proto.result)
+            proto.status_color, proto.status_text, len(proto.result),
+            proto.perf_details
         )
 
     def start_collecting(self, proto, first_time, user_name, next_page):

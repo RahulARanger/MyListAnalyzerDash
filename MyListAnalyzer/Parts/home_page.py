@@ -1,15 +1,12 @@
 import typing
-from dash import Input, Output, callback, dcc, html, clientside_callback, ClientsideFunction, State, \
-    no_update, callback_context, ALL, MATCH, ctx, get_app, register_page
+from dash import dcc, html, get_app
 import dash_mantine_components as dmc
-from MyListAnalyzer.utils import get_mapping, starry_bg
+from MyListAnalyzer.utils import starry_bg
 from MyListAnalyzer.Components.malCreds import MalCredsModal
-from MyListAnalyzer.Components.layout import expanding_layout, expanding_scroll
-from MyListAnalyzer.Components.buttons import icon_butt, image_button
-from MyListAnalyzer.Components.ModalManager import get_modal, make_modal_alive, enter_to_click
+from MyListAnalyzer.Components.layout import expanding_layout
+from MyListAnalyzer.Components.buttons import icon_butt
 from MyListAnalyzer.Components.notifications import provider
 from MyListAnalyzer.mappings.enums import main_app, home_page, mal_creds_modal
-from MyListAnalyzer.Components.collection import add_user
 
 
 class HomePage:
@@ -20,7 +17,7 @@ class HomePage:
         self.mal_creds.init()
         self.add_routes()
 
-    def inside_children(self, set_active):
+    def inside_children(self, set_active: int):
         paper_height = 250
 
         tabs = dmc.Tabs(
@@ -39,14 +36,14 @@ class HomePage:
                 , position={"top": f"calc(50% - {paper_height // 2}px)", "left": "calc(50% - 150px)"},
                 style={"width": "300px", "height": f"{paper_height}px"}
             ),
-            provider(mal_creds_modal.notify, home_page.testNote),
+            provider(mal_creds_modal.notify),
             html.Div([self.mal_creds.inside], id="modals")
         ]
 
     def layout(self, tab):
         return dmc.LoadingOverlay(
             children=self.inside_children(tab),
-            id="home", loaderProps=main_app.loadingProps)
+            class_name="home", loaderProps=main_app.loadingProps)
 
     def login_things(self):
         return expanding_layout(

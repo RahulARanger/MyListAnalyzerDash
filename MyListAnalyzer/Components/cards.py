@@ -5,7 +5,6 @@ from MyListAnalyzer.Components.coreGraph import core_graph
 from MyListAnalyzer.mappings.enums import css_classes
 from dash import html, dcc
 import logging
-import math
 
 
 def graph_card(
@@ -33,11 +32,11 @@ def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
     )
 
 
-def no_data(directions):
+def no_data(directions, force=False):
     return home_card(dmc.Image(
         class_name="no-data",
         src="/assets/nodata.svg",
-        caption=f"No Data Found, Please wait or else open {directions} to start the Timer",
+        caption=directions if force else f"No Data Found, Please wait or else open {directions} to start the Timer",
         alt="No Data Found",
         placeholder="No Data Found ",
         withPlaceholder=True

@@ -4,3 +4,6 @@
 venv
 build
 MyListAnalyzerDash.egg-info
+*.pyc
+MyListAnalyzer/assets/*
+Raw

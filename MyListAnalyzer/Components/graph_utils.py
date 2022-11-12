@@ -63,11 +63,12 @@ class BeautifyMyGraph(GraphInfo):
         # in case u need to return multiple but handle only one figure ?, then return casually
 
     def handle_subject(self, figure: go.Figure) -> go.Figure:
+        font_family = '"segoe ui" Helvetica'
         figure.update_layout(
             dragmode=self.allow_drag,
             template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
             font={
-                "family": '"segoe ui" Helvetica'
+                "family": font_family
             },
             margin=dict(
                 l=self.ml,
@@ -85,16 +86,16 @@ class BeautifyMyGraph(GraphInfo):
                 y=self.legend_y,
                 title_text=self.legend_title,
                 font=dict(
-                    size=self.legend_font_size,
+                    size=self.legend_font_size, family=font_family
                 )
             )
         )
 
         figure.update_xaxes(
-            showgrid=self.show_x_grid, visible=self.show_x, automargin=True, tickangle=self.x_tick_angle
+            showgrid=self.show_x_grid, visible=self.show_x, automargin=True, title=dict(font=dict(family=font_family))
         )
         figure.update_yaxes(
-            showgrid=self.show_y_grid, visible=self.show_y, automargin=True
+            showgrid=self.show_y_grid, visible=self.show_y, automargin=True, title=dict(font=dict(family=font_family))
         )
 
         return figure

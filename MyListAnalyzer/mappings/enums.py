@@ -1,23 +1,21 @@
 from collections import namedtuple
 
-
 main_app = namedtuple("MainApplication", [
     "loadApp", "loadingProps", "about", "repo", "body", "me", "collections"
 ])(
     "__app_load", {"variant": "bars", "color": "orange", "size": "xl"},
-    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user", "user-collections-mla"
+    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user",
+    "user-collections-mla"
 )
 
 home_page = namedtuple("HomePage", [
-    "url", "name", "description", "github_logo", "tests", "testID", "testResult", "greet", "testNote", "testFilter",
-    "testIcon", "apps"
+    "url", "name", "description", "github_logo", "greet", "apps", "home"
 ])(
     "/MLA/", "Home", "Home Page of the MyListAnalyzer, please check the Test Cases tab",
-    "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", [
-        "Logged in MAL", "Are MAL Tokens valid ?"], "test", "test-area", "Allow MyListAnalyzer to access your,",
-    "test-results", "test-filter", "https://api.iconify.design/carbon/rule-test.svg", [
+    "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "Allow MyListAnalyzer to access your,",
+    [
         ["View Dashboard", "/MLA/view/", "Dashboard for MyAnimeList Users"]
-    ]
+    ], "mal-home"
 )
 
 main_page_dashboard = namedtuple("MainPageDashBoard", [
@@ -51,14 +49,16 @@ view_header = namedtuple(
     [
         "collection", "settings", "askName", "getName", "requestDetails",
         "re_fetch", "genresCount", "studiosCount", "collectionImage", "addUser", "giveName", "appName", "short_name",
-        "home", "show_name", "resultForSearch", "validateNote", "collectionTabs"
+        "home", "show_name", "resultForSearch", "validateNote", "collectionTabs", "autoOpen", "autoRun"
     ]
 )(
     "view-board-table-details", "view-settings", "ask-user-name", "get-user-name", "request-details",
     "data-descriptive-fetch", "genres-count", "studios-count",
     "https://api.iconify.design/flat-color-icons/database.svg",
-    'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer", "MLA",
-    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-collection-tabs"
+    'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer",
+    "MLA",
+    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-collection-tabs", "view-collection-open",
+    "view-collection-auto-run"
 )
 
 dashboard = namedtuple(
@@ -70,7 +70,8 @@ view_dashboard = namedtuple(
     [
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
         "startDetails", "tabs", "stop_note", "start_note", "storedName", "startButt", "stopButt", "paging",
-        "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore"
+        "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
+        "row_1_colors", "tab_names", "status_color", "graphs"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
@@ -79,7 +80,10 @@ view_dashboard = namedtuple(
     "Starting Timer...", "user-stored-name",
     "https://api.iconify.design/codicon/run-above.svg?color=green",
     "https://api.iconify.design/codicon/run-errors.svg?color=red",
-    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view"
+    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view", "note-user-job-details",
+    ["teal", "indigo", "blue", "pink"], ["Overview", "Explore"], {
+        "completed": "green", "plan_to_watch": "yellow", "dropped": "red", "on_hold": "orange", "watching": "blue"
+    }, ["user-detail-overview-ep", "user-detail-overview-think", "user-detail-overview-seasons"]
 )
 
 creds_modal = namedtuple(
@@ -114,3 +118,13 @@ mal_creds_modal = creds_modal(
 css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card", "request_details"])(
     "do-jump", "custom-butt", "home_card", "request-details"
 )
+
+
+_status_map = namedtuple(
+    "Status", [
+        "watching", "plan_to_watch", "completed", "on_hold", "dropped"
+    ]
+)
+
+status_colors = _status_map("blue", "indigo", "green", "yellow", "red")
+status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")

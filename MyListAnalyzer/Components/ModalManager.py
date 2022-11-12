@@ -41,7 +41,7 @@ def for_time(display_time_in, then="lineClamp", other=None):
     return clientside_callback(
         ClientsideFunction(
             namespace="handleData",
-            function_name="formatTimeInComp"
+            function_name="formatDateTime"
         ),
         Output(display_time_in, "children"),
         Input(display_time_in if not other else other, then)

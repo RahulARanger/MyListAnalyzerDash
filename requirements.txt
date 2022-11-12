@@ -1,5 +1,5 @@
-dash==2.6.2
+dash==2.7.0
 dash_mantine_components~=0.10.2
 requests==2.28.1
 Flask==2.2.2
-plotly==5.10.0
+plotly==5.11.0

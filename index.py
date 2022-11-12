@@ -1,15 +1,14 @@
 import logging
 import os
+import pathlib
 from MyListAnalyzer import __name__ as name
-from dash import Dash, page_container, dcc, clientside_callback, ClientsideFunction, Input, Output
+from MyListAnalyzer.route_setup import build_assets, js_s
+from dash import Dash, page_container, dcc, clientside_callback, ClientsideFunction, Input, Output, html
 import dash_mantine_components as dmc
 from dotenv import load_dotenv
 
 load_dotenv()
-
 assert os.getenv("MAL_CLIENT_ID"), "We need client id for MAL"
-
-
 logging.getLogger('flask_cors').level = logging.DEBUG
 
 
@@ -21,9 +20,11 @@ class MainApplication:
             update_title="Loading...",
             use_pages=True,
             external_scripts=[
-                "https://unpkg.com/dash.nprogress@latest/dist/dash.nprogress.js",
-                "https://unpkg.com/embla-carousel/embla-carousel.umd.js"
-            ]
+                "https://unpkg.com/embla-carousel/embla-carousel.umd.js",
+                "https://unpkg.com/embla-carousel-class-names/embla-carousel-class-names.umd.js",
+                *js_s()
+            ],
+            extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzer" / "misc"]
         )
 
         clientside_callback(
@@ -33,6 +34,8 @@ class MainApplication:
         )  # called only once
 
         self.set_layout()
+
+        build_assets(self.app.server)
 
     @property
     def app(self):
