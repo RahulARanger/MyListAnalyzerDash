@@ -81,7 +81,7 @@ view_dashboard = namedtuple(
     "https://api.iconify.design/codicon/run-above.svg?color=green",
     "https://api.iconify.design/codicon/run-errors.svg?color=red",
     "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view", "note-user-job-details",
-    ["teal", "indigo", "blue", "pink"], ["Overview", "Explore"], {
+    ["teal", "indigo", "blue", "pink"], ["Overview", "Belts"], {
         "completed": "green", "plan_to_watch": "yellow", "dropped": "red", "on_hold": "orange", "watching": "blue"
     }, ["user-detail-overview-ep", "user-detail-overview-think", "user-detail-overview-seasons"]
 )
@@ -115,8 +115,8 @@ mal_creds_modal = creds_modal(
         "logo": "https://image.myanimelist.net/ui/OK6W_koKDTOqqqLDbIoPAiC8a86sHufn_jOI-JGtoCQ"
     })
 
-css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card", "request_details"])(
-    "do-jump", "custom-butt", "home_card", "request-details"
+css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card", "request_details", "number_counter", "as_percent"])(
+    "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number"
 )
 
 
@@ -128,3 +128,11 @@ _status_map = namedtuple(
 
 status_colors = _status_map("blue", "indigo", "green", "yellow", "red")
 status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")
+
+
+seasons_maps = {
+    "winter": ["https://api.iconify.design/game-icons/cold-heart.svg?color=lightblue", "gray"],
+    "spring": ["https://api.iconify.design/ph/tree-fill.svg?color=green", "green"],
+    "fall": ["https://api.iconify.design/noto/fallen-leaf.svg", "orange"],
+    "summer": ["https://api.iconify.design/line-md/sun-rising-filled-loop.svg?color=darkorange", "yellow"]
+}

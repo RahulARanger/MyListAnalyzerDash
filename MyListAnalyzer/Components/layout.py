@@ -42,8 +42,8 @@ def expanding_scroll(*children, **__):
     )
 
 
-def expanding_row(*args, class_name="", style=None):
+def expanding_row(*args, class_name="", style=None, id_=""):
     style = style if style else dict()
     return html.Article(
-        args, className=f"expanding-row {class_name}", style=style
+        args, className=f"expanding-row {class_name}", style=style, id=id_
     )

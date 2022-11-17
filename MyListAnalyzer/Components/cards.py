@@ -1,28 +1,10 @@
 import typing
 import dash_mantine_components as dmc
 from MyListAnalyzer.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzer.Components.coreGraph import core_graph
 from MyListAnalyzer.mappings.enums import css_classes
 from dash import html, dcc
+from dash.dependencies import Component
 import logging
-
-
-def graph_card(
-        title, name, index, graph, extras=tuple(), menu_options=tuple(), is_resp=False,
-        footer_class="graph-card-footer", card_class="graph-card",
-        **__
-):
-    options = dmc.Menu(
-        [dmc.MenuLabel(title), dmc.Divider(color="orange"), *menu_options], class_name=footer_class, trigger="hover"
-    )
-    elements = [
-        expanding_layout(
-            core_graph(graph, prefix=name, index=index, responsive=is_resp, **__),
-        ),
-        options,
-        *extras
-    ]
-    return html.Article(elements, className=card_class)
 
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
@@ -65,68 +47,75 @@ def sign(number, reference, class_name=""):
     )
 
 
+def _number_comp(number, is_percent, color, class_name, size="lg"):
+    return dmc.Text(
+        f"{number:.2f}%" if is_percent else str(number), color=color, weight="bold", size=size,
+        class_name=f"{css_classes.as_percent} {css_classes.number_counter} {class_name}")
+
+
+def _number_layout(*numbers):
+    return expanding_layout(
+        *numbers,
+        direction="row", spacing=0, no_wrap=True, align="center", position="center"
+    )
+
+
+def _divider(label: str = "", color: str = "gray"):
+    return dmc.Divider(
+        label=label, color=color, labelPosition="center",
+        style={"opacity": 0.8, "width": "100%"})
+
+
 def number_card_format_1(
-        number=0, label="...", another=-1, color="green", class_name="", is_percent=True,
+        number=0, label="...", another=-1, color="green", class_name=None, is_percent=True,
         ref_number=-1, ref_another=-1
 ):
     references = []
     references.append(html.Sub([
         "[",
-        html.Span(another, title=str(another), className=f"count-number {class_name}"), "]"]
+        html.Span(another, title=str(another), className=f"{css_classes.number_counter} {class_name}"), "]"]
     )) if another >= 0 else ...
 
-    numbers = [dmc.Text(
-        f"{number:.2f}%" if is_percent else str(number), color=color, weight="bold", size="lg",
-        class_name=f"percent-number count-number {class_name}"),
-    ]
+    numbers = [_number_comp(number, is_percent, color, class_name)]
 
     references.insert(0, sign(number, ref_number, class_name)) if ref_number > -1 else ...
     numbers.append(dmc.Text(references, size="xs", color=color)) if references else ...
     references.append(sign(another, ref_another, class_name)) if another > -1 and ref_another > -1 else ...
 
     return expanding_row(
-        expanding_layout(
-            *numbers,
-            direction="row", spacing=0, no_wrap=True, align="center", position="center"
-        ),
+        _number_layout(*numbers),
         dmc.Space(h=1),
-        dmc.Divider(
-            label=" ".join(label.capitalize().split("_")), color=color, labelPosition="center",
-            style={"opacity": 0.8, "width": "100%"}
-        ), class_name=f"number-card {class_name}")
+        _divider(" ".join(label.capitalize().split("_")), color),
+        class_name=f"number-card {class_name}")
 
 
-def slides(x):
-    def _operate(*_, **__):
-        return [html.Aside(
-            card, className="embla__slide"
-        ) for card in x(*_, **__)]
-
-    return _operate
+def embla_slides(_slides: typing.Tuple[Component]):
+    return [html.Aside(
+        card, className="embla__slide"
+    ) for card in _slides]
 
 
-def one_card_at_a_time(gives_slides):
-    def _operate(*_, **__):
-        class_name = __.get("class_name", "")
-        return html.Article(
-            html.Section(
-                html.Div(
-                    gives_slides(*_, **__), className="embla__container"
-                ), className="embla__viewport"
-            ), className=f"embla {class_name}"
+def embla_container(*slides: Component, class_name: str = None, id_=""):
+    return html.Article(
+        html.Section(
+            html.Div(
+                embla_slides(slides), className="embla__container"
+            ), className="embla__viewport"
+        ), className=f"embla {class_name}", id=id_
+    )
+
+
+def number_card_format_2(label, icon, value=0, color="red", percent_value=0, class_name=None):
+    return expanding_row(
+        dmc.Avatar(src=icon, size="lg"),
+        dmc.Space(w=6),
+        expanding_layout(
+            expanding_layout(
+                _number_comp(value, False, color, class_name),
+                dmc.Divider(color="gray", orientation="vertical"),
+                _number_comp(percent_value, True, color, class_name, size="md"),
+                direction="row", position="center"
+            ),
+            _divider(label, color)
         )
-
-    return _operate
-
-
-@one_card_at_a_time
-@slides
-def graph_two_cards(fig, fig_class="", index=0, animate=True, is_resp=False, class_name="", second_card=html.Section("Not yet Implemented")):
-    return dcc.Graph(
-        figure=fig,
-        className=fig_class,
-        animate=animate,
-        config=dict(),
-        responsive="auto" if is_resp is None else is_resp,
-        id=dict(index=index, type=class_name)
-    ), second_card
+    )

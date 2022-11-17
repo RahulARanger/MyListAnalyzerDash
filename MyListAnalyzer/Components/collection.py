@@ -5,8 +5,7 @@ from MyListAnalyzer.Components.layout import expanding_layout
 from MyListAnalyzer.Components.ModalManager import get_modal, make_modal_alive, get_modal_id, enter_to_click, \
     invalid_to_disable
 import plotly.graph_objects as go
-from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph
-from MyListAnalyzer.Components.cards import graph_two_cards
+from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph, core_graph
 import typing
 
 
@@ -101,13 +100,13 @@ def collections(prop=False, add=False):
 
     row_1 = expanding_layout(
         dmc.Button(
-            "Start", rightIcon=[dmc.Image(src=view_dashboard.startButt)], color="dark", variant="subtle",
+            dmc.Image(src=view_dashboard.startButt), color="dark",
             id=view_dashboard.startButtTrigger, size="xs"),
         dmc.Badge("🤷", color="yellow", id=view_dashboard.fetchStatus),
         dmc.Button(
-            "Cancel", rightIcon=[dmc.Image(src=view_dashboard.stopButt)], color="dark", variant="subtle",
+            dmc.Image(src=view_dashboard.stopButt), color="dark",
             id=view_dashboard.stopButtTrigger, size="xs"),
-        direction="row", align="center"
+        direction="row", align="center", no_wrap=True
     )
 
     row_3 = expanding_layout(
@@ -123,28 +122,19 @@ def collections(prop=False, add=False):
     )
 
     figure = BeautifyMyGraph(
+        title="Requests made for User Details", x_title="Time", y_title="Time Taken(s)",
         autosize=True, show_x=True, show_y=True, show_x_grid=True, ml=3, mr=5, mb=10
     ).handle_subject(go.Figure())
-    figure.update_xaxes(
-        title=dict(text="Time", font=dict(size=10)), autorange=True
-    )
-    figure.update_yaxes(
-        title=dict(text="Time Taken(s)", font=dict(size=10)), autorange=True
-    )
-    figure.update_layout(
-        dict(title=dict(
-            text="Requests made for User Details", font=dict(size=12),
-            xanchor="right", yanchor="bottom", x=1, y=0.06))
-    )
 
-    graph = graph_two_cards(
-        figure, is_resp=True, fig_class=css_classes.request_details, class_name=css_classes.request_details,
-        second_card=dmc.Image(src="/MLA/assets/jobExplain.png", height=200, fit="contain"), animate=False)
+    request_graph = core_graph(
+        figure, responsive=True, class_name=css_classes.request_details,
+        prefix=css_classes.request_details, index=0
+    )
 
     tab_1 = dmc.Tab(children=expanding_layout(
         row_1,
         dmc.Divider(color="orange"),
-        graph,
+        request_graph,
         dmc.Divider(color="orange"),
         row_3
     ), label="User Detail")

@@ -1,13 +1,14 @@
 from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
     html
 import dash_mantine_components as dmc
-from MyListAnalyzer.mappings.enums import view_dashboard, status_colors, status_labels
-from MyListAnalyzer.Components.cards import number_card_format_1, no_data, error_card, graph_two_cards, core_graph
-from MyListAnalyzer.Components.layout import expanding_row, expanding_layout, expanding_scroll
-from MyListAnalyzer.Components.notifications import show_notifications
-from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph
+from MyListAnalyzer.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps
+from MyListAnalyzer.Components.cards import number_card_format_1, no_data, error_card, embla_container, \
+    number_card_format_2
+from MyListAnalyzer.Components.layout import expanding_row, expanding_layout
+from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
 import json
 import plotly.graph_objects as go
+from dash.dash_table import DataTable
 
 
 class ViewDashboard:
@@ -68,7 +69,7 @@ class ViewDashboard:
                     no_data("Please wait until results are fetched", force=True),
                     pl=10, pr=10, pb=10,
                     id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), label=label, disabled=index == 1))
+                    visible=False, animate=True), label=label))
             store.append(
                 dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data=""))
 
@@ -81,104 +82,143 @@ class ViewDashboard:
         ])
 
     def process_tabs(self, data):
-        print(data)
         if not data:
             return no_data("Collections -> user details")
 
-        graph_class = view_dashboard.tab_names[0] + "-graphs"
+        current_tab = view_dashboard.tab_names[0]
+        graph_class = current_tab + "-graphs"
 
         try:
-            row_1, row_2, histogram_plot, (season, this_year), wht_the_dog_dng = process_overview(data)
+            row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng = process_overview(
+                data, current_tab, graph_class)
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
 
         first_row = expanding_row(*(
             number_card_format_1(
                 number=value, label=label,
-                color=color, class_name=view_dashboard.tab_names[0], is_percent=False)
+                color=color, class_name=current_tab, is_percent=False)
             for value, label, color in row_1
         ))
 
         second_row = expanding_row(*(
             number_card_format_1(
                 number=value, is_percent=True, label=label.capitalize(),
-                class_name=view_dashboard.tab_names[0], another=exact,
+                class_name=current_tab, another=exact,
                 color=color
             ) for label, (exact, value), color in row_2
         ))
 
-        ep_range = core_graph(
-            histogram_plot,
-            apply_shimmer=False, index=1, prefix=view_dashboard.tab_names[0], class_name=graph_class,
-            responsive=True
-        )
-
-        wht_dng = core_graph(
-            wht_the_dog_dng,
-            apply_shimmer=False, index=2, prefix=view_dashboard.tab_names[0], class_name=graph_class,
-            responsive=True
-        )
-
-        this_year_season = core_graph(
-            season if not this_year else this_year,
-            prefix=view_dashboard.tab_names[0],
-            apply_shimmer=False,
-            index=2,
-            responsive=True,
-            class_name=graph_class
-        )
-
-        seasons_plot = graph_two_cards(
-            season, class_name=view_dashboard.tab_names[0], animate=False,
-            fig_class=graph_class, is_resp=True, index=3, second_card=this_year_season
-        ) if season and this_year else this_year_season
-
         third_row = expanding_row(
-            ep_range, seasons_plot, wht_dng
+            ep_range, seasonal_info, wht_the_dog_dng, style=dict(gap="1rem")
         )
 
-        return expanding_scroll(*[
+        return [
             __ for _ in (first_row, second_row, third_row) for __ in
             [_, dmc.Divider(color="dark", style={"opacity": 0.5, "marginBottom": "2px"})]
-        ])
+        ]
 
 
-def process_overview(data):
+def process_overview(data, current_tab, graph_class):
     row_1 = data["row_1"]
     row_2 = json.loads(data["row_2"])
-    row_3 = data["row_3"]
+    ep_range_raw, seasons_raw, airing_dist, airing_detail, current_year = data["row_3"]
 
     yield zip(row_1["values"], row_1["keys"], view_dashboard.row_1_colors)
     yield zip(
         map(lambda x: getattr(status_labels, x), row_2["index"]),
         row_2["data"], map(lambda x: getattr(status_colors, x), row_2["index"])
     )
+    # above is for the cards
 
-    yield BeautifyMyGraph(show_x=True, show_y=True, show_x_grid=True, autosize=True).handle_subject(
-        go.Figure(go.Histogram(x=row_3[0])))
+    ep_range = Config()
+    ep_range.scroll_zoom = False
 
-    seasons, this_year = (json.loads(_) for _ in row_3[2])
-    airing = json.loads(row_3[1])
+    yield core_graph(
+        BeautifyMyGraph(
+            title="Range of Anime Episodes", x_title="Episodes", y_title="Count",
+            show_x=True, show_y=True, show_y_grid=True, autosize=True).handle_subject(
+            ep_bins_plot(json.loads(ep_range_raw))),
+        apply_shimmer=False, index=1, prefix=current_tab, class_name=graph_class,
+        responsive=True, config=ep_range
+    )
 
-    handler_for_pies = BeautifyMyGraph(mt=30, mb=30, ml=30, mr=30, pad=100)
+    seasons = []
+    # not using generator as it becomes hard to read
+    for raw, title in zip(seasons_raw, ("Up Until,", f"{current_year},")):
+        loaded = json.loads(raw)
 
-    yield False if not seasons["data"] else handler_for_pies.handle_subject(go.Figure(
+        seasons.append(
+            expanding_layout(dmc.Text(title, size="sm"), *(
+                number_card_format_2(
+                    season.capitalize(), seasons_maps[season][0],
+                    value=value[0], percent_value=value[1] * 100, class_name=current_tab,
+                    color=seasons_maps[season][1])
+
+                for [season, value] in zip(loaded["index"], loaded["data"])
+            )))
+
+    yield embla_container(
+        *seasons, class_name=graph_class, id_=dict(index=2, type=current_tab)
+    )
+
+    airing = json.loads(airing_dist)
+
+    if not airing["data"]:
+        yield dmc.Text("Empty")
+    else:
+        yield embla_container(
+            core_graph(
+                BeautifyMyGraph(
+                    title="Currently Airing"
+                ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=3,
+                prefix=current_tab, class_name=graph_class, responsive=True),
+            gen_table_for_airing_details(json.loads(airing_detail)),
+            class_name=current_tab
+        )
+
+
+def ep_bins_plot(series):
+    fig = go.Figure()
+
+    series["index"].pop()
+    colors = series["data"].pop()
+
+    bar_trace = go.Bar(
+        x=series["index"], y=series["data"], text=series["data"], textposition="auto",
+        marker=dict(color=colors, line=dict(width=2, color="#18191A")),
+        hovertemplate="<b>Range: %{x}</b> %{y}"
+    )
+    fig.add_trace(bar_trace)
+
+    return fig
+
+
+def currently_airing_pie(airing):
+    return go.Figure(
         go.Pie(
-            labels=[_.capitalize() for _ in seasons["index"]], values=seasons["data"],
-            title=dict(text="Animes watched per Seasons")
-        )
-    )), False if not this_year["data"] else handler_for_pies.handle_subject(go.Figure(
-        go.Pie(
-            labels=[_.capitalize() for _ in this_year["index"]], values=this_year["data"],
-            title=dict(text="This year watched")
-        )
-    ))
+            hovertemplate="<b>%{label}</b><extra>%{percent} || %{value}</extra>",
+            labels=tuple(map(lambda x: getattr(status_labels, x), airing["index"])), values=airing["data"],
+            marker=dict(
+                colors=tuple(map(lambda x: getattr(status_colors, x), airing["index"])),
+                line=dict(width=2, color="#18191A")),
+            textinfo="label+percent", pull=[
+                0.2 if status_labels.watching == getattr(status_labels, _) else 0 for _ in airing["index"]]
+        ),
+    )
 
-    yield False if not airing["data"] else handler_for_pies.handle_subject(
-        go.Figure(
-            go.Pie(
-                labels=airing["index"], values=airing["data"],
-                title=dict(text="Currently Airing"),
-            ),
-        )
+
+def gen_table_for_airing_details(raw):
+    filter_options = dict(case="insensitive")
+    cols = (dict(name="Title", id="node.title", filter_options=filter_options),
+            dict(name="Status", id="list_status.status", filter_options=filter_options))
+    style_header, style_data, style_cell = style_dash_table()
+
+    return DataTable(
+        data=raw, columns=cols,
+        style_header=style_header, style_data=style_data, style_table=dict(
+            minWidth="calc(150px + 3vw)", maxHeight="calc(100vh - 43vh - 69px)", overflowX="auto", overflowY="auto"),
+        style_cell=style_cell,
+        filter_action="native",
+        sort_action="native",
     )

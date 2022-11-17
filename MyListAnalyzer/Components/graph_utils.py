@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import typing
+from dash import dcc
+import dash_mantine_components as dmc
 import plotly.graph_objects as go
 
 
@@ -25,6 +27,9 @@ class GraphInfo:
     legend_title: str
     legend_font_size: int
     x_tick_angle: int
+    title: str
+    x_title: str
+    y_title: str
 
 
 class BeautifyMyGraph(GraphInfo):
@@ -33,12 +38,12 @@ class BeautifyMyGraph(GraphInfo):
             show_x_grid=False, show_y_grid=False, allow_drag=False,
             ml=1, mr=1, mt=5, mb=2, width=None, height=None,
             pad=0, showlegend=False, autosize=False, legend_x=1, legend_y=1, legend_title=None, legend_font_size=10,
-            x_tick_angle=45
+            x_tick_angle=45, title="", x_title="", y_title=""
     ):
         super().__init__(
             multiple, show_x, show_y, show_x_grid, show_y_grid, allow_drag,
             mt, mb, ml, mr, width, height, pad, showlegend, autosize,
-            legend_x, legend_y, legend_title, legend_font_size, x_tick_angle
+            legend_x, legend_y, legend_title, legend_font_size, x_tick_angle, title, x_title, y_title
         )
         self.worker: typing.Optional[typing.Callable] = None
 
@@ -49,7 +54,7 @@ class BeautifyMyGraph(GraphInfo):
         return self.handle_worker
 
     def handle_worker(self, *args, **kwargs) -> typing.Union[
-            typing.Tuple[go.Figure, typing.Any], typing.List[go.Figure], go.Figure]:
+        typing.Tuple[go.Figure, typing.Any], typing.List[go.Figure], go.Figure]:
 
         rec = self.worker(*args, **kwargs)
         if self.multiple:
@@ -64,6 +69,11 @@ class BeautifyMyGraph(GraphInfo):
 
     def handle_subject(self, figure: go.Figure) -> go.Figure:
         font_family = '"segoe ui" Helvetica'
+        font = dict(family=font_family, size=10)
+
+        title_font = font.copy()
+        title_font["size"] += 2
+
         figure.update_layout(
             dragmode=self.allow_drag,
             template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
@@ -74,7 +84,7 @@ class BeautifyMyGraph(GraphInfo):
                 l=self.ml,
                 r=self.mr,
                 b=self.mb,
-                t=self.mt,
+                t=max(self.mt, title_font["size"]) + 10,
                 pad=self.pad
             ),
             width=self.width,
@@ -88,14 +98,71 @@ class BeautifyMyGraph(GraphInfo):
                 font=dict(
                     size=self.legend_font_size, family=font_family
                 )
+            ),
+            title=dict(
+                text=self.title if self.title else f"{self.title}<br><br><br><br>", font=title_font
             )
         )
 
         figure.update_xaxes(
-            showgrid=self.show_x_grid, visible=self.show_x, automargin=True, title=dict(font=dict(family=font_family))
+            showgrid=self.show_x_grid, visible=self.show_x, automargin=True,
+            title=dict(text=self.x_title, font=font)
         )
         figure.update_yaxes(
-            showgrid=self.show_y_grid, visible=self.show_y, automargin=True, title=dict(font=dict(family=font_family))
+            showgrid=self.show_y_grid, visible=self.show_y, automargin=True,
+            title=dict(text=self.y_title, font=font)
         )
 
         return figure
+
+
+def shimmer(graph, prefix, index):
+    return dmc.Skeleton(
+        children=graph,
+        animate=True,
+        visible=False,
+        id=dict(type=prefix, index=index, section="shimmer")
+    )
+
+
+@dataclass
+class Config:
+    butt_to_remove = ["zoom"]
+    butts_to_add = ["drawopenpath", "eraseshape"]
+    scroll_zoom = False
+
+    def to_dict(self):
+        return {
+            "modeBarButtonsToAdd": self.butts_to_add,
+            "modeBarButtonsToRemove": self.butt_to_remove,
+            "displaylogo": False,
+            "scrollZoom": self.scroll_zoom
+        }
+
+
+def core_graph(
+        fig: go.Figure, prefix: str, index: typing.Union[bool, str, int] = False,
+        responsive: bool = "auto", class_name=None, config: Config = None, apply_shimmer=True, animate=False):
+    config = config if config else Config()
+
+    graph = dcc.Graph(
+        id=prefix if index is False else dict(type=prefix, index=index),
+        animate=animate,
+        figure=fig,
+        responsive=responsive,
+        className=class_name,
+        config=config.to_dict()
+    )
+
+    return graph if not apply_shimmer else shimmer(graph, prefix, index)
+
+
+def style_dash_table():
+    # styles for the header, data
+    return (
+        dict(
+            backgroundColor="transparent", color="white", border="1px ridge orange", textAlign="center",
+            fontSize="0.8rem", fontWeight="bold"),
+        dict(backgroundColor="transparent", color="white", fontSize="0.69rem", textAlign="left"),
+        dict(overflow="hidden", textOverflow="ellipsis", maxWidth="0")
+    )
