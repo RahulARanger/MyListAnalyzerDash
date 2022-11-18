@@ -187,7 +187,7 @@ def ep_bins_plot(series):
     bar_trace = go.Bar(
         x=series["index"], y=series["data"], text=series["data"], textposition="auto",
         marker=dict(color=colors, line=dict(width=2, color="#18191A")),
-        hovertemplate="<b>Range: %{x}</b> %{y}"
+        hovertemplate="<b><%{x}></b>: %{y}"
     )
     fig.add_trace(bar_trace)
 

@@ -96,13 +96,16 @@ def embla_slides(_slides: typing.Tuple[Component]):
 
 
 def embla_container(*slides: Component, class_name: str = None, id_=""):
-    return html.Article(
-        html.Section(
+    embla_class = f"embla {class_name}"
+    child = html.Section(
             html.Div(
                 embla_slides(slides), className="embla__container"
             ), className="embla__viewport"
-        ), className=f"embla {class_name}", id=id_
-    )
+        ),
+
+    return html.Article(
+        child, id=id_, className=embla_class
+    ) if id_ else html.Article(child, className=embla_class)
 
 
 def number_card_format_2(label, icon, value=0, color="red", percent_value=0, class_name=None):

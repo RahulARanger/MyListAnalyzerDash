@@ -81,7 +81,8 @@ div.Overview-graphs[id^='{"index":1']{
 }
 
 article.Overview-graphs[id^='{"index":2']{
-    max-width: 220px;
+    min-width: 200px;
+    max-width: 250px;
     padding: 0px 10px;
 }
 
@@ -92,4 +93,3 @@ div.Overview-graphs[id^='{"index":3']{
     flex-grow: 1;
     box-sizing: border-box;
 }
-  
