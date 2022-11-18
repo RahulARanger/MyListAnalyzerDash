@@ -4,11 +4,11 @@ import typing
 from dash import no_update, html, Input, Output, State, ctx, callback, dcc
 import dash_mantine_components as dmc
 
-from MyListAnalyzer.mal_api_handler import VerySimpleMALSession
-from MyListAnalyzer.Components.notifications import show_notifications
-from MyListAnalyzer.utils import CookieHandler, get_a_proper_url, get_mapping, css_classes, get_marked
-from MyListAnalyzer.Components.ModalManager import ModalManager, for_time
-from MyListAnalyzer.Components.layout import expanding_layout
+from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
+from MyListAnalyzerDash.Components.notifications import show_notifications
+from MyListAnalyzerDash.utils import CookieHandler, get_a_proper_url, get_mapping, css_classes, get_marked
+from MyListAnalyzerDash.Components.ModalManager import ModalManager, for_time
+from MyListAnalyzerDash.Components.layout import expanding_layout
 
 
 class CredsModal(CookieHandler):

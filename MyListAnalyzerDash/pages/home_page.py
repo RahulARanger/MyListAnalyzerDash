@@ -1,8 +1,8 @@
 import dash
 from dash import register_page, html, get_app
-from MyListAnalyzer.Parts.home_page import HomePage
-from MyListAnalyzer.mappings.enums import home_page
-from MyListAnalyzer.utils import from_css
+from MyListAnalyzerDash.Parts.home_page import HomePage
+from MyListAnalyzerDash.mappings.enums import home_page
+from MyListAnalyzerDash.utils import from_css
 
 page = HomePage()
 page.connect_callbacks()

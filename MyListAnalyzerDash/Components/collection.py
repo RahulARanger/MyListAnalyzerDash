@@ -1,11 +1,11 @@
 from dash import ALL, callback, Input, State, Output, no_update, dcc, clientside_callback, ClientsideFunction, MATCH
 import dash_mantine_components as dmc
-from MyListAnalyzer.mappings.enums import view_header, main_app, view_dashboard, css_classes
-from MyListAnalyzer.Components.layout import expanding_layout
-from MyListAnalyzer.Components.ModalManager import get_modal, make_modal_alive, get_modal_id, enter_to_click, \
+from MyListAnalyzerDash.mappings.enums import view_header, main_app, view_dashboard, css_classes
+from MyListAnalyzerDash.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.ModalManager import get_modal, make_modal_alive, get_modal_id, enter_to_click, \
     invalid_to_disable
 import plotly.graph_objects as go
-from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph, core_graph
+from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
 import typing
 
 

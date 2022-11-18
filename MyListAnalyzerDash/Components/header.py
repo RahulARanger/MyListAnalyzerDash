@@ -1,9 +1,9 @@
 import dash_mantine_components as dmc
-from MyListAnalyzer.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.layout import expanding_layout
 import typing
 from dash import dcc, clientside_callback, Input, Output
-from MyListAnalyzer.mappings.enums import view_header
-from MyListAnalyzer.Components.collection import add_user, collections
+from MyListAnalyzerDash.mappings.enums import view_header
+from MyListAnalyzerDash.Components.collection import add_user, collections
 
 
 class CommonHeaderComponent:

@@ -5,5 +5,5 @@ venv
 build
 MyListAnalyzerDash.egg-info
 *.pyc
-MyListAnalyzer/assets/*
+MyListAnalyzerDash/assets/*
 Raw

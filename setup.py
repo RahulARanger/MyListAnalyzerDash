@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 import pathlib
-from MyListAnalyzer import __version__
+from MyListAnalyzerDash import __version__
 
 here = pathlib.Path(__file__).parent
 req = here / "requirements.txt"

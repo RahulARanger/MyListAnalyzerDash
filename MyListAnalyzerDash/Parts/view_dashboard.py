@@ -1,11 +1,11 @@
 from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
     html
 import dash_mantine_components as dmc
-from MyListAnalyzer.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps
-from MyListAnalyzer.Components.cards import number_card_format_1, no_data, error_card, embla_container, \
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps
+from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, embla_container, \
     number_card_format_2
-from MyListAnalyzer.Components.layout import expanding_row, expanding_layout
-from MyListAnalyzer.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
+from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
+from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
 import json
 import plotly.graph_objects as go
 from dash.dash_table import DataTable
@@ -69,7 +69,7 @@ class ViewDashboard:
                     no_data("Please wait until results are fetched", force=True),
                     pl=10, pr=10, pb=10,
                     id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), label=label))
+                    visible=False, animate=True), label=label, disabled=index == 1))
             store.append(
                 dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data=""))
 

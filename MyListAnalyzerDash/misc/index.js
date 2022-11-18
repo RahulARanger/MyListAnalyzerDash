@@ -152,7 +152,7 @@ async function processUserDetailsWhenNeeded(
                 return response.json();
     
             }).catch((response) => {
-                response_template.so = response.status ? `${response.status} : ${response.statusText}` : ["MAL Server didn't response, Please raise an issue in ", failedToAskMALAPI()]
+                response_template.so = response.status ? `${response.status} : ${response.statusText}` : ["MAL Server didn't respond, Please raise an issue in ", failedToAskMALAPI()]
                 return false;
             });
     

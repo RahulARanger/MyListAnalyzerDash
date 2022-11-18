@@ -3,7 +3,7 @@ import dash_mantine_components as dmc
 from dash import html
 import random
 import string
-from MyListAnalyzer.utils import set_timestamp
+from MyListAnalyzerDash.utils import set_timestamp
 
 
 def show_notifications(title: object, *message: object, auto_close: typing.Union[bool, int] = False, color: object = "red") -> object:

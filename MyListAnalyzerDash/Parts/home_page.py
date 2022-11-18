@@ -1,12 +1,12 @@
 import typing
 from dash import dcc, html, get_app
 import dash_mantine_components as dmc
-from MyListAnalyzer.utils import starry_bg
-from MyListAnalyzer.Components.malCreds import MalCredsModal
-from MyListAnalyzer.Components.layout import expanding_layout
-from MyListAnalyzer.Components.buttons import icon_butt
-from MyListAnalyzer.Components.notifications import provider
-from MyListAnalyzer.mappings.enums import main_app, home_page, mal_creds_modal
+from MyListAnalyzerDash.utils import starry_bg
+from MyListAnalyzerDash.Components.malCreds import MalCredsModal
+from MyListAnalyzerDash.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.buttons import icon_butt
+from MyListAnalyzerDash.Components.notifications import provider
+from MyListAnalyzerDash.mappings.enums import main_app, home_page, mal_creds_modal
 
 
 class HomePage:

@@ -1,14 +1,14 @@
 import logging
 import typing
-from MyListAnalyzer.Components.header import ViewHeaderComponent
+from MyListAnalyzerDash.Components.header import ViewHeaderComponent
 import dash_mantine_components as dmc
 from dash import html, dcc, ctx, callback, Output, Input, State, no_update
-from MyListAnalyzer.mappings.enums import main_app, view_dashboard, view_header
-from MyListAnalyzer.mappings.callback_proto import ValidateName, DataCollectionProto1
-from MyListAnalyzer.Components.notifications import provider, show_notifications
-from MyListAnalyzer.utils import starry_bg
-from MyListAnalyzer.mal_api_handler import VerySimpleMALSession
-from MyListAnalyzer.Parts.view_dashboard import ViewDashboard
+from MyListAnalyzerDash.mappings.enums import main_app, view_dashboard, view_header
+from MyListAnalyzerDash.mappings.callback_proto import ValidateName, DataCollectionProto1
+from MyListAnalyzerDash.Components.notifications import provider, show_notifications
+from MyListAnalyzerDash.utils import starry_bg
+from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
+from MyListAnalyzerDash.Parts.view_dashboard import ViewDashboard
 
 
 class ViewPage:

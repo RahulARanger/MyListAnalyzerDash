@@ -1,15 +1,15 @@
 import logging
 import typing
-from MyListAnalyzer.mappings.callback_proto import AuthAction
+from MyListAnalyzerDash.mappings.callback_proto import AuthAction
 from dash import no_update, html, Input, Output, State, ctx, callback, dcc, clientside_callback
 import dash_mantine_components as dmc
-from MyListAnalyzer.mappings.enums import mal_creds_modal, css_classes
-from MyListAnalyzer.mal_api_handler import VerySimpleMALSession
-from MyListAnalyzer.Components.notifications import show_notifications
-from MyListAnalyzer.utils import CookieHandler, get_a_proper_url
-from MyListAnalyzer.Components.ModalManager import make_modal_alive, get_modal, for_time
-from MyListAnalyzer.Components.buttons import image_button
-from MyListAnalyzer.Components.layout import expanding_layout
+from MyListAnalyzerDash.mappings.enums import mal_creds_modal, css_classes
+from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
+from MyListAnalyzerDash.Components.notifications import show_notifications
+from MyListAnalyzerDash.utils import CookieHandler, get_a_proper_url
+from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, for_time
+from MyListAnalyzerDash.Components.buttons import image_button
+from MyListAnalyzerDash.Components.layout import expanding_layout
 
 
 # TODO: There's no check, if the tokens are expired or not (refresh is another task needed)

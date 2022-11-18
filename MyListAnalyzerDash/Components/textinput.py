@@ -1,6 +1,6 @@
 from dash import Input, Output, clientside_callback, ClientsideFunction, dcc, State
 import dash_mantine_components as dmc
-from MyListAnalyzer.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.layout import expanding_layout
 
 
 def validateUser(id_, disable_id, ur_name=None, just_call=False, add=False):

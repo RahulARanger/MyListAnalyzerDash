@@ -4,7 +4,7 @@ import time
 import requests
 import typing
 from flask import request, redirect, url_for, make_response
-from MyListAnalyzer.utils import CookieHandler
+from MyListAnalyzerDash.utils import CookieHandler
 from dataclasses import dataclass
 from datetime import datetime, timezone
 

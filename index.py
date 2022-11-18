@@ -1,8 +1,8 @@
 import logging
 import os
 import pathlib
-from MyListAnalyzer import __name__ as name
-from MyListAnalyzer.route_setup import build_assets, js_s
+from MyListAnalyzerDash import __name__ as name
+from MyListAnalyzerDash.route_setup import build_assets, js_s
 from dash import Dash, page_container, dcc, clientside_callback, ClientsideFunction, Input, Output, html
 import dash_mantine_components as dmc
 from dotenv import load_dotenv
@@ -24,7 +24,7 @@ class MainApplication:
                 "https://unpkg.com/embla-carousel-class-names/embla-carousel-class-names.umd.js",
                 *js_s()
             ],
-            extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzer" / "misc"]
+            extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzerDash" / "misc"]
         )
 
         clientside_callback(

@@ -1,7 +1,7 @@
 import typing
 import dash_mantine_components as dmc
-from MyListAnalyzer.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzer.mappings.enums import css_classes
+from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
+from MyListAnalyzerDash.mappings.enums import css_classes
 from dash import html, dcc
 from dash.dependencies import Component
 import logging

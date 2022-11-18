@@ -1,7 +1,7 @@
 import dash_mantine_components as dmc
-from MyListAnalyzer.Components.ModalManager import ModalManager
-from MyListAnalyzer.Components.layout import expanding_layout, expanding_scroll
-from MyListAnalyzer.utils import get_mapping
+from MyListAnalyzerDash.Components.ModalManager import ModalManager
+from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_scroll
+from MyListAnalyzerDash.utils import get_mapping
 
 
 class SettingsModel:
