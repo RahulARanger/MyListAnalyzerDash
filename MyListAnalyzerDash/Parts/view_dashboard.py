@@ -147,14 +147,14 @@ def process_overview(data, current_tab, graph_class):
     # not using generator as it becomes hard to read
     for raw, title in zip(seasons_raw, ("Up Until,", f"{current_year},")):
         loaded = json.loads(raw)
+        print(loaded, title)
 
         seasons.append(
             expanding_layout(dmc.Text(title, size="sm"), *(
                 number_card_format_2(
                     season.capitalize(), seasons_maps[season][0],
-                    value=value[0], percent_value=value[1] * 100, class_name=current_tab,
-                    color=seasons_maps[season][1])
-
+                    value=value[0] if value[0] else 0, percent_value=(value[1] if value[1] else 0) * 100,
+                    class_name=current_tab, color=seasons_maps[season][1])
                 for [season, value] in zip(loaded["index"], loaded["data"])
             )))
 
@@ -165,7 +165,10 @@ def process_overview(data, current_tab, graph_class):
     airing = json.loads(airing_dist)
 
     if not airing["data"]:
-        yield dmc.Text("Empty")
+        yield dmc.Alert(
+                dmc.Text("Not Watching Any Animes which are currently airing"),
+                color="orange", title="No Data", withCloseButton=True, variant="light",
+                icon=[dmc.Image(src=view_dashboard.no_data)])
     else:
         yield embla_container(
             core_graph(
@@ -187,7 +190,7 @@ def ep_bins_plot(series):
     bar_trace = go.Bar(
         x=series["index"], y=series["data"], text=series["data"], textposition="auto",
         marker=dict(color=colors, line=dict(width=2, color="#18191A")),
-        hovertemplate="<b><%{x}></b>: %{y}"
+        hovertemplate="<b>[%{x}]</b>: %{y}<extra></extra>"
     )
     fig.add_trace(bar_trace)
 
