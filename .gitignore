@@ -6,4 +6,4 @@ build
 MyListAnalyzerDash.egg-info
 *.pyc
 MyListAnalyzerDash/assets/*
-Raw
+Raw/*
