@@ -8,7 +8,7 @@ from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
 from MyListAnalyzerDash.Components.notifications import show_notifications
 from MyListAnalyzerDash.utils import CookieHandler, get_a_proper_url
 from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, for_time
-from MyListAnalyzerDash.Components.buttons import image_button
+from MyListAnalyzerDash.Components.buttons import icon_butt_img
 from MyListAnalyzerDash.Components.layout import expanding_layout
 
 
@@ -44,7 +44,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                 dmc.Space(h=20),
                 expanding_layout(
                     dcc.Link(
-                        image_button("https://api.iconify.design/bx/link-external.svg?color=gray", "redirect-mal"),
+                        icon_butt_img("https://api.iconify.design/bx/link-external.svg?color=gray", "redirect-mal"),
                         href="", target="_blank",
                         id=mal_creds_modal.link_id),
                     dmc.Text(

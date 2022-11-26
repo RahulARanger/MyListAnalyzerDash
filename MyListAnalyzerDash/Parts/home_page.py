@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 from MyListAnalyzerDash.utils import starry_bg
 from MyListAnalyzerDash.Components.malCreds import MalCredsModal
 from MyListAnalyzerDash.Components.layout import expanding_layout
-from MyListAnalyzerDash.Components.buttons import icon_butt
+from MyListAnalyzerDash.Components.buttons import button_with_icon
 from MyListAnalyzerDash.Components.notifications import provider
 from MyListAnalyzerDash.mappings.enums import main_app, home_page, mal_creds_modal
 
@@ -48,7 +48,7 @@ class HomePage:
     def login_things(self):
         return expanding_layout(
             dmc.Text(home_page.greet, size="xs"),
-            icon_butt(
+            button_with_icon(
                 "MyAnimeList", id_=mal_creds_modal.triggerId, image_src=mal_creds_modal.logo,
                 size="sm"),
             spacing="xl", align="center", position="center"

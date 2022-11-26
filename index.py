@@ -22,6 +22,7 @@ class MainApplication:
             external_scripts=[
                 "https://unpkg.com/embla-carousel/embla-carousel.umd.js",
                 "https://unpkg.com/embla-carousel-class-names/embla-carousel-class-names.umd.js",
+                "https://unpkg.com/embla-carousel-autoplay/embla-carousel-autoplay.umd.js",
                 *js_s()
             ],
             extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzerDash" / "misc"]

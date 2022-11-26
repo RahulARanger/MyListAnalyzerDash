@@ -1,20 +1,45 @@
 from dash import register_page
 from MyListAnalyzerDash.Parts.view_page import ViewPage
-from MyListAnalyzerDash.mappings.enums import home_page
 from MyListAnalyzerDash.utils import from_css
+from collections import namedtuple
+
+page_template = namedtuple(
+    "PageTemplate", ["title", "description", "user_job", "path", "is_template", "layout"]
+)
 
 page = ViewPage()
 page.connect_callbacks()
+common_css = from_css("user-view.css"), from_css("general-dashboard.css")
 
 
-def layout(name=""):
-    return [*page.layout(name), from_css("user-view.css"), from_css("general-dashboard.css")]
+def whole_layout(name=""):
+    return *page.layout(name), *common_css
 
 
-register_page(
-    __name__, path_template="/MLA/view/<name>", title="User View", description=home_page.description,
-    layout=layout)
+def layout_for_recently_tab(name=""):
+    return *page.layout(name, disable_user_job=True), *common_css
 
-register_page(
-    __name__ + "-general", path="/MLA/view", title="User View", description=home_page.description, layout=layout
+
+user_view_requested = page_template(
+    "User View", "User View for the requested user", True, "/MLA/view/<name>", True, whole_layout
 )
+user_view = user_view_requested._replace(
+    path="/MLA/view", description="User View for yet to request user", title="User View - Say")
+
+recent_view_requested = page_template(
+    "Recent", "Dashboard for Recently watched animes for the requested user", False, "/MLA/view-r/<name>",
+    True, layout_for_recently_tab
+)
+
+recent_view = recent_view_requested._replace(
+    path="/MLA/view-r", description="Dashboard for Recently watched animes for yet to request users", title="Recent - Say"
+)
+
+for _ in (user_view_requested, user_view, recent_view_requested, recent_view):
+    extras = {
+        ("path_template" if _.is_template else "path"): _.path
+    }
+
+    register_page(
+        __name__ + _.title, title=_.title, description=_.description, layout=_.layout, **extras
+    )

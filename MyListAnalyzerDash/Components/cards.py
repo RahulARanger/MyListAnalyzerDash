@@ -1,3 +1,4 @@
+import json
 import typing
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
@@ -95,16 +96,28 @@ def embla_slides(_slides: typing.Tuple[Component]):
     ) for card in _slides]
 
 
-def embla_container(*slides: Component, class_name: str = None, id_=""):
+def embla_container(*slides: Component, class_name: str = None, id_="", embla_options=None, plugin_options=None):
+    default_plugin_options = dict(enableAutoClass=True, enableAutoPlay=False)
+    default_plugin_options.update(plugin_options) if plugin_options else ...
+
+    default_embla_options = dict(loop=True)
+    default_embla_options.update(embla_options) if embla_options else ...
+
     embla_class = f"embla {class_name}"
     child = html.Section(
-            html.Div(
-                embla_slides(slides), className="embla__container"
-            ), className="embla__viewport"
-        ),
+        html.Div(
+            embla_slides(slides), className="embla__container"
+        ), className="embla__viewport", **{
+            "data-options": json.dumps(default_embla_options),
+            "data-plugin-options": json.dumps(default_plugin_options)
+        }
+    ),
+
+    extras = {}
+    extras.update(id=id_) if id_ else ...
 
     return html.Article(
-        child, id=id_, className=embla_class
+        child, className=embla_class, **extras
     ) if id_ else html.Article(child, className=embla_class)
 
 

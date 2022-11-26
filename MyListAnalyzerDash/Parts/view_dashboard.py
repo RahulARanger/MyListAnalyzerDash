@@ -1,7 +1,8 @@
 from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
     html
 import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps,\
+    status_light_colors
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, embla_container, \
     number_card_format_2
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
@@ -51,27 +52,31 @@ class ViewDashboard:
                 State(view_dashboard.userDetailsJobResult, "data"),
                 State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
                 State("pipe", "data"),
-                State(view_dashboard.storedName, "data"),
+                State(view_dashboard.page_settings, "data"),
                 State(dict(type=view_dashboard.tabs, index=ALL), "data"),
                 State(dict(type=postfix_tab, index=ALL), "id"),
             ]
         )
 
-    def layout(self):
+    def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
 
         tabs = []
         store = []
 
         for index, label in enumerate(view_dashboard.tab_names):
+            if index != 1 and page_settings.get("disable_user_job", False):
+                continue
+
             tabs.append(dmc.Tab(
                 children=dmc.Skeleton(dmc.Paper(
                     no_data("Please wait until results are fetched", force=True),
                     pl=10, pr=10, pb=10,
                     id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), label=label, disabled=index == 1))
+                    visible=False, animate=True), label=label, disabled=index != 0))
             store.append(
-                dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data=""))
+                dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data="")
+            )
 
         return html.Section([
             dmc.Tabs(
@@ -89,7 +94,7 @@ class ViewDashboard:
         graph_class = current_tab + "-graphs"
 
         try:
-            row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng = process_overview(
+            row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_overview(
                 data, current_tab, graph_class)
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
@@ -115,8 +120,8 @@ class ViewDashboard:
 
         return [
             __ for _ in (first_row, second_row, third_row) for __ in
-            [_, dmc.Divider(color="dark", style={"opacity": 0.5, "marginBottom": "2px"})]
-        ]
+            [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=3)]
+        ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
 
 
 def process_overview(data, current_tab, graph_class):
@@ -136,7 +141,7 @@ def process_overview(data, current_tab, graph_class):
 
     yield core_graph(
         BeautifyMyGraph(
-            title="Range of Anime Episodes", x_title="Episodes", y_title="Count",
+            title="Range of Anime Episodes", x_title="Episode Range", y_title="Number of Shows",
             show_x=True, show_y=True, show_y_grid=True, autosize=True).handle_subject(
             ep_bins_plot(json.loads(ep_range_raw))),
         apply_shimmer=False, index=1, prefix=current_tab, class_name=graph_class,
@@ -145,9 +150,8 @@ def process_overview(data, current_tab, graph_class):
 
     seasons = []
     # not using generator as it becomes hard to read
-    for raw, title in zip(seasons_raw, ("Up Until,", f"{current_year},")):
+    for raw, title in zip(seasons_raw, ("Up Until,", f"In {current_year},")):
         loaded = json.loads(raw)
-        print(loaded, title)
 
         seasons.append(
             expanding_layout(dmc.Text(title, size="sm"), *(
@@ -159,26 +163,25 @@ def process_overview(data, current_tab, graph_class):
             )))
 
     yield embla_container(
-        *seasons, class_name=graph_class, id_=dict(index=2, type=current_tab)
+        *seasons, class_name=graph_class, id_=dict(index=2, type=current_tab),
+        plugin_options=dict(enableAutoPlay=json.dumps(dict(playOnInit=True)))
     )
 
     airing = json.loads(airing_dist)
 
     if not airing["data"]:
         yield dmc.Alert(
-                dmc.Text("Not Watching Any Animes which are currently airing"),
-                color="orange", title="No Data", withCloseButton=True, variant="light",
-                icon=[dmc.Image(src=view_dashboard.no_data)])
+            dmc.Text("Not Watching Any Animes which are currently airing"),
+            color="orange", title="No Data", withCloseButton=True, variant="light",
+            icon=[dmc.Image(src=view_dashboard.no_data)])
     else:
-        yield embla_container(
-            core_graph(
-                BeautifyMyGraph(
-                    title="Currently Airing"
-                ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=3,
-                prefix=current_tab, class_name=graph_class, responsive=True),
-            gen_table_for_airing_details(json.loads(airing_detail)),
-            class_name=current_tab
-        )
+        yield core_graph(
+            BeautifyMyGraph(
+                title="Currently Airing"
+            ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=3,
+            prefix=current_tab, class_name=graph_class, responsive=True)
+
+    yield airing_detail
 
 
 def ep_bins_plot(series):
@@ -200,10 +203,10 @@ def ep_bins_plot(series):
 def currently_airing_pie(airing):
     return go.Figure(
         go.Pie(
-            hovertemplate="<b>%{label}</b><extra>%{percent} || %{value}</extra>",
+            hovertemplate="<b>%{label}</b>: %{value} || %{percent}<extra></extra>",
             labels=tuple(map(lambda x: getattr(status_labels, x), airing["index"])), values=airing["data"],
             marker=dict(
-                colors=tuple(map(lambda x: getattr(status_colors, x), airing["index"])),
+                colors=tuple(map(lambda x: getattr(status_light_colors, x), airing["index"])),
                 line=dict(width=2, color="#18191A")),
             textinfo="label+percent", pull=[
                 0.2 if status_labels.watching == getattr(status_labels, _) else 0 for _ in airing["index"]]
@@ -224,4 +227,15 @@ def gen_table_for_airing_details(raw):
         style_cell=style_cell,
         filter_action="native",
         sort_action="native",
+    )
+
+
+def over_view_s_over_view(raw):
+    loaded = gen_table_for_airing_details(json.loads(raw)) if raw else False
+
+    table = dmc.MenuItem("Currently Airing - Table", color="orange")
+
+    return dmc.Affix(
+        dmc.Menu(table, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True),
+        position=dict(right=10, bottom=10), zIndex="2"
     )

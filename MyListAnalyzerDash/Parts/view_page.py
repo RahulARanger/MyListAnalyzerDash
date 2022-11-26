@@ -13,10 +13,11 @@ from MyListAnalyzerDash.Parts.view_dashboard import ViewDashboard
 
 class ViewPage:
     def __init__(self):
-        self.header = ViewHeaderComponent()
+        super().__init__()
         self.user_name = ""
-        self.mal_session = VerySimpleMALSession()
+        self.header = ViewHeaderComponent()
         self.dashboard = ViewDashboard()
+        self.mal_session = VerySimpleMALSession()
 
     def connect_callbacks(self):
         id_, modal_id = self.header.handle_callbacks()
@@ -27,7 +28,7 @@ class ViewPage:
         callback(
             [
                 Output(view_header.validateNote, "children"),
-                Output(view_dashboard.storedName, "data"),
+                Output(view_dashboard.page_settings, "data"),
                 Output(modal_id, "opened"),
                 Output(id_, "id")
             ],
@@ -38,8 +39,7 @@ class ViewPage:
             [
                 State(view_header.askName, "value"),
                 State(modal_id, "opened"),
-                State(view_dashboard.storedName, "data"),
-                State(view_header.show_name, "children")
+                State(view_dashboard.page_settings, "data")
             ]
         )(self.validate)
 
@@ -55,7 +55,7 @@ class ViewPage:
                 Output(view_dashboard.fetchStatus, "color"),
                 Output(view_dashboard.fetchStatus, "children"),
                 Output(view_dashboard.paging + "-display", "children"),
-                Output(view_dashboard.collectThings, "data")
+                Output(view_dashboard.collectThings, "data")  # for storing the details of the requests made
             ],
             [
                 Input(view_header.show_name, "children"),
@@ -72,68 +72,80 @@ class ViewPage:
 
         self.dashboard.connect_callbacks()
 
-    def layout(self, user_name=""):
-        return [dcc.Store(id=view_dashboard.collectThings),
-                dcc.Store(id=view_dashboard.storedName),
-                dcc.Store(id=view_dashboard.userDetailsJobResult),
-                dcc.Store(id=view_dashboard.paging),
-                dcc.Location(id=view_dashboard.locationChange, refresh=False),
-                dcc.Interval(
-                    id=view_dashboard.intervalAsk, disabled=True, n_intervals=0, max_intervals=0, interval=500),
-                *starry_bg(),
-                dmc.Affix(self.header.layout(user_name), position={"top": 0, "left": 0}),
-                dmc.LoadingOverlay([
-                    dmc.ScrollArea(self.dashboard.layout(), type="auto", class_name="home half-elf"),
-                    dcc.Store(id={"type": view_dashboard.tabs, "index": 0}),
-                    dcc.Store(id={"type": view_dashboard.tabs, "index": 1})
-                ], loaderProps=main_app.loadingProps),
-                html.Section(list(self.modals), id="modals"),
-                html.Aside(id=view_dashboard.tempDataStore),
-                provider(
-                    view_dashboard.startDetails, view_header.resultForSearch,
-                    view_header.validateNote, view_dashboard.userJobDetailsNote)]
+    def layout(self, user_name="", disable_user_job=False):
+        page_settings = dict(
+            user_name=user_name, disable_user_job=disable_user_job
+        )
+
+        return [
+            dcc.Interval(
+                id=view_dashboard.intervalAsk, disabled=True, n_intervals=0, max_intervals=0,
+                interval=500),
+            dcc.Store(id=view_dashboard.collectThings),
+            dcc.Store(id=view_dashboard.page_settings, data=page_settings),
+            dcc.Store(id=view_dashboard.userDetailsJobResult), dcc.Store(id=view_dashboard.paging),
+            dcc.Location(id=view_dashboard.locationChange, refresh=False), *starry_bg(),
+            dmc.Affix(self.header.layout(page_settings), position={"top": 0, "left": 0}), dmc.LoadingOverlay([
+                dmc.ScrollArea(self.dashboard.layout(page_settings), type="hover", class_name="home half-elf"),
+                dcc.Store(id={"type": view_dashboard.tabs, "index": 0}),
+                dcc.Store(id={"type": view_dashboard.tabs, "index": 1})
+            ], loaderProps=main_app.loadingProps), html.Section(list(self.modals), id="modals"),
+            html.Aside(id=view_dashboard.tempDataStore), provider(
+                view_dashboard.startDetails, view_header.resultForSearch,
+                view_header.validateNote, view_dashboard.userJobDetailsNote)]
 
     @property
     def modals(self):
-        yield from self.header.modals
+        yield tuple()
 
-    def validate(self, _, __, name, opened, _prev, user_name):
-        first_time = not _
-        name = user_name if first_time and not name else name
-        now_name = name.lower() if name else ""
-        already_name = "" if not _prev else _prev.lower()
+    def validate(self, _, __, searched, opened, page_settings) -> typing.Tuple:
+        """
 
+        :param _: search button *click*
+        :param __: asked to search button *click*
+        :param searched: name that was searched in the search bar
+        :param opened: Modal opened ?
+        :param page_settings: page_settings
+        :return: items for the DataCollectionProto1
+        """
         trig = ctx.triggered_id
+        _saved = page_settings.get("user_name", "").lower()
+        current_name = (_saved if not (trig or searched) else searched).lower()
+        already_name = "" if not trig else _saved
 
-        asked_to_search = isinstance(trig, dict) and trig.get("type") == view_header.getName
-        so_we_search = asked_to_search or not (now_name or _)
+        action = ValidateName()
+        action.openModal = True if not trig else not opened
 
-        proto = ValidateName()
+        # if name is given or was triggered by search bar (its id is not dict type)
+        while current_name or (trig and trig != view_header.settings):
+            if current_name == already_name:
+                break
 
-        if so_we_search:
-            proto.openModal = True if first_time else not opened
-        else:
-            if now_name != already_name:
-                try:
-                    result = self.mal_session.validate_user(now_name)
-                    proto.openModal = False
-                    proto.storeName = now_name
-                    proto.note = show_notifications(
-                        f"User {now_name} exists",
-                        f"One of the Anime from Current Watchlist: {result}",
-                        color="green", auto_close=5000
-                    )
-                except Exception as _:
-                    logging.exception("Failed to validate a user %s", now_name, exc_info=True)
+            try:
+                result = self.mal_session.validate_user(current_name)
+                action.openModal = False
 
-                    proto.openModal = True
-                    proto.note = show_notifications(
-                        f"User {now_name} does not exist",
-                        f"Error Received: {_}, Please try again", color="red", auto_close=7000
-                    )
+                action.storeName = page_settings
+                action.storeName["user_name"] = current_name
+
+                action.note = show_notifications(
+                    f"User {current_name} exists",
+                    f"One of the Anime from Current Watchlist: {result}",
+                    color="green", auto_close=5000
+                )
+            except Exception as _:
+                logging.exception("Failed to validate a user %s", current_name, exc_info=True)
+
+                action.openModal = True
+                action.note = show_notifications(
+                    f"User {current_name} does not exist",
+                    f"Error Received: {_}, Please try again", color="red", auto_close=5000
+                )
+
+            break
 
         return (
-            proto.note, proto.storeName, proto.openModal, proto.just_for_loading
+            action.note, action.storeName, action.openModal, action.just_for_loading
         )
 
     def fetch_things(self, user_name, _, __, interval, temp_data, paging):
@@ -160,7 +172,8 @@ class ViewPage:
         if first_time:
             proto.note = show_notifications(
                 "Starting to Fetch the Details",
-                "Clearing previous data if present", color="orange", auto_close=2500
+                "Clearing previous data if present", color="orange", loading=True, disallowClose=True,
+                force=view_dashboard.loadingNote
             )
             proto.disable_timer = proto.disable_stop = False
             proto.disable_start = True
@@ -185,14 +198,15 @@ class ViewPage:
                 proto.note = show_notifications(
                     f"Completed User Data Fetch | {user_name}",
                     "Details were fetched successfully, Please open the necessary tabs, it will plot results for you.",
-                    color="teal", auto_close=4000
+                    color="teal", action="update", force=view_dashboard.loadingNote, auto_close=3500
                 )
 
         except Exception as _:
 
             proto.note = show_notifications(
                 "Failed to fetch the required details",
-                f"Fetch - Data Failed for the UserName: {user_name}, Reason: {_}"
+                f"Fetch - Data Failed for the UserName: {user_name}, Reason: {_}",
+                action="update", force=view_dashboard.loadingNote
             )
             completed = True
             proto.result = []  # clear prev results if failed
@@ -210,9 +224,10 @@ class ViewPage:
             return
 
         proto.note = show_notifications(
-            f"User Data - {user_name} - A Iteration Passed",
+            f"User Data - {user_name} - {len(proto.result)} Iteration{'s' if len(proto.result) else ''} Passed",
             "Checking if there's else more to fetch else will wrap things up",
-            color="pink", auto_close=3500
+            color="pink", loading=True, disallowClose=True,
+            action="update", force=view_dashboard.loadingNote
         )
         proto.status_color = "orange"
         proto.status_text = "Fetching"
@@ -225,7 +240,8 @@ def interrupt_peace(return_me: DataCollectionProto1) -> typing.NoReturn:
         "Stopped as requested",
         view_dashboard.stop_note,
         auto_close=6900,
-        color="red"
+        color="red", loading=True, disallowClose=True,
+        action="update", force=view_dashboard.loadingNote
     )
     return_me.disable_timer = return_me.disable_stop = True
     return_me.status_text = "stopped"

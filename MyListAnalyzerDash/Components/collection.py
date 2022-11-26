@@ -1,88 +1,48 @@
-from dash import ALL, callback, Input, State, Output, no_update, dcc, clientside_callback, ClientsideFunction, MATCH
+from dash import Input, State, Output, dcc, clientside_callback, ClientsideFunction
 import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import view_header, main_app, view_dashboard, css_classes
+from MyListAnalyzerDash.mappings.enums import view_header, view_dashboard, css_classes
 from MyListAnalyzerDash.Components.layout import expanding_layout
-from MyListAnalyzerDash.Components.ModalManager import get_modal, make_modal_alive, get_modal_id, enter_to_click, \
-    invalid_to_disable
-import plotly.graph_objects as go
+from MyListAnalyzerDash.Components.ModalManager import get_modal, enter_to_click, \
+    invalid_to_disable, get_modal_id
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
+from MyListAnalyzerDash.Components.buttons import icon_butt_img
+import plotly.graph_objects as go
 import typing
 
 
-def add_user(index=0, prop=False, add=False) -> typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]:
-    id_ = {"type": view_header.getName, "index": ALL}
-
+def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
+    typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
     if add:
         invalid_to_disable(view_header.askName, view_header.giveName)
         enter_to_click(view_header.askName, view_header.giveName)
+        return
 
-    id_["index"] = index
-
-    if add:
-        modal_id = get_modal_id(view_header.getName)
-        clientside_callback(
-            """function (enteredName){
-                return [
-                Boolean(enteredName), `/MLA/view/${enteredName}`,
-                enteredName, `https://myanimelist.net/profile/${enteredName}`
-            ];
-            }""",
-
-            [
-                Output(modal_id, "withCloseButton"),
-                Output(view_dashboard.locationChange, "href"),
-                Output(view_header.show_name, "children"),
-                Output(view_header.show_name + "-link", "href"),
-            ],
-            Input(view_dashboard.storedName, "data")
-        )
-
-        return id_, modal_id
-
-    if prop:
-        return dmc.MenuItem("Search User 🔍", id=id_, color="teal")
-
-    name = dcc.Input(
-        value="", id=view_header.askName, placeholder="Enter Name!", autoFocus=True,
+    name_input = dcc.Input(
+        value="", id=view_header.askName, placeholder="Enter Name!", autoFocus=False,
         pattern=r'^\w+$', required=True, className="mantine-TextInput-filledVariant mantine-TextInput-input"
     )
+    add_in_case = (dmc.Alert(
+        [
+            "Some Tabs are disabled because fetching user details is not required. ",
+            "Please visit ", dcc.Link("view", href="/MLA/view"), " in case needed."
+        ],
+        title="Recent Animes are only needed", color="yellow", variant="filled"
+    ),) if disable_user_job else tuple()
 
-    return get_modal(
-        view_header.getName, "Search User 🔍",
+    return expanding_layout(
+        *add_in_case,
+        dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="filled"),
+        dmc.Space(h=10),
         expanding_layout(
-            dmc.Alert("We can only search for the Public Users.", color="orange", title="Note", variant="filled"),
-
-            expanding_layout(
-                name,
-                dmc.Button("+", id=view_header.giveName, color="gray", size="xs"), direction="row", align="center",
-            )
-        ), closeable=False
+            name_input,
+            dmc.Button(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="gray", size="xs"),
+            direction="row", align="center",
+        )
     )
 
 
-def default_collections():
-    return [dcc.Store(main_app.me, storage_type="memory")]
-
-
-def collections(prop=False, add=False):
-    if prop:
-        return dmc.MenuItem(
-            "Collections", color="orange", id=view_header.collection, icon=[dmc.Image(src=view_header.collectionImage)]
-        )
-
+def user_details_tab(add=False):
     if add:
-        clientside_callback(
-            ClientsideFunction(
-                namespace="MLA",
-                function_name="enableEmblaForRequestDetails"
-            ),
-            Output(get_modal_id(view_header.collection), "id"),
-            [
-                Input(get_modal_id(view_header.collection), "opened"),
-                Input(view_header.collectionTabs, "active")
-            ]
-        )
-
         clientside_callback(
             ClientsideFunction(
                 namespace="MLA",
@@ -92,20 +52,19 @@ def collections(prop=False, add=False):
             Input(view_dashboard.collectThings, "data"),
             [
                 State({"index": 0, "type": css_classes.request_details}, "figure"),
-                State(view_dashboard.storedName, "data")
+                State(view_dashboard.page_settings, "data")
             ]
         )
-
-        return make_modal_alive(view_header.collection)
+        return
 
     row_1 = expanding_layout(
         dmc.Button(
             dmc.Image(src=view_dashboard.startButt), color="dark",
-            id=view_dashboard.startButtTrigger, size="xs"),
+            id=view_dashboard.startButtTrigger, size="xs", disabled=True),
         dmc.Badge("🤷", color="yellow", id=view_dashboard.fetchStatus),
         dmc.Button(
             dmc.Image(src=view_dashboard.stopButt), color="dark",
-            id=view_dashboard.stopButtTrigger, size="xs"),
+            id=view_dashboard.stopButtTrigger, size="xs", disabled=True),
         direction="row", align="center", no_wrap=True
     )
 
@@ -130,52 +89,58 @@ def collections(prop=False, add=False):
         figure, responsive=True, class_name=css_classes.request_details,
         prefix=css_classes.request_details, index=0
     )
-
-    tab_1 = dmc.Tab(children=expanding_layout(
+    return expanding_layout(
         row_1,
         dmc.Divider(color="orange"),
         request_graph,
         dmc.Divider(color="orange"),
         row_3
-    ), label="User Detail")
-
-    s_row_1 = expanding_layout(
-        dmc.Switch(
-            label="Do not Open this Modal", offLabel="No", onLabel="Yes", color="orange",
-            persistence="true", persistence_type="local", id=view_header.autoOpen
-        ),
-        dmc.Switch(
-            label="Do not auto fetch the User Details", offLabel="No", onLabel="Yes", color="orange",
-            persistence="true", persistence_type="local", id=view_header.autoRun
-        ),
-        direction="row"
     )
 
-    s_row_2 = expanding_layout(
-        dmc.Switch(
-            label="nsfw", color="red", persistence="true", persistence_type="local",
-            offLabel="🫣", onLabel="😏"
+
+def settings_tabs(add=False, disable_user_job=False):
+    if add:
+        return search_user_tab(add=add), user_details_tab(add)
+
+    return dmc.Tabs(
+        [dmc.Tab(
+            search_user_tab(disable_user_job=disable_user_job), label="Search User 🔍"
         ),
-        direction="row"
+            dmc.Tab(
+                user_details_tab(),
+                label="User Details", disabled=disable_user_job
+            )], color="orange", id=view_header.settingsTabs
     )
 
-    settings = dmc.Paper(
-        expanding_layout(
-            dmc.Text("At Every Visit,", size="sm", color="orange"),
-            s_row_1,
-            dmc.Divider(color="orange"),
-            dmc.Text("For Every Fetch,", size="sm", color="teal"),
-            s_row_2,
-            dmc.Divider(color="orange"),
+
+def settings_modal(
+        page_settings: typing.Optional[typing.Dict[str, typing.Union[str, bool]]] = None, prop=False,
+        add=False):
+    if add:
+        modal_id = get_modal_id(view_header.settings)
+        clientside_callback(
+            ClientsideFunction(
+                namespace="MLA",
+                function_name="set_view_url_after_search"),
+            [
+                Output(modal_id, "withCloseButton"),
+                Output(view_dashboard.locationChange, "href"),
+                Output(view_header.show_name, "children"),
+                Output(view_header.show_name + "-link", "href"),
+            ],
+            Input(view_dashboard.page_settings, "data"),
+            State(view_dashboard.locationChange, "href"),
         )
-    )
+        settings_tabs(add=True)
+        return view_header.settings, modal_id
+
+    if prop:
+        return icon_butt_img(
+            view_header.settingsImage, view_header.settings
+        )
 
     return get_modal(
-        view_header.collection,
-        "Collections 🫙",
-        dmc.Tabs(
-            [tab_1,
-                dmc.Tab(settings, label="Settings")],
-            color="orange", id=view_header.collectionTabs),
-        ease_close=False, size="lg"
+        view_header.settings,
+        "Settings",
+        settings_tabs(disable_user_job=page_settings.get("disable_user_job", False)), closeable=False, size="lg"
     )

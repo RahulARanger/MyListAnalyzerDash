@@ -1,11 +1,10 @@
 from collections import namedtuple
 
 main_app = namedtuple("MainApplication", [
-    "loadApp", "loadingProps", "about", "repo", "body", "me", "collections"
+    "loadApp", "loadingProps", "about", "repo", "body", "me"
 ])(
     "__app_load", {"variant": "bars", "color": "orange", "size": "xl"},
-    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user",
-    "user-collections-mla"
+    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user"
 )
 
 home_page = namedtuple("HomePage", [
@@ -18,47 +17,23 @@ home_page = namedtuple("HomePage", [
     ], "mal-home"
 )
 
-main_page_dashboard = namedtuple("MainPageDashBoard", [
-    "tab", "tabIDs", "checks", "pages", "segment", "color_map", "intro_cards", "general_pies"
-])(
-    "tabs-for-main-page-dashboard", [
-        "general",
-        "recent",
-        "overview"
-    ], "dashboard-check", "paginate-graph", "graph-option-segment", {
-        "completed": "green", "plan_to_watch": "yellow", "dropped": "red", "on_hold": "orange"
-    }, [["teal", "indigo", "blue", "pink"], ["Total Animes", "Time Spent (hrs)", "Watching", "Not yet Aired"]],
-    "general-pies-user"
-)
-
-main_page_view = namedtuple(
-    "MainPageView",
-    [
-        "link_skip", "tabs", "collectThings",
-        "intervalAsk", "startDetails", "storedName",
-        "userDetailsJobResult", "start_note", "disableWhile"
-    ]
-)(
-    "go-to-home", "dashboard-tabs", "collect-session",
-    "ask-in-interval", "start-details-fetch-view", "stored-name", "result-for-fetch",
-    "Starting Timer...", "disable-while"
-)
-
 view_header = namedtuple(
     "ViewHeader",
     [
-        "collection", "settings", "askName", "getName", "requestDetails",
-        "re_fetch", "genresCount", "studiosCount", "collectionImage", "addUser", "giveName", "appName", "short_name",
-        "home", "show_name", "resultForSearch", "validateNote", "collectionTabs", "autoOpen", "autoRun"
+        "settings", "askName", "getName", "requestDetails",
+        "re_fetch", "genresCount", "studiosCount", "addUser", "giveName", "appName", "short_name",
+        "home", "show_name", "resultForSearch", "validateNote", "settingsTabs", "settingsImage", "addImage",
+        "searchAlert"
     ]
 )(
-    "view-board-table-details", "view-settings", "ask-user-name", "get-user-name", "request-details",
+    "view-settings", "ask-user-name", "get-user-name", "request-details",
     "data-descriptive-fetch", "genres-count", "studios-count",
-    "https://api.iconify.design/flat-color-icons/database.svg",
     'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer",
     "MLA",
-    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-collection-tabs", "view-collection-open",
-    "view-collection-auto-run"
+    "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-settings-tabs",
+    "https://api.iconify.design/line-md/cloud-print-loop.svg?color=lightblue",
+    "https://api.iconify.design/line-md/plus.svg?color=darkorange",
+    "We can only search for the public users. If any filters needed beforehand, Please apply them as provided in the filters tab"
 )
 
 dashboard = namedtuple(
@@ -69,20 +44,21 @@ view_dashboard = namedtuple(
     "viewDashBoard",
     [
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
-        "startDetails", "tabs", "stop_note", "start_note", "storedName", "startButt", "stopButt", "paging",
+        "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "stopButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
-        "row_1_colors", "tab_names", "no_data"
+        "row_1_colors", "tab_names", "no_data", "loadingNote"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
     "start-details-fetch-view", "view-dashboard-tabs",
     "Please Note, When Stopped, we will be deleting everything that was collected before",
-    "Starting Timer...", "user-stored-name",
+    "Starting Timer...", "mla-page_settings",
     "https://api.iconify.design/codicon/run-above.svg?color=green",
     "https://api.iconify.design/codicon/run-errors.svg?color=red",
     "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view", "note-user-job-details",
-    ["teal", "indigo", "blue", "pink"], ["Overview", "Belts"],
-    "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray"
+    ["teal", "indigo", "blue", "pink"], ["Overview", "Recently", "Belts"],
+    "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
+    "loading-user-details-view"
 )
 
 creds_modal = namedtuple(
@@ -126,6 +102,7 @@ _status_map = namedtuple(
 )
 
 status_colors = _status_map("blue", "indigo", "green", "yellow", "red")
+status_light_colors = _status_map("#2B4F60", "#FF8243", "#FFCB42", "#FFE300", "#E64848")
 status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")
 
 

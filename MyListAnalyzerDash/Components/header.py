@@ -3,7 +3,7 @@ from MyListAnalyzerDash.Components.layout import expanding_layout
 import typing
 from dash import dcc, clientside_callback, Input, Output
 from MyListAnalyzerDash.mappings.enums import view_header
-from MyListAnalyzerDash.Components.collection import add_user, collections
+from MyListAnalyzerDash.Components.collection import settings_modal
 
 
 class CommonHeaderComponent:
@@ -16,19 +16,6 @@ class CommonHeaderComponent:
     def handle_callbacks(self):
         ...
 
-    @property
-    def menu_items(self) -> typing.List[typing.Union[dmc.MenuItem, dmc.MenuLabel]]:
-        return [
-            # dmc.Divider(label="Help", labelPosition="center"),
-            # dmc.MenuItem("Docs", color="teal"),
-            # dmc.MenuItem("About", id=self.about, color="orange"),
-            # dmc.MenuItem("ChangeLog", id=self._mapping.changeLog, color="orange")
-        ]
-
-    @property
-    def _menu(self):
-        return dmc.Menu(self.menu_items)
-
     def layout(self, *args):
         inside_header = self.inside_header(*args)
         return dmc.Header(expanding_layout(
@@ -37,13 +24,9 @@ class CommonHeaderComponent:
 
             expanding_layout(
                 *(tuple() if not inside_header else inside_header),
-                self._menu, spacing="sm", direction="row", align="center", position="right"
+                spacing="sm", direction="row", align="center", position="right"
             ), direction="row"
         ))
-
-    def modals(self) -> typing.Sequence[dmc.Modal]:
-        ...
-        # yield embed_about(self._about)
 
 
 class ViewHeaderComponent(CommonHeaderComponent):
@@ -52,27 +35,16 @@ class ViewHeaderComponent(CommonHeaderComponent):
 
         self.queries = view_header
 
-    @property
-    def menu_items(self) -> typing.List[typing.Union[dmc.MenuItem, dmc.MenuLabel]]:
-        return [
-            add_user(prop=True, index=0),
-            collections(prop=True)
-        ]
-
     def handle_callbacks(self):
-        collections(add=True)
-        return add_user(add=True)
+        return settings_modal(add=True)
 
-    @property
-    def modals(self) -> typing.Sequence[dmc.Modal]:
-        yield add_user()
-        yield collections()
+    def inside_header(self, page_settings):
+        user_name = page_settings.get("user_name", "")
 
-    def inside_header(self, user_name="") -> typing.Tuple[typing.Any]:
         link = view_header.show_name + '-link'
         return dcc.Link(
             dmc.Badge(color="orange", id=view_header.show_name, children=user_name), href="", id=link, target="_blank"
-        ),
+        ), settings_modal(prop=True), settings_modal(page_settings)
 
 
 def header_link(title, short, url):

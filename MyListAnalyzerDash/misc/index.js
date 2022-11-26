@@ -34,9 +34,9 @@ function refreshTabs(_, tabID){
     return enablePlainEmbla(tab_index);
 }
 
-
-
-function requestDetails(perf, _prev, user_name){
+function requestDetails(perf, _prev, page_settings){
+    const user_name = page_settings?.user_name ?? "";
+    
     if(!perf) return say_no(1)[0];
 
     const previous = structuredClone(_prev);
@@ -61,14 +61,6 @@ function requestDetails(perf, _prev, user_name){
     return previous;
 }
 
-function enableEmblaForRequestDetails(){
-    enable_embla({
-        loop: true
-      }); // no dragging please
-    return window.dash_clientside.no_update;
-}
-
-
 function failedToAskMALAPI(){
     return ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzer")
 }
@@ -82,6 +74,22 @@ function refreshTab(_, label_id){
 }
 
 
+function set_view_url_after_search(page_settings, url){
+    const user_name = page_settings?.user_name ?? "";
+    const url_regex = new RegExp("\/MLA\/view([a-z\-].)?");
+    const result = url_regex.exec(url);
+
+    const final_result = result ? `${result[0]}/${user_name}` : `/MLA/view/${user_name}`
+    
+    return [
+        Boolean(user_name),
+        final_result,
+        user_name,
+        `https://myanimelist.net/profile/${user_name}`
+    ]
+}
+
+
 
 async function processUserDetailsWhenNeeded(
     timer_is_stopped,
@@ -90,7 +98,7 @@ async function processUserDetailsWhenNeeded(
        stored_user_anime_list, // stored after processing from the raw 
         fresh_raw_fetched, // what it is fetched through the timer
          pipe, // URL for MLA-API
-          user_name,
+          page_settings,
            purified_tab_data,
             tab_labels  
             ){
@@ -100,13 +108,17 @@ async function processUserDetailsWhenNeeded(
     // if nobody called you, just DASH called you to know then say "no_update"
     if(ctx.length === 0) return said_no;
 
+    const user_name = page_settings?.user_name ?? "";
     const tab_index = _index ?? 0;
     const from_tabs = ctx[0].prop_id.includes("tab"); // does it because of switching tabs
 
+    const tab_name = tab_labels[tab_index]?.index;
+    
     if(from_tabs){
         refreshTab(null, tab_labels[tab_index]); // it will be nice to have this 
         // might need some review if refresh needed for every tab switch
     }
+
     const is_completed = from_tabs ? !(Boolean(stored_user_anime_list) && Boolean(purified_tab_data[tab_index])) : (timer_is_stopped && completed_color === "green" && fresh_raw_fetched.length > 0);
     // if it is coming because of tabs, then check if you have fetched data before, else check if timer is stopped and process is successful.
     
@@ -123,23 +135,14 @@ async function processUserDetailsWhenNeeded(
     const body = {timezone: getTimezone()}
 
     
-    switch(tab_index){
-        case 0:{
-            body.data = from_tabs ? stored_user_anime_list : fresh_raw_fetched.flat();
-            break;  // this idiot
-        }
-
-        case 1:{
-            body.data = ""
-        }
-    }
+    body.data = from_tabs ? stored_user_anime_list : fresh_raw_fetched.flat();
 
     let response = {};
 
     if(body.data){
         const ask = new Request(
-            `${pipe}/MLA/user_details/process/${tab_index}`,
-             {"method": "POST", "body": JSON.stringify(body), "headers": {"Content-Type": "application/json"}}
+            `${pipe}/MLA/user_details/process/${tab_name}`,
+             {method: "POST", body: JSON.stringify(body), headers: {"Content-Type": "application/json"}}
             );
     
         response = await fetch(ask).then(
@@ -148,7 +151,7 @@ async function processUserDetailsWhenNeeded(
                     return Promise.reject(response);
                 
                 response_template.failed = false;
-                response_template.so = "Passed!"
+                response_template.so = `${tab_name} is now ready.`
                 return response.json();
     
             }).catch((response) => {
@@ -161,11 +164,11 @@ async function processUserDetailsWhenNeeded(
     }
     else{
         response_template.failed = true;
-        response_template.so = ["Request body is empty because there of empty user anime list.", " but if you think there is, then please raise in ", ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzerDash")];
+        response_template.so = [
+            "Request body is empty either because of data is not yet fetched or there was no data for the requested user, else it might be an error.",
+             " But either way please ping in  ",
+              ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzerDash/issues")];
     }
-    
-
-    
 
     return [
         response_template.split_from, dmc_notification(
@@ -183,8 +186,8 @@ async function processUserDetailsWhenNeeded(
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     "MLA": {
         requestDetails,
-        enableEmblaForRequestDetails,
         processUserDetailsWhenNeeded,
-        refreshTab
+        refreshTab,
+        set_view_url_after_search
     }
 });

@@ -73,3 +73,4 @@ def invalid_to_disable(text_id: str, button_id: str, action: str = "value") -> t
         Input(text_id, action),
         State(text_id, "id")
     )
+

@@ -6,15 +6,25 @@ import string
 from MyListAnalyzerDash.utils import set_timestamp
 
 
-def show_notifications(title: object, *message: object, auto_close: typing.Union[bool, int] = False, color: object = "red") -> object:
+def show_notifications(
+        title: object,
+        *message: object,
+        auto_close: typing.Union[bool, int] = False,
+        color: object = "red",
+        action="show",
+        loading=False,
+        force="",
+        disallowClose=False
+) -> object:
     return dmc.Notification(
         title=set_timestamp(title),
         color=color,
         autoClose=auto_close,
-        disallowClose=False,
+        disallowClose=disallowClose,
         message=message,
-        action="show",
-        id="".join(random.choices(string.ascii_letters, k=10))
+        action=action,
+        id="".join(random.choices(string.ascii_letters, k=10)) if not force else force,
+        loading=loading
     )
 
 
