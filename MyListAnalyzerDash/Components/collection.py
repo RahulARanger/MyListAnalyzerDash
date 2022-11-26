@@ -11,7 +11,7 @@ import typing
 
 
 def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
-    typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
+        typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
     if add:
         invalid_to_disable(view_header.askName, view_header.giveName)
         enter_to_click(view_header.askName, view_header.giveName)
@@ -36,7 +36,7 @@ def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
         expanding_layout(
             name_input,
             dmc.Button(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="gray", size="xs"),
-            direction="row", align="center",
+            direction="row", align="center", no_wrap=True
         )
     )
 
