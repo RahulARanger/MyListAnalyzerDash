@@ -6,6 +6,22 @@ from MyListAnalyzerDash.mappings.enums import css_classes
 from dash import html, dcc
 from dash.dependencies import Component
 import logging
+from dataclasses import dataclass, asdict, Field
+
+
+@dataclass
+class SplideOptions:
+    # Subset of options presented in https://splidejs.com/guides/options
+    type: str = "slide"
+    autoplay: bool = False
+    rewind: bool = False
+    arrows: bool = False
+    pagination: bool = False
+    width: str = "200px"
+    mediaQuery: str = "min"
+
+    def embeded(self):
+        return json.dumps(asdict(self))
 
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
@@ -90,35 +106,31 @@ def number_card_format_1(
         class_name=f"number-card {class_name}")
 
 
-def embla_slides(_slides: typing.Tuple[Component]):
-    return [html.Aside(
-        card, className="embla__slide"
+def splide_slides(_slides: typing.Tuple[Component]):
+    return [html.Li(
+        card, className="splide__slide"
     ) for card in _slides]
 
 
-def embla_container(*slides: Component, class_name: str = None, id_="", embla_options=None, plugin_options=None):
-    default_plugin_options = dict(enableAutoClass=True, enableAutoPlay=False)
-    default_plugin_options.update(plugin_options) if plugin_options else ...
-
-    default_embla_options = dict(loop=True)
-    default_embla_options.update(embla_options) if embla_options else ...
-
-    embla_class = f"embla {class_name}"
-    child = html.Section(
-        html.Div(
-            embla_slides(slides), className="embla__container"
-        ), className="embla__viewport", **{
-            "data-options": json.dumps(default_embla_options),
-            "data-plugin-options": json.dumps(default_plugin_options)
-        }
+def splide_container(
+        *slides: Component,
+        class_name: str = None,
+        id_="",
+        splide_options: SplideOptions = SplideOptions()
+):
+    splide_class = f"splide {class_name}"
+    child = html.Div(
+        html.Ul(
+            splide_slides(slides), className="splide__list"
+        ), className="splide__track"
     ),
 
-    extras = {}
+    extras = {"data-splide": splide_options.embeded()}
     extras.update(id=id_) if id_ else ...
 
-    return html.Article(
-        child, className=embla_class, **extras
-    ) if id_ else html.Article(child, className=embla_class)
+    return html.Section(
+        child, className=splide_class, **extras, style=dict(minWidth="20%")
+    )
 
 
 def number_card_format_2(label, icon, value=0, color="red", percent_value=0, class_name=None):

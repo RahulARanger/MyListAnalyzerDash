@@ -84,6 +84,8 @@ article.expanding-row{
 div.Overview-graphs{
     height: calc(100vh - 43vh - 69px);
     min-height: 190px;
+    padding: 10px;
+    box-sizing: border-box;
 }    
 
 div.Overview-graphs[id^='{"index":1']{
@@ -91,16 +93,19 @@ div.Overview-graphs[id^='{"index":1']{
     min-width: calc(200px + 25vw);
 }
 
-article.Overview-graphs[id^='{"index":2']{
-    min-width: 200px;
-    max-width: 250px;
-    padding: 0px 10px;
-}
 
-
-div.Overview-graphs[id^='{"index":3']{
+div.Overview-graphs[id^='{"index":2']{
     /* current airing pie */
-    min-width: calc(150px + 3vw) !important;
+    min-width: calc(200px + 1.75vw) !important;
     flex-grow: 1;
     box-sizing: border-box;
+}
+
+.corner{
+    background-color: orangered;
+}
+
+.corner:hover{
+    -webkit-animation: 1s wiggle ease infinite;
+          animation: 1s wiggle ease infinite;
 }

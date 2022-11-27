@@ -3,8 +3,8 @@ from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientsi
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps,\
     status_light_colors
-from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, embla_container, \
-    number_card_format_2
+from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
+    number_card_format_2, SplideOptions
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
 import json
@@ -71,7 +71,7 @@ class ViewDashboard:
             tabs.append(dmc.Tab(
                 children=dmc.Skeleton(dmc.Paper(
                     no_data("Please wait until results are fetched", force=True),
-                    pl=10, pr=10, pb=10,
+                    pr=15, pb=5, mb=10,
                     id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
                     visible=False, animate=True), label=label, disabled=index != 0))
             store.append(
@@ -94,17 +94,29 @@ class ViewDashboard:
         graph_class = current_tab + "-graphs"
 
         try:
-            row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_overview(
+            time_spent, row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_overview(
                 data, current_tab, graph_class)
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
 
-        first_row = expanding_row(*(
+        cards = [
             number_card_format_1(
                 number=value, label=label,
                 color=color, class_name=current_tab, is_percent=False)
             for value, label, color in row_1
-        ))
+        ]
+
+        spent_container = splide_container(*(
+            number_card_format_1(
+                number=spent[0], label=spent[1], color=view_dashboard.time_spent_color, class_name=current_tab,
+                is_percent=False
+            )
+            for spent in time_spent
+        ), splide_options=SplideOptions(autoplay=True, type="loop", width="210px"))
+
+        cards.insert(1, spent_container)
+
+        first_row = expanding_row(*cards, style=dict(justifyContent="center"))
 
         second_row = expanding_row(*(
             number_card_format_1(
@@ -115,7 +127,8 @@ class ViewDashboard:
         ))
 
         third_row = expanding_row(
-            ep_range, seasonal_info, wht_the_dog_dng, style=dict(gap="1rem")
+            ep_range, seasonal_info, wht_the_dog_dng,
+            style=dict(gap="1rem", alignContent="center", alignItems="center", justifyContent="center")
         )
 
         return [
@@ -126,10 +139,13 @@ class ViewDashboard:
 
 def process_overview(data, current_tab, graph_class):
     row_1 = data["row_1"]
+    time_spent = data["time_spent"]
     row_2 = json.loads(data["row_2"])
     ep_range_raw, seasons_raw, airing_dist, airing_detail, current_year = data["row_3"]
 
+    yield time_spent
     yield zip(row_1["values"], row_1["keys"], view_dashboard.row_1_colors)
+
     yield zip(
         map(lambda x: getattr(status_labels, x), row_2["index"]),
         row_2["data"], map(lambda x: getattr(status_colors, x), row_2["index"])
@@ -160,11 +176,10 @@ def process_overview(data, current_tab, graph_class):
                     value=value[0] if value[0] else 0, percent_value=(value[1] if value[1] else 0) * 100,
                     class_name=current_tab, color=seasons_maps[season][1])
                 for [season, value] in zip(loaded["index"], loaded["data"])
-            )))
+            ), style=dict(padding="3px")))
 
-    yield embla_container(
-        *seasons, class_name=graph_class, id_=dict(index=2, type=current_tab),
-        plugin_options=dict(enableAutoPlay=json.dumps(dict(playOnInit=True)))
+    yield splide_container(
+        *seasons, class_name=graph_class, splide_options=SplideOptions(autoplay=True, type="loop", width="250px")
     )
 
     airing = json.loads(airing_dist)
@@ -178,7 +193,7 @@ def process_overview(data, current_tab, graph_class):
         yield core_graph(
             BeautifyMyGraph(
                 title="Currently Airing"
-            ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=3,
+            ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=2,
             prefix=current_tab, class_name=graph_class, responsive=True)
 
     yield airing_detail
@@ -236,6 +251,8 @@ def over_view_s_over_view(raw):
     table = dmc.MenuItem("Currently Airing - Table", color="orange")
 
     return dmc.Affix(
-        dmc.Menu(table, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True),
+        dmc.Menu(
+            table, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True,
+            class_name="corner", shadow="xl"),
         position=dict(right=10, bottom=10), zIndex="2"
     )

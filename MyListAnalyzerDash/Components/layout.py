@@ -11,7 +11,6 @@ def expanding_layout(
         style=None,
         class_name=None,
         reverse=False,
-        grow=True,
         id_=None,
         no_wrap=False,
         grow_child=False
@@ -19,17 +18,16 @@ def expanding_layout(
     extras = {"id": id_}
     extras.pop("id") if not id_ else ...
 
+    _style = dict(height="100%", flexGrow=1, flexDirection=direction + ("-reverse" if reverse else ""))
+    _style.update(style) if style else ...
+
     return dmc.Group(
         children=children,
         spacing=spacing,
         direction=direction,
         position=position,
         align=align,
-        style=None if style is False else {
-            "flexDirection": direction + ("-reverse" if reverse else ""),
-            "flexGrow": "initial" if grow is False else 1 if grow is True else grow,
-            "height": "initial" if grow is False else "100%"
-        },
+        style=_style,
         class_name=class_name,
         noWrap=no_wrap,
         grow=grow_child, **extras

@@ -68,7 +68,7 @@ function failedToAskMALAPI(){
 
 function refreshTab(_, label_id){
     animateCounters(label_id?.index);
-    enable_embla();
+    enable_splide();
 
     return say_no(1)[0];
 }

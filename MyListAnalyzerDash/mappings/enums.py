@@ -46,7 +46,7 @@ view_dashboard = namedtuple(
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
         "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "stopButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
-        "row_1_colors", "tab_names", "no_data", "loadingNote"
+        "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
@@ -56,9 +56,10 @@ view_dashboard = namedtuple(
     "https://api.iconify.design/codicon/run-above.svg?color=green",
     "https://api.iconify.design/codicon/run-errors.svg?color=red",
     "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view", "note-user-job-details",
-    ["teal", "indigo", "blue", "pink"], ["Overview", "Recently", "Belts"],
+    ["teal", "blue", "pink"], ["Overview", "Recently", "Belts"],
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
-    "loading-user-details-view"
+    "loading-user-details-view",
+    "indigo"
 )
 
 creds_modal = namedtuple(

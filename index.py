@@ -20,9 +20,7 @@ class MainApplication:
             update_title="Loading...",
             use_pages=True,
             external_scripts=[
-                "https://unpkg.com/embla-carousel/embla-carousel.umd.js",
-                "https://unpkg.com/embla-carousel-class-names/embla-carousel-class-names.umd.js",
-                "https://unpkg.com/embla-carousel-autoplay/embla-carousel-autoplay.umd.js",
+                "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js",
                 *js_s()
             ],
             extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzerDash" / "misc"]
