@@ -1,38 +1,17 @@
 'use strict';
 
-
-function decide_refresh_path(isDisabled, tabIndex, prevValues, modified, labels){
-    // just save current time in seconds
-    const values = replicate_no(prevValues.length);
-    
-    if(!isDisabled){ return values};
-    
-    
-    const tab_index = Number(tabIndex ?? 0);
-    refreshTabs(null, labels[tab_index]);  // only refresh when switching tabs
-
-    
-    const current = Number(prevValues[tab_index] ?? -1);
-    const now = Number(modified ?? -1);
-    // update if the modified time is not same as the recorded ones
-    values[tab_index] = current === now ? values[tab_index] : Math.max(current, now);
-    return values;
-}
-
-
-
 function animateCounters(tabIndex){
     Array(...document.querySelectorAll(`.count-number.${tabIndex}`)).map((x) => animateRawNumbers(x));
     return window.dash_clientside.no_update;
 }
 
 
-
-function refreshTabs(_, tabID){
-    const tab_index = tabID?.index;
-    animateCounters(tab_index);
-    return enablePlainEmbla(tab_index);
+function formatTimers(){
+    document.querySelectorAll(".need_to_time_format").forEach(
+        (e) => new FormattedTimeElement(e)
+    );
 }
+
 
 function requestDetails(perf, _prev, page_settings){
     const user_name = page_settings?.user_name ?? "";
@@ -67,8 +46,9 @@ function failedToAskMALAPI(){
 
 
 function refreshTab(_, label_id){
-    animateCounters(label_id?.index);
     enable_splide();
+    animateCounters(label_id?.index);
+    formatTimers();
 
     return say_no(1)[0];
 }
@@ -90,94 +70,175 @@ function set_view_url_after_search(page_settings, url){
 }
 
 
+class ProcessUserDetails{
+    tab_settings = [
+        [true, false],
+        [false, true]
+    ];
+    // list [tab of] send user details, recent_animes
 
-async function processUserDetailsWhenNeeded(
-    timer_is_stopped,
-     _index,
-      completed_color,
-       stored_user_anime_list, // stored after processing from the raw 
-        fresh_raw_fetched, // what it is fetched through the timer
-         pipe, // URL for MLA-API
-          page_settings,
-           purified_tab_data,
-            tab_labels  
-            ){
-    const ctx = dash_clientside.callback_context.triggered;
-    const said_no = say_no(1)[0];
-    
-    // if nobody called you, just DASH called you to know then say "no_update"
-    if(ctx.length === 0) return said_no;
+    response_template = {
+        failed: true,
+        reason: "Mostly blocked due to CORS Error, or might be backend API is sleeping 😴😴😴.",
+        tab_cache: null,
+        drip_cache: say_no(1)[0],
+        recent_animes_cache: say_no(1)[0]
+    };
 
-    const user_name = page_settings?.user_name ?? "";
-    const tab_index = _index ?? 0;
-    const from_tabs = ctx[0].prop_id.includes("tab"); // does it because of switching tabs
+    tab_index;
+    tab_name;
+    user_name;
 
-    const tab_name = tab_labels[tab_index]?.index;
-    
-    if(from_tabs){
-        refreshTab(null, tab_labels[tab_index]); // it will be nice to have this 
-        // might need some review if refresh needed for every tab switch
+    constructor(tab_index, tab_names, user_name){
+        this.tab_index = tab_index ?? 0;
+        this.tab_name = tab_names[this.tab_index]?.index;
+        this.user_name = user_name;
+
+        refreshTab(null, tab_names[this.tab_index]);
     }
 
-    const is_completed = from_tabs ? !(Boolean(stored_user_anime_list) && Boolean(purified_tab_data[tab_index])) : (timer_is_stopped && completed_color === "green" && fresh_raw_fetched.length > 0);
-    // if it is coming because of tabs, then check if you have fetched data before, else check if timer is stopped and process is successful.
-    
-    if(!is_completed) return said_no;
-    // if not completed, then say "no_update"
+    prepBody(user_details, recent_animes, processAgain){
+        const data = {}
 
-    
-    const split_from = purified_tab_data.length;
-    const response_template = {
-        failed: true, so: "Unknown, Failed before doing anything.",
-        split_from: say_no(split_from)
+        const _set = this.tab_settings[this.tab_index];
+
+        const send_recent_animes = !processAgain && _set[1];
+        if(processAgain || _set[0]) data.user_anime_list = user_details;
+        if(send_recent_animes) data.recent_animes = recent_animes;
+
+        // if asked to process again, we need to send the raw user anime list regardless of the active tab
+        // if asked to process again, we should not send the recent animes regardless of the active tab.
+        
+        return {
+            timezone: getTimezone(),
+            user_name: this.user_name,
+            data,
+            need_to_parse_recent: send_recent_animes
+        }
     }
 
-    const body = {timezone: getTimezone()}
-
-    
-    body.data = from_tabs ? stored_user_anime_list : fresh_raw_fetched.flat();
-
-    let response = {};
-
-    if(body.data){
+    async sendRequest(pipe, ...args){
+        const requestBody = this.prepBody(...args);
+        
         const ask = new Request(
-            `${pipe}/MLA/user_details/process/${tab_name}`,
-             {method: "POST", body: JSON.stringify(body), headers: {"Content-Type": "application/json"}}
-            );
+            `${pipe}/MLA/user_anime_list/process/${this.tab_name}`,
+             {
+                method: "POST",
+                body: JSON.stringify(requestBody),
+                headers: {"Content-Type": "application/json"}
+            }
+        );
     
-        response = await fetch(ask).then(
-            function(response){
+        const resp = await fetch(ask).then(
+            (response) => {
                 if(!response.ok)
                     return Promise.reject(response);
-                
-                response_template.failed = false;
-                response_template.so = `${tab_name} is now ready.`
+
+                this.response_template.failed = false;
                 return response.json();
     
-            }).catch((response) => {
-                response_template.so = response.status ? `${response.status} : ${response.statusText}` : ["MAL Server didn't respond, Please raise an issue in ", failedToAskMALAPI()]
-                return false;
-            });
-    
-        
-        response_template.split_from[tab_index] = response?.meta || said_no;
+            }).catch(async (response) => {
+                const reason = await response.text();
+                this.response_template.reason = reason ? reason : this.response_template.reason;
+                return say_no(1)[0];
+        });       
+
+        if(resp.drip) this.response_template.drip_cache = resp.drip;
+        if(resp.dripped) this.response_template.tab_cache = resp.dripped;
+        if(resp.recent_animes) this.response_template.recent_animes_cache = resp.recent_animes;
     }
-    else{
-        response_template.failed = true;
-        response_template.so = [
-            "Request body is empty either because of data is not yet fetched or there was no data for the requested user, else it might be an error.",
-             " But either way please ping in  ",
-              ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzerDash/issues")];
+}
+
+
+async function processUserDetailsWhenNeeded(
+        timer_is_stopped,
+        active_tab,
+        ___manually_asked,
+        timer_status,
+        pipe,
+        tab_names,
+        page_settings,
+        user_anime_list_source,
+        parsed_user_anime_list,
+        parsed_recent_animes,
+        meta_for_tabs){
+
+    const ctx = dash_clientside.callback_context.triggered;
+    const said_no = say_no(1)[0];    
+    // if nobody called you, then say "no_update"
+    if(ctx.length === 0) return said_no;
+    const asked_to_process_raw = ctx[0].prop_id.includes("disabled"); // does it because of switching tabs
+
+    const processor = new ProcessUserDetails(
+        active_tab,
+         tab_names,
+          page_settings?.user_name ?? ""
+    );
+
+    // BUG: yet to find
+    const who_triggered = ctx[0].prop_id;
+    const ask_to_process = timer_is_stopped && (asked_to_process_raw ? (
+        timer_status === "green" && user_anime_list_source.length > 0
+    ) : (Boolean(
+        parsed_recent_animes
+    ) && (
+        who_triggered.includes("run-process-job-again") || !Boolean(meta_for_tabs[processor.tab_index])
+        )))
+
+    const tab_caches = (
+        ask_to_process && asked_to_process_raw
+        ) ? Array(meta_for_tabs.length).fill("") : say_no(meta_for_tabs.length);
+
+    if(!ask_to_process){
+        const send_note = user_anime_list_source.length === 0 && timer_is_stopped && timer_status === "green";
+        if(!send_note) return said_no;
+        else return [
+            tab_caches,
+            dmc_notification(
+                false,
+                "red",
+                false,
+                `Requested User: ${processor.user_name} has empty anime list. Please request for other user.`,
+                `Empty Anime List`
+            ),
+            said_no,
+            said_no
+        ]
     }
 
+    await processor.sendRequest(
+        pipe,
+        asked_to_process_raw ? user_anime_list_source.flat() : parsed_user_anime_list,
+        parsed_recent_animes,
+        asked_to_process_raw
+    );
+
+    
+    tab_caches[processor.tab_index] = processor.response_template.tab_cache;
+    
+    const message = [processor.response_template.reason];
+    if(processor.response_template.failed)
+        message.push(
+            ". Reasonable Issue ? then log it in ",
+            ddc_link("Issues.", "https://github.com/RahulARanger/MyListAnalyzerDash/issues")
+        )
+
+    const note = processor.response_template.failed ? dmc_notification(
+        false, // autoClose
+        processor.response_template.failed ? "red" : "green",
+        false,
+        message,
+        `Result for Processing User: ${processor.user_name}'s Details`
+    ) : said_no;
+    // if passed, do not show notification, to reduce the traffic.
+    
+
     return [
-        response_template.split_from, dmc_notification(
-        !response_template.failed,
-         response_template.failed ? "red" : "green",
-         false, // allow close regardless
-         response_template.so,
-         `Result for Processing User: ${user_name}'s Details`
-        ), response?.drip ? response.drip : said_no
+        tab_caches,
+        note,
+        processor.response_template.drip_cache,
+        processor.response_template.recent_animes_cache,
+        said_no
     ]
 }
 

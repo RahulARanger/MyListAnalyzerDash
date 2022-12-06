@@ -23,7 +23,7 @@ view_header = namedtuple(
         "settings", "askName", "getName", "requestDetails",
         "re_fetch", "genresCount", "studiosCount", "addUser", "giveName", "appName", "short_name",
         "home", "show_name", "resultForSearch", "validateNote", "settingsTabs", "settingsImage", "addImage",
-        "searchAlert"
+        "searchAlert", "ask_again_image", "last_updated"
     ]
 )(
     "view-settings", "ask-user-name", "get-user-name", "request-details",
@@ -31,9 +31,12 @@ view_header = namedtuple(
     'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer",
     "MLA",
     "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-settings-tabs",
-    "https://api.iconify.design/line-md/cloud-print-loop.svg?color=lightblue",
+    "https://api.iconify.design/line-md/beer-alt-filled-loop.svg?color=darkorange",
     "https://api.iconify.design/line-md/plus.svg?color=darkorange",
-    "We can only search for the public users. If any filters needed beforehand, Please apply them as provided in the filters tab"
+    "We can only search for the public users. If any filters needed beforehand, Please apply them as provided in the "
+    "filters tab",
+    "https://api.iconify.design/line-md/rotate-270.svg?color=green",
+    "last-asked-user-details-job-mla"
 )
 
 dashboard = namedtuple(
@@ -46,7 +49,8 @@ view_dashboard = namedtuple(
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
         "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "stopButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
-        "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color"
+        "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color", "process_again",
+        "recent_anime"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
@@ -55,11 +59,13 @@ view_dashboard = namedtuple(
     "Starting Timer...", "mla-page_settings",
     "https://api.iconify.design/codicon/run-above.svg?color=green",
     "https://api.iconify.design/codicon/run-errors.svg?color=red",
-    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view", "note-user-job-details",
-    ["teal", "blue", "pink"], ["Overview", "Recently", "Belts"],
+    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view",
+    "note-user-job-details",
+    ["teal", "blue", "pink"], ["Overview", "Recently"],
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
-    "indigo"
+    "indigo", "run-process-job-again-view-mla",
+    "view-dashboard-recent-anime-view"
 )
 
 creds_modal = namedtuple(
@@ -91,8 +97,14 @@ mal_creds_modal = creds_modal(
         "logo": "https://image.myanimelist.net/ui/OK6W_koKDTOqqqLDbIoPAiC8a86sHufn_jOI-JGtoCQ"
     })
 
-css_classes = namedtuple("CSSClasses", ["jump", "customButton", "home_card", "request_details", "number_counter", "as_percent"])(
-    "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number"
+css_classes = namedtuple(
+    "CSSClasses",
+    [
+        "jump", "customButton", "home_card", "request_details", "number_counter", "as_percent",
+        "time_format"
+    ])(
+    "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number",
+    "need_to_time_format"
 )
 
 

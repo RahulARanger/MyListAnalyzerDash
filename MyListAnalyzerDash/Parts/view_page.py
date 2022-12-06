@@ -1,8 +1,9 @@
 import logging
+import time
 import typing
 from MyListAnalyzerDash.Components.header import ViewHeaderComponent
 import dash_mantine_components as dmc
-from dash import html, dcc, ctx, callback, Output, Input, State, no_update
+from dash import html, dcc, ctx, callback, Output, Input, State, no_update, ALL
 from MyListAnalyzerDash.mappings.enums import main_app, view_dashboard, view_header
 from MyListAnalyzerDash.mappings.callback_proto import ValidateName, DataCollectionProto1
 from MyListAnalyzerDash.Components.notifications import provider, show_notifications
@@ -55,7 +56,10 @@ class ViewPage:
                 Output(view_dashboard.fetchStatus, "color"),
                 Output(view_dashboard.fetchStatus, "children"),
                 Output(view_dashboard.paging + "-display", "children"),
-                Output(view_dashboard.collectThings, "data")  # for storing the details of the requests made
+                Output(view_dashboard.collectThings, "data"),  # for storing the details of the requests made,
+                Output(view_header.last_updated, "data-time-stamp"),
+                Output(view_dashboard.process_again, "size"),
+                Output(dict(type=view_dashboard.tabs + self.dashboard.tab_butt, index=ALL), "disabled")
             ],
             [
                 Input(view_header.show_name, "children"),
@@ -84,6 +88,7 @@ class ViewPage:
             dcc.Store(id=view_dashboard.collectThings),
             dcc.Store(id=view_dashboard.page_settings, data=page_settings),
             dcc.Store(id=view_dashboard.userDetailsJobResult), dcc.Store(id=view_dashboard.paging),
+            dcc.Store(id=view_dashboard.recent_anime),
             dcc.Location(id=view_dashboard.locationChange, refresh=False), *starry_bg(),
             dmc.Affix(self.header.layout(page_settings), position={"top": 0, "left": 0}), dmc.LoadingOverlay([
                 dmc.ScrollArea(self.dashboard.layout(page_settings), type="hover", class_name="home half-elf"),
@@ -163,7 +168,7 @@ class ViewPage:
             proto.disable_start, proto.disable_stop, proto.max_intervals, proto.paging, proto.note,
             proto.result, proto.disable_timer,
             proto.status_color, proto.status_text, len(proto.result),
-            proto.perf_details
+            proto.perf_details, time.time(), proto.just_to_load_refresh, proto.disable_tabs
         )
 
     def start_collecting(self, proto, first_time, user_name, next_page):
@@ -181,6 +186,7 @@ class ViewPage:
             proto.status_text = "started"
             proto.status_color = "orange"
             proto.result = tuple()  # deleting previous results
+            proto.disable_tabs = len(view_dashboard.tab_names) * [True]
             return
 
         limit = 1000  # limit for each round is 100 animes
@@ -221,6 +227,7 @@ class ViewPage:
             proto.disable_start = False
             proto.disable_timer = proto.disable_stop = True
             proto.max_intervals -= 1
+            proto.disable_tabs = len(view_dashboard.tab_names) * [False]
             return
 
         proto.note = show_notifications(
@@ -247,6 +254,7 @@ def interrupt_peace(return_me: DataCollectionProto1) -> typing.NoReturn:
     return_me.status_text = "stopped"
     return_me.status_color = "red"
     return_me.paging = ""
+    return_me.disable_tabs = len(view_dashboard.tab_names) * [False]
 
 
 def build_store(raw, index=0):

@@ -1,6 +1,5 @@
 import typing
-
-from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback
+from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback, html
 import dash_mantine_components as dmc
 
 
@@ -74,3 +73,23 @@ def invalid_to_disable(text_id: str, button_id: str, action: str = "value") -> t
         State(text_id, "id")
     )
 
+
+def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=""):
+    if add_callback:
+        return clientside_callback(
+            ClientsideFunction(
+                namespace="eventListenerThings",
+                function_name="formatTimeStamp"
+            ),
+            Output(id_, "id"),
+            [Input(id_, "data-time-stamp"), *args],
+            State(id_, "id"),
+            prevent_initial_call=True
+        )
+    extras = {"data-time-stamp": default}
+    extras.update(id=id_) if id_ else ...
+
+    return html.I(
+        "Not Yet Updated", **extras,
+        className=class_name
+    )

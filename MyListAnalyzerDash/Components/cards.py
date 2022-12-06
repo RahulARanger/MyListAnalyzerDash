@@ -65,9 +65,14 @@ def sign(number, reference, class_name=""):
 
 
 def _number_comp(number, is_percent, color, class_name, size="lg"):
+    exact_value = f"{number:.2f}%" if is_percent else str(number)
     return dmc.Text(
-        f"{number:.2f}%" if is_percent else str(number), color=color, weight="bold", size=size,
-        class_name=f"{css_classes.as_percent} {css_classes.number_counter} {class_name}")
+        html.Span(
+            exact_value,
+            title=exact_value, className=f"{css_classes.as_percent} {css_classes.number_counter} {class_name}"
+        ),
+        color=color, weight="bold", size=size
+    )
 
 
 def _number_layout(*numbers):
@@ -114,7 +119,7 @@ def splide_slides(_slides: typing.Tuple[Component]):
 
 def splide_container(
         *slides: Component,
-        class_name: str = None,
+        class_name: str = "",
         id_="",
         splide_options: SplideOptions = SplideOptions()
 ):

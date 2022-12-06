@@ -1,12 +1,13 @@
 from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
     html
 import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps,\
-    status_light_colors
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps, \
+    status_light_colors, css_classes
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
     number_card_format_2, SplideOptions
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
+from MyListAnalyzerDash.Components.collection import fixed_menu, relative_time_stamp_but_calc_in_good_way
 import json
 import plotly.graph_objects as go
 from dash.dash_table import DataTable
@@ -15,13 +16,10 @@ from dash.dash_table import DataTable
 class ViewDashboard:
     def __init__(self):
         self.postfix_tab = "-tab"
+        self.tab_butt = "-button"
 
     def connect_callbacks(self):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
-        callback(
-            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
-            Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data")
-        )(self.process_tabs)
 
         clientside_callback(
             ClientsideFunction(
@@ -41,25 +39,51 @@ class ViewDashboard:
             [
                 Output(dict(type=view_dashboard.tabs, index=ALL), "data"),
                 Output(view_dashboard.userJobDetailsNote, "children"),
-                Output(view_dashboard.userDetailsJobResult, "data")
+                Output(view_dashboard.userDetailsJobResult, "data"),
+                Output(view_dashboard.recent_anime, "data"),
+                Output(view_dashboard.process_again, "id")
             ],
             [
                 Input(view_dashboard.intervalAsk, "disabled"),
                 Input(view_dashboard.tabs, "active"),
+                Input(view_dashboard.process_again, "n_clicks")
             ],
             [
+                # Timer Status
                 State(view_dashboard.fetchStatus, "color"),
-                State(view_dashboard.userDetailsJobResult, "data"),
-                State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
+                # BackEnd URL
                 State("pipe", "data"),
-                State(view_dashboard.page_settings, "data"),
-                State(dict(type=view_dashboard.tabs, index=ALL), "data"),
+                # tab_labels
                 State(dict(type=postfix_tab, index=ALL), "id"),
+                # Data Sources
+                State(view_dashboard.page_settings, "data"),
+                State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
+                State(view_dashboard.userDetailsJobResult, "data"),
+                State(view_dashboard.recent_anime, "data"),
+                State(dict(type=view_dashboard.tabs, index=ALL), "data"),
+                State(view_dashboard.tabs, "id")
             ]
         )
 
+        callback(
+            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+            [
+                Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data"),
+                Input(view_dashboard.page_settings, "data")
+            ]
+        )(self.process_for_overview)
+
+        callback(
+            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[1]), "children"),
+            [
+                Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
+                Input(view_dashboard.page_settings, "data")
+            ]
+        )(self.process_recently_data)
+
     def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
+        tab_butt = view_dashboard.tabs + self.tab_butt
 
         tabs = []
         store = []
@@ -73,7 +97,7 @@ class ViewDashboard:
                     no_data("Please wait until results are fetched", force=True),
                     pr=15, pb=5, mb=10,
                     id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), label=label, disabled=index != 0))
+                    visible=False, animate=True), label=label, id=dict(type=tab_butt, index=label)))
             store.append(
                 dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data="")
             )
@@ -86,9 +110,11 @@ class ViewDashboard:
             *store
         ])
 
-    def process_tabs(self, data):
+    def process_for_overview(self, data, user_name):
         if not data:
-            return no_data("Collections -> user details")
+            return no_data(
+                "Please wait until the data gets processed.", force=True
+            )
 
         current_tab = view_dashboard.tab_names[0]
         graph_class = current_tab + "-graphs"
@@ -134,7 +160,26 @@ class ViewDashboard:
         return [
             __ for _ in (first_row, second_row, third_row) for __ in
             [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=3)]
-        ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
+            ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
+
+    def process_recently_data(self, data, page_settings):
+        if not data:
+            return no_data(
+                "Please wait until the data gets processed.", force=True
+            )
+
+        user_name = page_settings.get("user_name", "")
+
+        return fixed_menu(
+            side_ways=[
+                dmc.Text(expanding_layout(
+                    dmc.Text(user_name, color="orange", size="sm"), f"last Updated:",
+                    relative_time_stamp_but_calc_in_good_way(
+                        False, class_name=css_classes.time_format, default=data["recently_updated_at"]
+                    ), direction="row"
+                ), size="sm")
+            ]
+        )
 
 
 def process_overview(data, current_tab, graph_class):
@@ -249,10 +294,4 @@ def over_view_s_over_view(raw):
     loaded = gen_table_for_airing_details(json.loads(raw)) if raw else False
 
     table = dmc.MenuItem("Currently Airing - Table", color="orange")
-
-    return dmc.Affix(
-        dmc.Menu(
-            table, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True,
-            class_name="corner", shadow="xl"),
-        position=dict(right=10, bottom=10), zIndex="2"
-    )
+    return fixed_menu(table)

@@ -17,6 +17,8 @@ class DataCollectionProto1:
     perf_details: go.Figure = no_update
     status_color: str = "gray"
     status_text: str = "😴"
+    just_to_load_refresh: bool = no_update
+    disable_tabs: typing.Union[tuple, list] = tuple()
 
 
 @dataclass

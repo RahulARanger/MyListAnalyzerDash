@@ -3,7 +3,8 @@ from MyListAnalyzerDash.Components.layout import expanding_layout
 import typing
 from dash import dcc, clientside_callback, Input, Output
 from MyListAnalyzerDash.mappings.enums import view_header
-from MyListAnalyzerDash.Components.collection import settings_modal
+from MyListAnalyzerDash.Components.collection import settings_modal, ask_again
+from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way, get_modal_id
 
 
 class CommonHeaderComponent:
@@ -36,15 +37,23 @@ class ViewHeaderComponent(CommonHeaderComponent):
         self.queries = view_header
 
     def handle_callbacks(self):
-        return settings_modal(add=True)
+        modal_first = settings_modal(add=True)
+
+        relative_time_stamp_but_calc_in_good_way(
+            view_header.last_updated,
+            Input(view_header.settingsTabs, "active"),
+            Input(get_modal_id(view_header.settings), "opened"),
+            add_callback=True
+        )
+        return modal_first
 
     def inside_header(self, page_settings):
         user_name = page_settings.get("user_name", "")
 
         link = view_header.show_name + '-link'
-        return dcc.Link(
+        return settings_modal(page_settings), dcc.Link(
             dmc.Badge(color="orange", id=view_header.show_name, children=user_name), href="", id=link, target="_blank"
-        ), settings_modal(prop=True), settings_modal(page_settings)
+        ), settings_modal(prop=True), ask_again()
 
 
 def header_link(title, short, url):

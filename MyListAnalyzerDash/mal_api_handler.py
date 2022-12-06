@@ -127,7 +127,7 @@ class VerySimpleMALSession(CoreMALSession):
             requests.get(
                 self.postfix(user_name, "animelist"), headers=self.client_auth, params={
                     "offset": 0, "limit": 1, "sort": "list_updated_at"
-                }))
+                }, timeout=9.9))
 
         return "No Recent Animes found" if not result["data"] else result["data"][-1]["node"]["title"]
 

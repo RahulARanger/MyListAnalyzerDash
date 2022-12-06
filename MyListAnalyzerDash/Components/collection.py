@@ -3,7 +3,7 @@ import dash_mantine_components as dmc
 from MyListAnalyzerDash.mappings.enums import view_header, view_dashboard, css_classes
 from MyListAnalyzerDash.Components.layout import expanding_layout
 from MyListAnalyzerDash.Components.ModalManager import get_modal, enter_to_click, \
-    invalid_to_disable, get_modal_id
+    invalid_to_disable, get_modal_id, relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
 from MyListAnalyzerDash.Components.buttons import icon_butt_img
 import plotly.graph_objects as go
@@ -75,8 +75,9 @@ def user_details_tab(add=False):
                 direction="row", align="center"),
             color="violet", size="sm"),
         dmc.Text(
-            expanding_layout("Last Updated at: ", dmc.Text("--"), direction="row", align="center"),
-            style={"fontStyle": "italic"}, color="orange", size="sm"),
+            expanding_layout("Last Updated: ", relative_time_stamp_but_calc_in_good_way(
+                view_header.last_updated
+            ), direction="row", align="center"), color="orange", size="sm"),
         direction="row", align="center"
     )
 
@@ -143,4 +144,22 @@ def settings_modal(
         view_header.settings,
         "Settings",
         settings_tabs(disable_user_job=page_settings.get("disable_user_job", False)), closeable=False, size="lg"
+    )
+
+
+def ask_again():
+    return icon_butt_img(
+        view_header.ask_again_image, view_dashboard.process_again
+    )
+
+
+def fixed_menu(*options, side_ways=tuple()):
+    return dmc.Affix(
+        expanding_layout(
+            *side_ways, dmc.Menu(
+                options, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True,
+                class_name="corner", shadow="xl"),
+            direction="row", position="center"
+        ),
+        position=dict(right=10, bottom=10), zIndex="2"
     )
