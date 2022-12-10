@@ -114,3 +114,20 @@ div.Overview-graphs[id^='{"index":2']{
     -webkit-animation: 1s wiggle ease infinite;
           animation: 1s wiggle ease infinite;
 }
+
+.Recently.splide{
+    box-sizing: border-box;
+    width: calc(100vw - 3px);
+}   
+
+.Recently.belt{
+    width: 100%;
+    box-shadow: var(--hard-chocolate);
+    padding: 10px;
+    border: 1px solid transparent;
+}
+
+.Recently.belt:hover{
+    border: 1px solid silver;
+    box-shadow: inset 0 0 0.5em 0 sliver, 0 0 0.5em 0 sliver;
+}

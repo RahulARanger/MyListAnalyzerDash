@@ -20,7 +20,8 @@ class MainApplication:
             update_title="Loading...",
             use_pages=True,
             external_scripts=[
-                "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js",
+                "https://cdn.jsdelivr.net/combine/npm/@splidejs/splide@4.1.4,"
+                "npm/@splidejs/splide-extension-auto-scroll@0.5.3",
                 *js_s()
             ],
             extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzerDash" / "misc"]

@@ -44,11 +44,16 @@ function failedToAskMALAPI(){
     return ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzer")
 }
 
+function setColorBasedOnRankParser(){
+    document.querySelectorAll(".format_rank_index").forEach(setColorBasedOnRank);
+}
+
 
 function refreshTab(_, label_id){
     enable_splide();
     animateCounters(label_id?.index);
     formatTimers();
+    setColorBasedOnRankParser();
 
     return say_no(1)[0];
 }

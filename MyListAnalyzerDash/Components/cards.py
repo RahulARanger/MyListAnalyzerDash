@@ -2,12 +2,12 @@ import json
 import typing
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzerDash.mappings.enums import css_classes
+from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color
+from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from dash import html, dcc
 from dash.dependencies import Component
 import logging
 from dataclasses import dataclass, asdict, Field
-
 
 @dataclass
 class SplideOptions:
@@ -19,6 +19,11 @@ class SplideOptions:
     pagination: bool = False
     width: str = "200px"
     mediaQuery: str = "min"
+    perPage: int = 1
+    gap: str = "0px"
+    padding: str = "0px"
+    autoScroll: typing.Union[typing.Dict[str, int], bool] = False
+    breakpoints: typing.Union[typing.Dict, bool] = False
 
     def embeded(self):
         return json.dumps(asdict(self))
@@ -64,12 +69,17 @@ def sign(number, reference, class_name=""):
     )
 
 
-def _number_comp(number, is_percent, color, class_name, size="lg"):
+def number_comp(number, is_percent, color, class_name, size="lg"):
     exact_value = f"{number:.2f}%" if is_percent else str(number)
+    class_name_added = f"{css_classes.number_counter} {class_name}"
+
+    if is_percent:
+        class_name_added += f" {css_classes.as_percent}"
+
     return dmc.Text(
         html.Span(
             exact_value,
-            title=exact_value, className=f"{css_classes.as_percent} {css_classes.number_counter} {class_name}"
+            title=exact_value, className=class_name_added
         ),
         color=color, weight="bold", size=size
     )
@@ -98,7 +108,7 @@ def number_card_format_1(
         html.Span(another, title=str(another), className=f"{css_classes.number_counter} {class_name}"), "]"]
     )) if another >= 0 else ...
 
-    numbers = [_number_comp(number, is_percent, color, class_name)]
+    numbers = [number_comp(number, is_percent, color, class_name)]
 
     references.insert(0, sign(number, ref_number, class_name)) if ref_number > -1 else ...
     numbers.append(dmc.Text(references, size="xs", color=color)) if references else ...
@@ -144,11 +154,85 @@ def number_card_format_2(label, icon, value=0, color="red", percent_value=0, cla
         dmc.Space(w=6),
         expanding_layout(
             expanding_layout(
-                _number_comp(value, False, color, class_name),
+                number_comp(value, False, color, class_name),
                 dmc.Divider(color="gray", orientation="vertical"),
-                _number_comp(percent_value, True, color, class_name, size="md"),
+                number_comp(percent_value, True, color, class_name, size="md"),
                 direction="row", position="center"
             ),
             _divider(label, color)
         )
+    )
+
+
+def number_card_format_3(
+        class_name="",
+        index=0,
+        id_="",
+        anime_name="Testing",
+        time_stamp=0,
+        up_until=4,
+        difference=2,
+        status_label="Hold",
+        total=12,
+        re_watching=True,
+        link="",
+        size="sm"
+):
+
+    link = link if link else f"https://myanimelist.net/anime/{id_}"
+    try:
+        status_color = getattr(recent_status_color, status_label)
+    except AttributeError:
+        status_color = "red"
+
+    changed = expanding_row(
+        dmc.Text("+" if difference else "", size=size, color="green", weight="bold"),
+        number_comp(
+            difference, is_percent=False, class_name=class_name, color="green", size=size
+        ), style=dict(alignItems="center", justifyContent="flex-start")
+    ) if not re_watching else dmc.Badge("Re-watching", color="blue", size=size)
+
+    up_until_comp = number_comp(
+        up_until, color="blue" if difference else "violet", size=size, class_name=class_name, is_percent=False)
+
+    transition = [expanding_row(
+            number_comp(up_until - difference, color="cyan", size=size, class_name=class_name, is_percent=False),
+            dmc.Text("→", color="gray", size=size), up_until_comp,
+            style=dict(alignItems="center", justifyContent="center")
+        ) if difference else up_until_comp]
+
+    transition.append(
+        expanding_row(
+            dmc.Text("Total: ", size=size, color="orange"),
+            number_comp(total, is_percent=False, size=size, color="orange", class_name=class_name),
+            style=dict(justifyContent="flex-end")
+        )
+    ) if total else ...
+
+    return expanding_layout(
+        expanding_row(
+            dmc.Anchor(
+                html.Span(anime_name, title=anime_name),
+                href=link, target="_blank", size="lg", align="center",
+                style=dict(textOverflow="ellipsis")
+            ),
+            html.Sup(
+                dmc.Text(
+                    html.Span(str(index + 1), **{"data-rank": str(index + 1)}, className=css_classes.rank_index_format),
+                    size="xs", color="yellow"
+                ))
+        ),
+        expanding_row(
+            changed,
+            *transition,
+            style=dict(alignItems="center")
+        ),
+        dmc.Divider(color=status_color),
+        expanding_row(
+            dmc.Badge(status_label, color=status_color, size="sm"),
+            relative_time_stamp_but_calc_in_good_way(
+                False, default=time_stamp,
+                size="sm", class_name=css_classes.time_format
+            )
+        ), class_name=f"{class_name} belt"
     )

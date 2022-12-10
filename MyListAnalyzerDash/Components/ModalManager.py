@@ -74,7 +74,7 @@ def invalid_to_disable(text_id: str, button_id: str, action: str = "value") -> t
     )
 
 
-def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=""):
+def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name="", size="sm"):
     if add_callback:
         return clientside_callback(
             ClientsideFunction(
@@ -89,7 +89,9 @@ def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, def
     extras = {"data-time-stamp": default}
     extras.update(id=id_) if id_ else ...
 
-    return html.I(
-        "Not Yet Updated", **extras,
-        className=class_name
+    return dmc.Text(
+        html.I(
+            "Not Yet Updated", **extras,
+            className=class_name
+        ), size=size
     )

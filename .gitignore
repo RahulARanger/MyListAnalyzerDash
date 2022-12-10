@@ -7,3 +7,4 @@ MyListAnalyzerDash.egg-info
 *.pyc
 MyListAnalyzerDash/assets/*
 Raw/*
+!/MyListAnalyzerDash/pages/demo_page.py

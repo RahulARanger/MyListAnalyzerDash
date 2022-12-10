@@ -4,7 +4,7 @@ import dash_mantine_components as dmc
 from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps, \
     status_light_colors, css_classes
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    number_card_format_2, SplideOptions
+    number_card_format_2, SplideOptions, number_card_format_3, number_comp
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
 from MyListAnalyzerDash.Components.collection import fixed_menu, relative_time_stamp_but_calc_in_good_way
@@ -160,7 +160,7 @@ class ViewDashboard:
         return [
             __ for _ in (first_row, second_row, third_row) for __ in
             [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=3)]
-            ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
+        ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
 
     def process_recently_data(self, data, page_settings):
         if not data:
@@ -169,8 +169,10 @@ class ViewDashboard:
             )
 
         user_name = page_settings.get("user_name", "")
+        recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
+        tab_name = view_dashboard.tab_names[1]
 
-        return fixed_menu(
+        menu = fixed_menu(
             side_ways=[
                 dmc.Text(expanding_layout(
                     dmc.Text(user_name, color="orange", size="sm"), f"last Updated:",
@@ -179,6 +181,31 @@ class ViewDashboard:
                     ), direction="row"
                 ), size="sm")
             ]
+        )
+
+        first_row = recently_updated_trend_comp(False, False)
+
+        cards = [
+            number_card_format_3(
+                tab_name, index, *_
+            ) for index, _ in enumerate(recently_updated_animes)
+        ]
+
+        splide_options = SplideOptions(
+            type="loop", width="", perPage=3, gap=".69rem", padding="6px", autoScroll=dict(speed=1),
+            mediaQuery="max",
+            breakpoints={
+                "720": dict(perPage=2),
+                "420": dict(perPage=1.5)
+            }
+        )
+
+        last_row = splide_container(*cards, splide_options=splide_options, class_name=tab_name)
+
+        return expanding_layout(
+            first_row,
+            last_row,
+            menu
         )
 
 
@@ -295,3 +322,16 @@ def over_view_s_over_view(raw):
 
     table = dmc.MenuItem("Currently Airing - Table", color="orange")
     return fixed_menu(table)
+
+
+def recently_updated_trend_comp(recently_updated_data, cum_sum):
+
+    return expanding_layout(
+            dmc.Tabs(
+                [
+                    dmc.Tab(label="Recently"),
+                    dmc.Tab(label="Cumulatively")
+                ], color="orange", variant="pills"
+            ),
+            dmc.Header()
+        )

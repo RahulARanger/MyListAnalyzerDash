@@ -238,6 +238,7 @@ class ViewPage:
         )
         proto.status_color = "orange"
         proto.status_text = "Fetching"
+        proto.disable_tabs = len(view_dashboard.tab_names) * [True]
 
 
 def interrupt_peace(return_me: DataCollectionProto1) -> typing.NoReturn:

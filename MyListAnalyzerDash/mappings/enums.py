@@ -101,12 +101,11 @@ css_classes = namedtuple(
     "CSSClasses",
     [
         "jump", "customButton", "home_card", "request_details", "number_counter", "as_percent",
-        "time_format"
+        "time_format", "rank_index_format"
     ])(
     "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number",
-    "need_to_time_format"
+    "need_to_time_format", "format_rank_index"
 )
-
 
 _status_map = namedtuple(
     "Status", [
@@ -117,7 +116,12 @@ _status_map = namedtuple(
 status_colors = _status_map("blue", "indigo", "green", "yellow", "red")
 status_light_colors = _status_map("#2B4F60", "#FF8243", "#FFCB42", "#FFE300", "#E64848")
 status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")
+recent_status = namedtuple(
+    "Status", [
+        "Watching", "Completed", "Hold"
+    ])
 
+recent_status_color = recent_status("blue", "green", "yellow")
 
 seasons_maps = {
     "winter": ["https://api.iconify.design/game-icons/cold-heart.svg?color=lightblue", "gray"],
