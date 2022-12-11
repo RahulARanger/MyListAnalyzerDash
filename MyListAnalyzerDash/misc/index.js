@@ -143,9 +143,15 @@ class ProcessUserDetails{
                 return response.json();
     
             }).catch(async (response) => {
-                const reason = await response.text();
-                this.response_template.reason = reason ? reason : this.response_template.reason;
-                return say_no(1)[0];
+                try{
+                    const reason = await response.text();
+                    this.response_template.reason = reason ? reason : this.response_template.reason;
+                    return say_no(1)[0];
+                }
+                catch{
+                    this.response_template.reason = "Failed, Because API got stuck with something it can't understand. I was waiting for such errors."
+                    return say_no(1)[0];
+                }
         });       
 
         if(resp.drip) this.response_template.drip_cache = resp.drip;

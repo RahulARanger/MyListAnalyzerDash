@@ -11,12 +11,14 @@ from MyListAnalyzerDash.Components.collection import fixed_menu, relative_time_s
 import json
 import plotly.graph_objects as go
 from dash.dash_table import DataTable
+from datetime import datetime
 
 
 class ViewDashboard:
     def __init__(self):
         self.postfix_tab = "-tab"
         self.tab_butt = "-button"
+        self.graph_prefix = "-graphs"
 
     def connect_callbacks(self):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
@@ -110,14 +112,18 @@ class ViewDashboard:
             *store
         ])
 
+    def tab_details(self, index=0):
+        current_tab = view_dashboard.tab_names[index]
+        graph_class = current_tab + self.graph_prefix
+        return current_tab, graph_class
+
     def process_for_overview(self, data, user_name):
         if not data:
             return no_data(
                 "Please wait until the data gets processed.", force=True
             )
 
-        current_tab = view_dashboard.tab_names[0]
-        graph_class = current_tab + "-graphs"
+        current_tab, graph_class = self.tab_details(0)
 
         try:
             time_spent, row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_overview(
@@ -168,9 +174,10 @@ class ViewDashboard:
                 "Please wait until the data gets processed.", force=True
             )
 
+        current_tab, graph_class = self.tab_details(1)
+
         user_name = page_settings.get("user_name", "")
         recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
-        tab_name = view_dashboard.tab_names[1]
 
         menu = fixed_menu(
             side_ways=[
@@ -183,11 +190,15 @@ class ViewDashboard:
             ]
         )
 
-        first_row = recently_updated_trend_comp(False, False)
+        recently_updated_plots = recently_updated_trend_comp(
+            json.loads(data.get("recently_updated_day_wise", "{}")),
+            data.get("recently_updated_cum_sum", []),
+            current_tab, graph_class
+        )
 
         cards = [
             number_card_format_3(
-                tab_name, index, *_
+                current_tab, index, *_
             ) for index, _ in enumerate(recently_updated_animes)
         ]
 
@@ -200,10 +211,10 @@ class ViewDashboard:
             }
         )
 
-        last_row = splide_container(*cards, splide_options=splide_options, class_name=tab_name)
+        last_row = splide_container(*cards, splide_options=splide_options, class_name=current_tab)
 
         return expanding_layout(
-            first_row,
+            recently_updated_plots,
             last_row,
             menu
         )
@@ -324,14 +335,49 @@ def over_view_s_over_view(raw):
     return fixed_menu(table)
 
 
-def recently_updated_trend_comp(recently_updated_data, cum_sum):
+def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_class):
+    to_dates = [
+        datetime(*_)
+        for _ in recently_updated_data.get("columns", [])
+    ]
 
-    return expanding_layout(
-            dmc.Tabs(
-                [
-                    dmc.Tab(label="Recently"),
-                    dmc.Tab(label="Cumulatively")
-                ], color="orange", variant="pills"
-            ),
-            dmc.Header()
-        )
+    up_until, total, diff, not_comp, re_watched = recently_updated_data.get("data", [tuple() for _ in range(5)])
+
+    plot_with_actual_data = go.Figure()
+    plot_with_cum_sum = go.Figure()
+
+    marker = dict(color="darkorange")
+    line = dict(shape="spline")
+    mode = "markers+lines"
+
+    trace = go.Scatter(
+        x=to_dates, y=diff, mode=mode, marker=marker, line=line
+    )
+
+    plot_with_actual_data.add_trace(trace)
+
+    trace = go.Scatter(
+        x=to_dates, y=cum_sum, mode=mode, marker=marker, line=line)
+
+    plot_with_cum_sum.add_trace(trace)
+
+    plot_1 = core_graph(
+        BeautifyMyGraph(
+            title="When did the User Update",
+            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
+        ).handle_subject(plot_with_actual_data), apply_shimmer=False, index=1,
+        prefix=tab_name, class_name=graph_class, responsive=True)
+
+    plot_2 = core_graph(
+        BeautifyMyGraph(
+            title="When did the User Update",
+            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
+        ).handle_subject(plot_with_cum_sum), apply_shimmer=False, index=2,
+        prefix=tab_name, class_name=graph_class, responsive=True)
+
+    return dmc.Tabs(
+        [
+            dmc.Tab(children=plot_1, label="Actual"),
+            dmc.Tab(children=plot_2, label="Cumulative")
+        ], color="orange", variant="pills"
+    )
