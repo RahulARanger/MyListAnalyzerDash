@@ -1,3 +1,5 @@
+import typing
+
 from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
     html
 import dash_mantine_components as dmc
@@ -11,7 +13,7 @@ from MyListAnalyzerDash.Components.collection import fixed_menu, relative_time_s
 import json
 import plotly.graph_objects as go
 from dash.dash_table import DataTable
-from datetime import datetime
+from datetime import datetime, time
 
 
 class ViewDashboard:
@@ -117,17 +119,18 @@ class ViewDashboard:
         graph_class = current_tab + self.graph_prefix
         return current_tab, graph_class
 
-    def process_for_overview(self, data, user_name):
+    def process_for_overview(self, data, page_settings):
         if not data:
             return no_data(
                 "Please wait until the data gets processed.", force=True
             )
 
         current_tab, graph_class = self.tab_details(0)
+        user_name = page_settings.get("user_name")
 
         try:
-            time_spent, row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_overview(
-                data, current_tab, graph_class)
+            time_spent, row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_for_overview(
+                data, current_tab, graph_class, user_name)
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
 
@@ -193,7 +196,7 @@ class ViewDashboard:
         recently_updated_plots = recently_updated_trend_comp(
             json.loads(data.get("recently_updated_day_wise", "{}")),
             data.get("recently_updated_cum_sum", []),
-            current_tab, graph_class
+            current_tab, graph_class, user_name
         )
 
         cards = [
@@ -211,16 +214,15 @@ class ViewDashboard:
             }
         )
 
-        last_row = splide_container(*cards, splide_options=splide_options, class_name=current_tab)
+        belt = splide_container(*cards, splide_options=splide_options, class_name=current_tab)
 
         return expanding_layout(
-            recently_updated_plots,
-            last_row,
+            belt, dmc.Space(h=2), recently_updated_plots,
             menu
         )
 
 
-def process_overview(data, current_tab, graph_class):
+def process_for_overview(data, current_tab, graph_class, user_name):
     row_1 = data["row_1"]
     time_spent = data["time_spent"]
     row_2 = json.loads(data["row_2"])
@@ -269,7 +271,7 @@ def process_overview(data, current_tab, graph_class):
 
     if not airing["data"]:
         yield dmc.Alert(
-            dmc.Text("Not Watching Any Animes which are currently airing"),
+            dmc.Text(f"{user_name} is not Watching any Animes which are currently airing"),
             color="orange", title="No Data", withCloseButton=True, variant="light",
             icon=[dmc.Image(src=view_dashboard.no_data)])
     else:
@@ -329,13 +331,31 @@ def gen_table_for_airing_details(raw):
 
 
 def over_view_s_over_view(raw):
-    loaded = gen_table_for_airing_details(json.loads(raw)) if raw else False
-
     table = dmc.MenuItem("Currently Airing - Table", color="orange")
     return fixed_menu(table)
 
 
-def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_class):
+def timely_updated_at(time_stamps: typing.Sequence[int], graph_class: str, tab_name: str):
+    date_times = [
+        datetime.fromtimestamp(time_stamp) for time_stamp in time_stamps
+    ]
+
+    violin_plot = go.Figure()
+    violin_plot.add_trace(
+        go.Violin(
+            x=date_times
+        )
+    )
+
+    return core_graph(
+        BeautifyMyGraph(
+            title="When did the User Update",
+            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
+        ).handle_subject(violin_plot), apply_shimmer=False, index=2,
+        prefix=tab_name, class_name=graph_class, responsive=True)
+
+
+def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_class, user_name):
     to_dates = [
         datetime(*_)
         for _ in recently_updated_data.get("columns", [])
@@ -363,21 +383,44 @@ def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_
 
     plot_1 = core_graph(
         BeautifyMyGraph(
-            title="When did the User Update",
-            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
+            title=f"Recently updated animes by days",
+            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
         ).handle_subject(plot_with_actual_data), apply_shimmer=False, index=1,
         prefix=tab_name, class_name=graph_class, responsive=True)
 
     plot_2 = core_graph(
         BeautifyMyGraph(
-            title="When did the User Update",
-            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
+            title=f"{user_name}'s recent progressive updates",
+            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
         ).handle_subject(plot_with_cum_sum), apply_shimmer=False, index=2,
         prefix=tab_name, class_name=graph_class, responsive=True)
+
+    _weeks = [
+        _.strftime("%A") for _ in to_dates
+    ]
+
+    fig = go.Figure()
+    trace = go.Violin(
+        x=_weeks, y=diff
+    )
+
+    fig.add_trace(trace)
+
+    weekly_fat = core_graph(
+        BeautifyMyGraph(
+            title=f"{user_name}'s weekly updates", show_x=True, show_x_grid=True, show_y=True
+        ).handle_subject(fig),
+        apply_shimmer=False, index=3, prefix=tab_name, class_name=graph_class, responsive=True
+    )
 
     return dmc.Tabs(
         [
             dmc.Tab(children=plot_1, label="Actual"),
-            dmc.Tab(children=plot_2, label="Cumulative")
+            dmc.Tab(children=plot_2, label="Cumulative"),
+            dmc.Tab(
+                label="Weekly",
+                children=weekly_fat
+            )
         ], color="orange", variant="pills"
     )
+

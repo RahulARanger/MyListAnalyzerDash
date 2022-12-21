@@ -9,6 +9,7 @@ from dash.dependencies import Component
 import logging
 from dataclasses import dataclass, asdict, Field
 
+
 @dataclass
 class SplideOptions:
     # Subset of options presented in https://splidejs.com/guides/options
@@ -178,7 +179,6 @@ def number_card_format_3(
         link="",
         size="sm"
 ):
-
     link = link if link else f"https://myanimelist.net/anime/{id_}"
     try:
         status_color = getattr(recent_status_color, status_label)
@@ -196,10 +196,11 @@ def number_card_format_3(
         up_until, color="blue" if difference else "violet", size=size, class_name=class_name, is_percent=False)
 
     transition = [expanding_row(
-            number_comp(up_until - difference, color="cyan", size=size, class_name=class_name, is_percent=False),
-            dmc.Text("→", color="gray", size=size), up_until_comp,
-            style=dict(alignItems="center", justifyContent="center")
-        ) if difference else up_until_comp]
+        number_comp(up_until - ((-1 if re_watching else 1) * difference), color="cyan", size=size,
+                    class_name=class_name, is_percent=False),
+        dmc.Text("→", color="gray", size=size), up_until_comp,
+        style=dict(alignItems="center", justifyContent="center")
+    ) if difference else up_until_comp]
 
     transition.append(
         expanding_row(

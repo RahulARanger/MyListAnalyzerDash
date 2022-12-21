@@ -1,7 +1,8 @@
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.Components.layout import expanding_layout
 import typing
-from dash import dcc, clientside_callback, Input, Output
+from dash import dcc, clientside_callback, Input, html
+from MyListAnalyzerDash import __version__
 from MyListAnalyzerDash.mappings.enums import view_header
 from MyListAnalyzerDash.Components.collection import settings_modal, ask_again
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way, get_modal_id
@@ -56,11 +57,14 @@ class ViewHeaderComponent(CommonHeaderComponent):
         ), settings_modal(prop=True), ask_again()
 
 
-def header_link(title, short, url):
+def header_link(title, short, url, version=__version__):
     return [
         dmc.MediaQuery(
             children=dcc.Link(
-                children=dmc.Title(title, order=4),
+                children=html.Span(expanding_layout(
+                    dmc.Title(title, order=4), html.Sup(dmc.Text(version, size="xs")),
+                    direction="row", align="flex-start", position="left", spacing=1
+                )),
                 href=url,
                 className="nav_link", refresh=False
             ),
@@ -71,7 +75,9 @@ def header_link(title, short, url):
         ),
         dmc.MediaQuery(
             children=dcc.Link(
-                children=dmc.Title(short, order=5),
+                children=expanding_layout(
+                    dmc.Title(short, order=5), html.Sup(dmc.Text(version, size="xs")),
+                    direction="row", align="flex-start", position="left", spacing=1),
                 href=url,
                 className="nav_link", refresh=False
             ),

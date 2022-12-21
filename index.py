@@ -2,7 +2,7 @@ import logging
 import os
 import pathlib
 from MyListAnalyzerDash import __name__ as name
-from MyListAnalyzerDash.route_setup import build_assets, js_s
+from MyListAnalyzerDash.route_setup import build_assets
 from dash import Dash, page_container, dcc, clientside_callback, ClientsideFunction, Input, Output, html
 import dash_mantine_components as dmc
 from dotenv import load_dotenv
@@ -19,11 +19,6 @@ class MainApplication:
             title="MAL-Remainder",
             update_title="Loading...",
             use_pages=True,
-            external_scripts=[
-                "https://cdn.jsdelivr.net/combine/npm/@splidejs/splide@4.1.4,"
-                "npm/@splidejs/splide-extension-auto-scroll@0.5.3",
-                *js_s()
-            ],
             extra_hot_reload_paths=[pathlib.Path(__file__).parent / "MyListAnalyzerDash" / "misc"]
         )
 
@@ -54,4 +49,5 @@ class MainApplication:
 
 if __name__ == "__main__":
     Application = MainApplication()
+    Application.app.renderer = (pathlib.Path(__file__).parent / "migrator.js").read_text()
     Application.app.run(port=6969, dev_tools_ui=True, debug=True, host="127.0.0.1")

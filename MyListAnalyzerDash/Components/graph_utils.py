@@ -30,6 +30,7 @@ class GraphInfo:
     title: str
     x_title: str
     y_title: str
+    hover_mode: str
 
 
 class BeautifyMyGraph(GraphInfo):
@@ -38,12 +39,13 @@ class BeautifyMyGraph(GraphInfo):
             show_x_grid=False, show_y_grid=False, allow_drag=False,
             ml=1, mr=1, mt=5, mb=2, width=None, height=None,
             pad=0, showlegend=False, autosize=False, legend_x=1, legend_y=1, legend_title=None, legend_font_size=10,
-            x_tick_angle=45, title="", x_title="", y_title=""
+            x_tick_angle=45, title="", x_title="", y_title="", hover_mode="closest"
     ):
         super().__init__(
             multiple, show_x, show_y, show_x_grid, show_y_grid, allow_drag,
             mt, mb, ml, mr, width, height, pad, showlegend, autosize,
-            legend_x, legend_y, legend_title, legend_font_size, x_tick_angle, title, x_title, y_title
+            legend_x, legend_y, legend_title, legend_font_size, x_tick_angle, title, x_title, y_title,
+            hover_mode=hover_mode
         )
         self.worker: typing.Optional[typing.Callable] = None
 
@@ -101,7 +103,7 @@ class BeautifyMyGraph(GraphInfo):
             ),
             title=dict(
                 text=self.title if self.title else f"{self.title}<br><br><br><br>", font=title_font
-            )
+            ), hovermode=self.hover_mode
         )
 
         figure.update_xaxes(

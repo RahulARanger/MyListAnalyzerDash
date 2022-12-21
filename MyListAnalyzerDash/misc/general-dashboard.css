@@ -153,3 +153,9 @@ div.Overview-graphs[id^='{"index":2']{
     }
 }
 
+div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2'], div.Recently-graphs[id^='{"index":3']{
+    flex-grow: 2;
+    min-width: 200px !important;
+    min-height: 200px;
+    height: calc(90vh - 300px);
+}

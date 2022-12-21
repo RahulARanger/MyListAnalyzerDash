@@ -76,23 +76,11 @@ function set_view_url_after_search(page_settings, url){
 
 
 class ProcessUserDetails{
-    tab_settings = [
-        [true, false],
-        [false, true]
-    ];
-    // list [tab of] send user details, recent_animes
-
-    response_template = {
-        failed: true,
-        reason: "Mostly blocked due to CORS Error, or might be backend API is sleeping 😴😴😴.",
-        tab_cache: null,
-        drip_cache: say_no(1)[0],
-        recent_animes_cache: say_no(1)[0]
-    };
-
+    reason = "Mostly blocked due to CORS Error, or might be backend API is sleeping 😴😴😴.";
     tab_index;
     tab_name;
     user_name;
+    passed = true;
 
     constructor(tab_index, tab_names, user_name){
         this.tab_index = tab_index ?? 0;
@@ -102,61 +90,92 @@ class ProcessUserDetails{
         refreshTab(null, tab_names[this.tab_index]);
     }
 
-    prepBody(user_details, recent_animes, processAgain){
-        const data = {}
+    async fetchStaticData(
+        pipe,
+         fetchUserAnimeList, fetchRecentAnimeList,
+            userAnimeList
+        ){
+        const genURL = (end) => `${pipe}/MLA/static/${end}`;
+        const no = say_no(1)[0];
 
-        const _set = this.tab_settings[this.tab_index];
-
-        const send_recent_animes = !processAgain && _set[1];
-        if(processAgain || _set[0]) data.user_anime_list = user_details;
-        if(send_recent_animes) data.recent_animes = recent_animes;
-
-        // if asked to process again, we need to send the raw user anime list regardless of the active tab
-        // if asked to process again, we should not send the recent animes regardless of the active tab.
-        
-        return {
-            timezone: getTimezone(),
-            user_name: this.user_name,
-            data,
-            need_to_parse_recent: send_recent_animes
+        const body = {
+            user_name : this.user_name,
+            timezone: getTimezone()
         }
+        
+        const result = [];
+        
+        // below request is the first request send if needed
+
+        result.push(fetchUserAnimeList ? (await this.__send_request(
+            genURL("UserAnimeList"),
+            {...body, data: userAnimeList},
+        ))?.user_anime_list : no)
+        
+        result.push(
+            this.passed && fetchRecentAnimeList ? (await this.__send_request(
+                genURL("RecentAnimeList"),
+                body
+            ))?.recent_animes : no
+        );
+
+        return result;
     }
 
-    async sendRequest(pipe, ...args){
-        const requestBody = this.prepBody(...args);
+
+    async fetchDynamicData(pipe, data){
+        const url = `${pipe}/MLA/dynamic/${this.tab_name}`;
+
+        const body = {data, user_name: this.user_name, timezone: getTimezone()};
         
-        const ask = new Request(
-            `${pipe}/MLA/user_anime_list/process/${this.tab_name}`,
-             {
-                method: "POST",
-                body: JSON.stringify(requestBody),
-                headers: {"Content-Type": "application/json"}
-            }
+        switch (this.tab_name) {
+            case "Overview":
+                return this.__send_request(
+                    url, body
+                );
+            case "Recently": 
+                return this.__send_request(
+                    url, body
+                )
+        }       
+
+    }
+
+    async __send_request(url, body){
+        const req = new Request(
+            url, {method: "POST", body: JSON.stringify(body), headers: {"Content-Type": "application/json"}}
         );
-    
-        const resp = await fetch(ask).then(
+
+
+        return fetch(req).then(
             (response) => {
                 if(!response.ok)
                     return Promise.reject(response);
 
-                this.response_template.failed = false;
+                this.passed = true && this.passed;
                 return response.json();
-    
             }).catch(async (response) => {
                 try{
                     const reason = await response.text();
-                    this.response_template.reason = reason ? reason : this.response_template.reason;
-                    return say_no(1)[0];
+                    this.reason = reason ? reason : this.reason;
                 }
                 catch{
-                    this.response_template.reason = "Failed, Because API got stuck with something it can't understand. I was waiting for such errors."
-                    return say_no(1)[0];
+                    this.reason = "Failed, Because API got stuck with something it can't understand. I was waiting for such errors."
                 }
-        });       
 
-        if(resp.drip) this.response_template.drip_cache = resp.drip;
-        if(resp.dripped) this.response_template.tab_cache = resp.dripped;
-        if(resp.recent_animes) this.response_template.recent_animes_cache = resp.recent_animes;
+                this.passed = false;
+
+                return say_no(1)[0];
+        });       
+    }
+
+    async extractData(userAnimeList, recentAnimeList){
+        switch (this.tab_name) {
+            case "Overview":
+                return userAnimeList;
+            case "Recently":
+                 return recentAnimeList;
+        }
     }
 }
 
@@ -178,7 +197,6 @@ async function processUserDetailsWhenNeeded(
     const said_no = say_no(1)[0];    
     // if nobody called you, then say "no_update"
     if(ctx.length === 0) return said_no;
-    const asked_to_process_raw = ctx[0].prop_id.includes("disabled"); // does it because of switching tabs
 
     const processor = new ProcessUserDetails(
         active_tab,
@@ -186,23 +204,25 @@ async function processUserDetailsWhenNeeded(
           page_settings?.user_name ?? ""
     );
 
-    // BUG: yet to find
-    const who_triggered = ctx[0].prop_id;
-    const ask_to_process = timer_is_stopped && (asked_to_process_raw ? (
-        timer_status === "green" && user_anime_list_source.length > 0
-    ) : (Boolean(
-        parsed_recent_animes
-    ) && (
-        who_triggered.includes("run-process-job-again") || !Boolean(meta_for_tabs[processor.tab_index])
-        )))
+    const timer_called_when_disabled = ctx[0].prop_id.includes("disabled") && timer_is_stopped
+    
+    const fetchForStaticDataForFirstTime = [
+        timer_called_when_disabled,
+         timer_status === "green",
+         user_anime_list_source.length > 0
+    ].every((x) => x);
+
+    
+    const fetchDynamicData = timer_called_when_disabled || !Boolean(meta_for_tabs[processor.tab_index]);
 
     const tab_caches = (
-        ask_to_process && asked_to_process_raw
+        fetchForStaticDataForFirstTime
         ) ? Array(meta_for_tabs.length).fill("") : say_no(meta_for_tabs.length);
 
-    if(!ask_to_process){
+    if(!(fetchDynamicData || fetchForStaticDataForFirstTime)){
         const send_note = user_anime_list_source.length === 0 && timer_is_stopped && timer_status === "green";
         if(!send_note) return said_no;
+        
         else return [
             tab_caches,
             dmc_notification(
@@ -216,39 +236,42 @@ async function processUserDetailsWhenNeeded(
             said_no
         ]
     }
-
-    await processor.sendRequest(
-        pipe,
-        asked_to_process_raw ? user_anime_list_source.flat() : parsed_user_anime_list,
-        parsed_recent_animes,
-        asked_to_process_raw
-    );
-
     
-    tab_caches[processor.tab_index] = processor.response_template.tab_cache;
+    if(fetchForStaticDataForFirstTime)
+         [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
+            pipe, true, true, user_anime_list_source.flat()
+        );
+
+    if(processor.passed && fetchDynamicData){
+        const asked = await processor.extractData(
+            parsed_user_anime_list, parsed_recent_animes
+        );
+        
+        if(asked)
+            tab_caches[processor.tab_index] = await processor.fetchDynamicData(pipe, asked);
+    }
     
-    const message = [processor.response_template.reason];
-    if(processor.response_template.failed)
+    const message = [processor.reason];
+    if(!processor.passed)
         message.push(
             ". Reasonable Issue ? then log it in ",
             ddc_link("Issues.", "https://github.com/RahulARanger/MyListAnalyzerDash/issues")
         )
 
-    const note = processor.response_template.failed ? dmc_notification(
-        false, // autoClose
-        processor.response_template.failed ? "red" : "green",
-        false,
-        message,
+    const note = !processor.passed ? dmc_notification(
+        false, "red", false, message,
         `Result for Processing User: ${processor.user_name}'s Details`
     ) : said_no;
     // if passed, do not show notification, to reduce the traffic.
     
+    const stores = processor.passed ? [
+        parsed_user_anime_list, parsed_recent_animes
+    ] : say_no(2)
 
     return [
         tab_caches,
         note,
-        processor.response_template.drip_cache,
-        processor.response_template.recent_animes_cache,
+        ...stores,
         said_no
     ]
 }
