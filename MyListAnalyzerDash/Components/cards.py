@@ -1,13 +1,16 @@
 import json
+import logging
 import typing
+from dataclasses import dataclass, asdict
+
 import dash_mantine_components as dmc
+from dash import html
+from dash.dependencies import Component
+
+from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color
-from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
-from dash import html, dcc
-from dash.dependencies import Component
-import logging
-from dataclasses import dataclass, asdict, Field
+from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
 
 
 @dataclass
@@ -33,40 +36,40 @@ class SplideOptions:
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
     return dmc.Paper(
         expanding_layout(*children, **__),
-        class_name=as_card if as_card else css_classes.home_card
+        className=as_card if as_card else css_classes.home_card
     )
 
 
 def no_data(directions, force=False):
-    return home_card(dmc.Image(
-        class_name="no-data",
-        src="/assets/nodata.svg",
-        caption=directions if force else f"No Data Found, Please wait or else open {directions} to start the Timer",
-        alt="No Data Found",
-        placeholder="No Data Found ",
-        withPlaceholder=True
-    ), align="center", position="center", as_card="center-card")
+    return home_card(
+        dmc.Image(
+            src="/assets/nodata.svg",
+            withPlaceholder=True,
+            alt="Failed to load illustration, but please wait for some time for data to get processed",
+            placeholder="Illustration to inform you that data is currently getting processed, and suggests you to wait."
+            , caption=directions, style=dict(width="25vw", marginTop="5vw")
+        ), align="center", position="center", as_card="center-card"
+    )
 
 
 def error_card(directions):
     logging.exception(directions, exc_info=True)
     return home_card(dmc.Image(
-        class_name="no-data",
         src="/assets/warning.svg",
         caption=f"Error while processing things, Please report it as a bug",
         alt="Error",
         placeholder="Failed to plot data",
-        withPlaceholder=True
-    ), dmc.Text(["Please refer to the error: ", dmc.Code(directions)]),
+        withPlaceholder=True, style=dict(width="25vw", marginTop="5vw")
+    ), dmc.Code(directions),
         align="center", position="center", as_card="center-card")
 
 
-def sign(number, reference, class_name=""):
+def sign(number, reference, className=""):
     return dmc.Text([
         html.Span(" = " if number == reference else " ▼  " if number < reference else " ▲ "),
-        html.Span(f'{abs(number - reference)}', className=f"count-number {class_name}")],
+        html.Span(f'{abs(number - reference)}', className=f"count-number {className}")],
         color="yellow" if number == reference else "red" if number < reference else "green",
-        size="xs", class_name="indicator-number"
+        size="xs", className="indicator-number"
     )
 
 
@@ -78,10 +81,9 @@ def number_comp(number, is_percent, color, class_name, size="lg"):
         class_name_added += f" {css_classes.as_percent}"
 
     return dmc.Text(
-        html.Span(
-            exact_value,
-            title=exact_value, className=class_name_added
-        ),
+        floating_tooltip(html.Span(
+            exact_value, className=class_name_added, **{"data-value": exact_value}
+        ), label=exact_value),
         color=color, weight="bold", size=size
     )
 
@@ -104,9 +106,11 @@ def number_card_format_1(
         ref_number=-1, ref_another=-1
 ):
     references = []
-    references.append(html.Sub([
-        "[",
-        html.Span(another, title=str(another), className=f"{css_classes.number_counter} {class_name}"), "]"]
+    references.append(floating_tooltip(
+        html.Sub([
+            "[", html.Span(
+                another, className=f"{css_classes.number_counter} {class_name}", **{"data-value": another}), "]"]
+        ), label=another
     )) if another >= 0 else ...
 
     numbers = [number_comp(number, is_percent, color, class_name)]
@@ -120,6 +124,18 @@ def number_card_format_1(
         dmc.Space(h=1),
         _divider(" ".join(label.capitalize().split("_")), color),
         class_name=f"number-card {class_name}")
+
+
+def card_format_4(text, label, color, class_name, size="lg", url=None):
+    return expanding_row(
+        expanding_row(
+            dmc.Text(text, size=size, color=color, weight="bold") if not url else dmc.Anchor(
+                text, size=size, color=color, href=url, weight="bold"), style=dict(justifyContent="center")
+        ),
+        dmc.Space(h=1),
+        _divider(label, color),
+        class_name=f"number-card {class_name}"
+    )
 
 
 def splide_slides(_slides: typing.Tuple[Component]):
@@ -152,12 +168,11 @@ def splide_container(
 def number_card_format_2(label, icon, value=0, color="red", percent_value=0, class_name=None):
     return expanding_row(
         dmc.Avatar(src=icon, size="lg"),
-        dmc.Space(w=6),
         expanding_layout(
             expanding_layout(
                 number_comp(value, False, color, class_name),
-                dmc.Divider(color="gray", orientation="vertical"),
-                number_comp(percent_value, True, color, class_name, size="md"),
+                # dmc.Divider(color="gray", orientation="vertical"),
+                # number_comp(percent_value, True, color, class_name, size="md"),
                 direction="row", position="center"
             ),
             _divider(label, color)
@@ -176,8 +191,7 @@ def number_card_format_3(
         status_label="Hold",
         total=12,
         re_watching=True,
-        link="",
-        size="sm"
+        link=""
 ):
     link = link if link else f"https://myanimelist.net/anime/{id_}"
     try:
@@ -185,49 +199,38 @@ def number_card_format_3(
     except AttributeError:
         status_color = "red"
 
-    changed = expanding_row(
-        dmc.Text("+" if difference else "", size=size, color="green", weight="bold"),
-        number_comp(
-            difference, is_percent=False, class_name=class_name, color="green", size=size
-        ), style=dict(alignItems="center", justifyContent="flex-start")
-    ) if not re_watching else dmc.Badge("Re-watching", color="blue", size=size)
+    current = up_until - ((-1 if re_watching else 1) * difference)
+    changed = f"{'' if not difference else '-' if re_watching else '+'}{difference}"
+    so = f"{current} {changed} → {up_until}"
 
-    up_until_comp = number_comp(
-        up_until, color="blue" if difference else "violet", size=size, class_name=class_name, is_percent=False)
-
-    transition = [expanding_row(
-        number_comp(up_until - ((-1 if re_watching else 1) * difference), color="cyan", size=size,
-                    class_name=class_name, is_percent=False),
-        dmc.Text("→", color="gray", size=size), up_until_comp,
-        style=dict(alignItems="center", justifyContent="center")
-    ) if difference else up_until_comp]
-
-    transition.append(
-        expanding_row(
-            dmc.Text("Total: ", size=size, color="orange"),
-            number_comp(total, is_percent=False, size=size, color="orange", class_name=class_name),
-            style=dict(justifyContent="flex-end")
-        )
-    ) if total else ...
+    progress = dmc.Progress(
+        sections=[
+            dict(value=(current / total) * 1e2, color="green", tooltip=so),
+            dict(
+                value=(difference / total) * 1e2,
+                color="violet" if re_watching else "indigo", label=changed, tooltip=so
+            )
+        ], animate=status_label == "Watching"
+    ) if total else dmc.Progress(
+        sections=[
+            dict(value=100, color="cyan", tooltip=so, label=so),
+        ], animate=True, striped=True
+    )
 
     return expanding_layout(
         expanding_row(
-            dmc.Anchor(
-                html.Span(anime_name, title=anime_name),
+            set_tooltip(dmc.Anchor(
+                anime_name,
                 href=link, target="_blank", size="lg", align="center",
                 style=dict(textOverflow="ellipsis")
-            ),
+            ), anime_name),
             html.Sup(
                 dmc.Text(
                     html.Span(str(index + 1), **{"data-rank": str(index + 1)}, className=css_classes.rank_index_format),
                     size="xs", color="yellow"
                 ))
         ),
-        expanding_row(
-            changed,
-            *transition,
-            style=dict(alignItems="center")
-        ),
+        progress,
         dmc.Divider(color=status_color),
         expanding_row(
             dmc.Badge(status_label, color=status_color, size="sm"),
@@ -237,3 +240,37 @@ def number_card_format_3(
             )
         ), class_name=f"{class_name} belt"
     )
+
+
+def number_parameter(label, value, class_name, is_percent=False):
+    return expanding_layout(
+        dmc.Text(label, color="gray", size="sm"),
+        number_comp(value, is_percent, color="light", size="xs", class_name=class_name),
+        spacing=2, align="flexStart", position="left")
+
+
+def special_anime_card(name, url, picture, second_row, special_label, special_color, *parameters):
+    return home_card(
+        expanding_row(
+            dmc.Avatar(src=picture, size="xl"),
+            dmc.Space(w=5),
+            expanding_layout(
+                dmc.Anchor(name, href=url),
+                second_row,
+                expanding_row(*parameters), position="start", align="flexStart", spacing=4
+            ), style=dict(justifyContent="flexStart", alignItems="flexStart")
+        ),
+        expanding_layout(dmc.Divider(
+            label=dmc.Text(
+                special_label,
+                weight="bold",
+                style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
+            color=special_color, labelPosition="center", size="md"),
+            direction="column"
+        ), as_card="home-card", style=dict(padding="10px")
+    )
+
+
+def relative_color(value, full):
+    relative = value / full
+    return "green" if relative > 0.89 else "teal" if relative > 0.85 else "lime" if relative > 0.75 else "yellow" if relative <= .69 else "orange" if relative <= 5 else "red"

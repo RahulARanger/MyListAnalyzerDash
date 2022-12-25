@@ -91,9 +91,7 @@ class ViewPage:
             dcc.Store(id=view_dashboard.recent_anime),
             dcc.Location(id=view_dashboard.locationChange, refresh=False), *starry_bg(),
             dmc.Affix(self.header.layout(page_settings), position={"top": 0, "left": 0}), dmc.LoadingOverlay([
-                dmc.ScrollArea(self.dashboard.layout(page_settings), type="hover", class_name="home half-elf"),
-                dcc.Store(id={"type": view_dashboard.tabs, "index": 0}),
-                dcc.Store(id={"type": view_dashboard.tabs, "index": 1})
+                dmc.ScrollArea(self.dashboard.layout(page_settings), type="hover", className="home half-elf"),
             ], loaderProps=main_app.loadingProps), html.Section(list(self.modals), id="modals"),
             html.Aside(id=view_dashboard.tempDataStore), provider(
                 view_dashboard.startDetails, view_header.resultForSearch,

@@ -26,6 +26,6 @@ const renderer = new DashRenderer();
         script.type = 'text/javascript';
         script.src = scriptPath;
         head.appendChild(script);
-    })
+    });
 
 })()

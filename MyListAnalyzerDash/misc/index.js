@@ -77,14 +77,15 @@ function set_view_url_after_search(page_settings, url){
 
 class ProcessUserDetails{
     reason = "Mostly blocked due to CORS Error, or might be backend API is sleeping 😴😴😴.";
-    tab_index;
+    tab_index = 0;
     tab_name;
     user_name;
     passed = true;
 
-    constructor(tab_index, tab_names, user_name){
-        this.tab_index = tab_index ?? 0;
-        this.tab_name = tab_names[this.tab_index]?.index;
+    constructor(tab_name, tab_names, user_name){
+        for(const [index, tab_format] of tab_names.entries())  if(tab_format?.index === tab_name){ this.tab_index = index; break;}
+        
+        this.tab_name = tab_name;
         this.user_name = user_name;
 
         refreshTab(null, tab_names[this.tab_index]);
@@ -177,6 +178,22 @@ class ProcessUserDetails{
                  return recentAnimeList;
         }
     }
+
+    async decide_what_to_fetch(static_index){
+        // fetch User Anime List, fetch Recent Anime List
+        switch(static_index){
+            case true: {
+                return [true, true];
+            }
+            case 0: { // overview
+                return [true, false];
+            }
+
+            case 1: { // recently
+                return [false, true];
+            }
+        }
+    }
 }
 
 
@@ -204,16 +221,27 @@ async function processUserDetailsWhenNeeded(
           page_settings?.user_name ?? ""
     );
 
-    const timer_called_when_disabled = ctx[0].prop_id.includes("disabled") && timer_is_stopped
+
+    // decide for which will we have to fetch static and dynamic data
+    const static_index = true; // means all
+
+    const timer_was_called = ctx[0].prop_id.includes("disabled");
+    const timer_was_called_when_disabled = timer_was_called && timer_is_stopped;
     
     const fetchForStaticDataForFirstTime = [
-        timer_called_when_disabled,
+        timer_was_called_when_disabled,
          timer_status === "green",
          user_anime_list_source.length > 0
     ].every((x) => x);
 
-    
-    const fetchDynamicData = timer_called_when_disabled || !Boolean(meta_for_tabs[processor.tab_index]);
+    if(fetchForStaticDataForFirstTime)
+        switch(static_index){
+            case true:{
+                meta_for_tabs = meta_for_tabs.map(() => "");
+            }
+        }
+
+    const fetchDynamicData = (timer_was_called ? timer_was_called_when_disabled : true) && !Boolean(meta_for_tabs[processor.tab_index]);
 
     const tab_caches = (
         fetchForStaticDataForFirstTime
@@ -236,11 +264,13 @@ async function processUserDetailsWhenNeeded(
             said_no
         ]
     }
-    
+
     if(fetchForStaticDataForFirstTime)
-         [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
-            pipe, true, true, user_anime_list_source.flat()
+        [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
+            pipe, ...await processor.decide_what_to_fetch(static_index), user_anime_list_source.flat(), static_index
         );
+    
+    console.log(parsed_user_anime_list, "after things");
 
     if(processor.passed && fetchDynamicData){
         const asked = await processor.extractData(

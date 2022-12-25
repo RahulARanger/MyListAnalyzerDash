@@ -31,7 +31,7 @@ def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
 
     return expanding_layout(
         *add_in_case,
-        dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="filled"),
+        dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="light"),
         dmc.Space(h=10),
         expanding_layout(
             name_input,
@@ -103,15 +103,23 @@ def settings_tabs(add=False, disable_user_job=False):
     if add:
         return search_user_tab(add=add), user_details_tab(add)
 
-    return dmc.Tabs(
-        [dmc.Tab(
-            search_user_tab(disable_user_job=disable_user_job), label="Search User 🔍"
-        ),
-            dmc.Tab(
-                user_details_tab(),
-                label="User Details", disabled=disable_user_job
-            )], color="orange", id=view_header.settingsTabs
+    values = [
+        "Search User 🔍",
+        "User Details"
+    ]
+
+    tab_list = dmc.TabsList(
+        [dmc.Tab(_, value=_, disabled=index == 1 and disable_user_job) for index, _ in enumerate(values)]
     )
+
+    return dmc.Tabs([
+        tab_list,
+        dmc.Space(h=6),
+        dmc.TabsPanel(
+            search_user_tab(disable_user_job=disable_user_job), value=values[0]
+        ),
+        dmc.TabsPanel(user_details_tab(), value=values[1])
+    ], color="orange", id=view_header.settingsTabs, value=values[0])
 
 
 def settings_modal(
@@ -158,7 +166,7 @@ def fixed_menu(*options, side_ways=tuple()):
         expanding_layout(
             *side_ways, dmc.Menu(
                 options, trigger="click", position="top", placement="end", closeOnItemClick=True, closeOnScroll=True,
-                class_name="corner", shadow="xl"),
+                className="corner", shadow="xl"),
             direction="row", position="center"
         ),
         position=dict(right=10, bottom=10), zIndex="2"

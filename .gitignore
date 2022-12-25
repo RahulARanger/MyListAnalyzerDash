@@ -11,3 +11,4 @@ MyListAnalyzerDash/pages/test_*
 node_modules
 */package-lock.json
 Node-Related/*
+tidy_check

@@ -20,13 +20,24 @@ class HomePage:
     def inside_children(self, set_active: int):
         paper_height = 250
 
-        tabs = dmc.Tabs(
-            [
-                dmc.Tab(dmc.Paper(
-                    _, style={"height": f"{paper_height - 69}px", "background": "transparent"}, p="md"),
-                    label=label) for _, label in
-                ((self.login_things(), "Login"), (self.show_view(), "Open"))]
-            , color="orange", class_name="home_card", active=set_active)
+        labels = ["Login", "Open"]
+
+        tab_list = dmc.TabsList(
+            [dmc.Tab(_, value=_) for _ in labels]
+        )
+
+        tab_meat = [
+            dmc.TabsPanel(
+                dmc.Paper(
+                    _, style={"height": f"{paper_height - 69}px", "background": "transparent"}, p="md"
+                ),
+                value=labels[index])
+            for index, _ in enumerate((self.login_things(), self.show_view()))]
+
+        tabs = dmc.Tabs([
+                tab_list,
+                dmc.Space(h=5),
+                *tab_meat], color="orange", className="home_card", loop=True, value=labels[0])
 
         return [
             *starry_bg(),
@@ -43,7 +54,7 @@ class HomePage:
     def layout(self, tab):
         return dmc.LoadingOverlay(
             children=self.inside_children(tab),
-            class_name="home", loaderProps=main_app.loadingProps)
+            className="home", loaderProps=main_app.loadingProps)
 
     def login_things(self):
         return expanding_layout(
@@ -51,7 +62,7 @@ class HomePage:
             button_with_icon(
                 "MyAnimeList", id_=mal_creds_modal.triggerId, image_src=mal_creds_modal.logo,
                 size="sm"),
-            spacing="xl", align="center", position="center"
+            spacing="xl", align="center", position="flexStart"
         )
 
     def connect_callbacks(self):

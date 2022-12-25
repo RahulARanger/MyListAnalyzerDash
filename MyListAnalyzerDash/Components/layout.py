@@ -24,11 +24,10 @@ def expanding_layout(
     return dmc.Group(
         children=children,
         spacing=spacing,
-        direction=direction,
         position=position,
         align=align,
         style=_style,
-        class_name=class_name,
+        className=class_name,
         noWrap=no_wrap,
         grow=grow_child, **extras
     )

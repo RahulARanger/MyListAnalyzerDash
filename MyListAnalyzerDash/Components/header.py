@@ -21,14 +21,13 @@ class CommonHeaderComponent:
     def layout(self, *args):
         inside_header = self.inside_header(*args)
         return dmc.Header(expanding_layout(
-
             *header_link(self.queries.appName, self.queries.short_name, self.queries.home),
 
             expanding_layout(
                 *(tuple() if not inside_header else inside_header),
                 spacing="sm", direction="row", align="center", position="right"
             ), direction="row"
-        ))
+        ), height="35px", pl=6, pt=3, pb=3, pr=3, zIndex=1, withBorder=True, style=dict(backgroundColor="transparent", width="100vw"))
 
 
 class ViewHeaderComponent(CommonHeaderComponent):

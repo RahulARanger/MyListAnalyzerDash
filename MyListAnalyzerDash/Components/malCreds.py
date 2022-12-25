@@ -30,11 +30,11 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                     ),
                     expanding_layout(
                         dmc.Button(
-                            "Login", class_name="custom-butt", id=mal_creds_modal.login
+                            "Login", className="custom-butt", id=mal_creds_modal.login
                         ), dmc.Button(
                             "Logout",
                             id=mal_creds_modal.logout,
-                            class_name="custom-butt"
+                            className="custom-butt"
                         ), no_wrap=True, direction="row"
                     ),
                     spacing="md", align="center", position="center"
@@ -65,7 +65,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                 Output(mal_creds_modal.pfp, "src"),
                 Output(mal_creds_modal.location, "href"),
                 Output(mal_creds_modal.last_prefix_id, "lineClamp"),
-                Output(mal_creds_modal.triggerId, "class_name")
+                Output(mal_creds_modal.triggerId, "className")
             ],
             [
                 Input(mal_creds_modal.login, "n_clicks"),

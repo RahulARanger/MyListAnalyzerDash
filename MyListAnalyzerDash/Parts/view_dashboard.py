@@ -1,19 +1,22 @@
-import typing
-
-from dash import dcc, callback, Output, State, Input, MATCH, no_update, clientside_callback, ClientsideFunction, ALL, \
-    html
-import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps, \
-    status_light_colors, css_classes
-from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    number_card_format_2, SplideOptions, number_card_format_3, number_comp
-from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
-from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
-from MyListAnalyzerDash.Components.collection import fixed_menu, relative_time_stamp_but_calc_in_good_way
 import json
+import typing
+from datetime import datetime
+
+import dash_mantine_components as dmc
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
+    html
 from dash.dash_table import DataTable
-from datetime import datetime, time
+
+from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
+    number_card_format_2, SplideOptions, number_card_format_3, card_format_4, relative_color
+from MyListAnalyzerDash.Components.collection import fixed_menu
+from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
+from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps, \
+    status_light_colors
+from MyListAnalyzerDash.utils import genre_link, studio_link
 
 
 class ViewDashboard:
@@ -49,7 +52,7 @@ class ViewDashboard:
             ],
             [
                 Input(view_dashboard.intervalAsk, "disabled"),
-                Input(view_dashboard.tabs, "active"),
+                Input(view_dashboard.tabs, "value"),
                 Input(view_dashboard.process_again, "n_clicks")
             ],
             [
@@ -64,8 +67,7 @@ class ViewDashboard:
                 State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
                 State(view_dashboard.userDetailsJobResult, "data"),
                 State(view_dashboard.recent_anime, "data"),
-                State(dict(type=view_dashboard.tabs, index=ALL), "data"),
-                State(view_dashboard.tabs, "id")
+                State(dict(type=view_dashboard.tabs, index=ALL), "data")
             ]
         )
 
@@ -91,26 +93,31 @@ class ViewDashboard:
 
         tabs = []
         store = []
+        tab_panels = []
 
-        for index, label in enumerate(view_dashboard.tab_names):
+        for index, page in enumerate(view_dashboard.tab_names):
             if index != 1 and page_settings.get("disable_user_job", False):
                 continue
 
-            tabs.append(dmc.Tab(
+            tabs.append(dmc.Tab(page, value=page))
+
+            tab_panels.append(dmc.TabsPanel(
                 children=dmc.Skeleton(dmc.Paper(
                     no_data("Please wait until results are fetched", force=True),
                     pr=15, pb=5, mb=10,
-                    id=dict(type=postfix_tab, index=label), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), label=label, id=dict(type=tab_butt, index=label)))
+                    id=dict(type=postfix_tab, index=page), style={"backgroundColor": "transparent"}),
+                    visible=False, animate=True), value=page, id=dict(type=tab_butt, index=page)))
             store.append(
-                dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=label), data="")
+                dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=page), data="")
             )
 
         return html.Section([
             dmc.Tabs(
-                children=tabs, color="orange",
+                children=[
+                    dmc.TabsList(tabs), dmc.Space(h=6), *tab_panels, dmc.Space(h=3)
+                ], color="orange",
                 style={"fontSize": "0.5rem"}, id=view_dashboard.tabs, persistence="true",
-                persistence_type="memory"),
+                persistence_type="memory", value=view_dashboard.tab_names[0]),
             *store
         ])
 
@@ -125,25 +132,25 @@ class ViewDashboard:
                 "Please wait until the data gets processed.", force=True
             )
 
-        current_tab, graph_class = self.tab_details(0)
+        page, graph_class = self.tab_details(0)
         user_name = page_settings.get("user_name")
 
         try:
-            time_spent, row_1, row_2, ep_range, seasonal_info, wht_the_dog_dng, wht_the_dog_dng_know_more = process_for_overview(
-                data, current_tab, graph_class, user_name)
+            time_spent, row_1, row_2, rating_over_years, ep_range, wht_the_dog_dng, wht_the_dog_dng_know_more = process_for_overview(
+                data, page, graph_class, user_name)
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
 
         cards = [
             number_card_format_1(
                 number=value, label=label,
-                color=color, class_name=current_tab, is_percent=False)
+                color=color, class_name=page, is_percent=False)
             for value, label, color in row_1
         ]
 
         spent_container = splide_container(*(
             number_card_format_1(
-                number=spent[0], label=spent[1], color=view_dashboard.time_spent_color, class_name=current_tab,
+                number=spent[0], label=spent[1], color=view_dashboard.time_spent_color, class_name=page,
                 is_percent=False
             )
             for spent in time_spent
@@ -156,20 +163,46 @@ class ViewDashboard:
         second_row = expanding_row(*(
             number_card_format_1(
                 number=value, is_percent=True, label=label.capitalize(),
-                class_name=current_tab, another=exact,
+                class_name=page, another=exact,
                 color=color
             ) for label, (exact, value), color in row_2
         ))
 
         third_row = expanding_row(
-            ep_range, seasonal_info, wht_the_dog_dng,
+            number_card_format_1(
+                number=data.get("eps_watched", 0), is_percent=False,
+                label="# Eps. Watched", class_name=page,
+                color="grape"
+            ),
+            number_card_format_1(
+                number=data.get("avg_score", 0), is_percent=False,
+                label="Mean Score", class_name=page,
+                color=relative_color(data.get("avg_score", 0), 10)
+            ),
+            card_format_4(
+                data.get("mostly_seen_genre", ""),
+                "Mostly seen Genre",
+                "orange", page, url=genre_link(data.get("genre_link"))
+            ),
+            card_format_4(
+                data.get("mostly_seen_studio", ""),
+                "Mostly seen Studio",
+                "cyan", page, url=studio_link(data.get("studio_link"))
+            ),
             style=dict(gap="1rem", alignContent="center", alignItems="center", justifyContent="center")
         )
 
+        fourth_row = expanding_row(
+            wht_the_dog_dng, ep_range,
+            style=dict(gap="1rem", alignContent="center", alignItems="center", justifyContent="center")
+        )
+
+        fifth_row = rating_over_years
+
         return [
-            __ for _ in (first_row, second_row, third_row) for __ in
+            __ for _ in (first_row, second_row, third_row, fourth_row, fifth_row) for __ in
             [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=3)]
-        ] + [dmc.Space(h=6), over_view_s_over_view(wht_the_dog_dng_know_more)]
+        ]
 
     def process_recently_data(self, data, page_settings):
         if not data:
@@ -182,16 +215,16 @@ class ViewDashboard:
         user_name = page_settings.get("user_name", "")
         recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
 
-        menu = fixed_menu(
-            side_ways=[
-                dmc.Text(expanding_layout(
-                    dmc.Text(user_name, color="orange", size="sm"), f"last Updated:",
-                    relative_time_stamp_but_calc_in_good_way(
-                        False, class_name=css_classes.time_format, default=data["recently_updated_at"]
-                    ), direction="row"
-                ), size="sm")
-            ]
-        )
+        # menu = fixed_menu(
+        #     side_ways=[
+        #         dmc.Text(expanding_layout(
+        #             dmc.Text(user_name, color="orange", size="sm"), f"last Updated:",
+        #             relative_time_stamp_but_calc_in_good_way(
+        #                 False, class_name=css_classes.time_format, default=data["recently_updated_at"]
+        #             ), direction="row"
+        #         ), size="sm")
+        #     ]
+        # )
 
         recently_updated_plots = recently_updated_trend_comp(
             json.loads(data.get("recently_updated_day_wise", "{}")),
@@ -206,19 +239,23 @@ class ViewDashboard:
         ]
 
         splide_options = SplideOptions(
-            type="loop", width="", perPage=3, gap=".69rem", padding="6px", autoScroll=dict(speed=1),
+            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoScroll=dict(speed=1),
             mediaQuery="max",
             breakpoints={
-                "720": dict(perPage=2),
-                "420": dict(perPage=1.5)
+                "1120": dict(perPage=3.5),
+                "980": dict(perPage=3),
+                "860": dict(perPage=2.5),
+                "740": dict(perPage=2),
+                "620": dict(perPage=1.5),
+                "420": dict(perPage=1.25),
+                "360": dict(perPage=1)
             }
         )
 
         belt = splide_container(*cards, splide_options=splide_options, class_name=current_tab)
 
         return expanding_layout(
-            belt, dmc.Space(h=2), recently_updated_plots,
-            menu
+            dmc.Space(h=3), belt, dmc.Space(h=2), recently_updated_plots
         )
 
 
@@ -226,7 +263,9 @@ def process_for_overview(data, current_tab, graph_class, user_name):
     row_1 = data["row_1"]
     time_spent = data["time_spent"]
     row_2 = json.loads(data["row_2"])
-    ep_range_raw, seasons_raw, airing_dist, airing_detail, current_year = data["row_3"]
+    ep_range_raw, airing_dist, airing_detail = data["row_3"]
+
+    rating_over_years = data["rating_over_years"]
 
     yield time_spent
     yield zip(row_1["values"], row_1["keys"], view_dashboard.row_1_colors)
@@ -240,6 +279,30 @@ def process_for_overview(data, current_tab, graph_class, user_name):
     ep_range = Config()
     ep_range.scroll_zoom = False
 
+    ratings = rating_over_years["ratings"]
+
+    fig = go.Figure(
+        data=[go.Bar(x=ratings, y=rating_over_years["frames"][0])],
+        layout=go.Layout(
+            yaxis=dict(range=[0, rating_over_years["max_y_range"]], autorange=False),
+            updatemenus=[dict(
+                type="buttons",
+                buttons=[dict(label="Play",
+                              method="animate",
+                              args=[None])])]
+        ),
+        frames=[go.Frame(data=[go.Bar(x=ratings, y=value)]) for value in rating_over_years["frames"][1:]]
+    )
+
+    yield core_graph(
+        BeautifyMyGraph(
+            title="Seasons over years", x_title="years", y_title="Seasons",
+            show_x=True, show_y=True
+        ).handle_subject(fig),
+        apply_shimmer=False, index=3, prefix=current_tab, class_name=graph_class,
+        responsive=True
+    )
+
     yield core_graph(
         BeautifyMyGraph(
             title="Range of Anime Episodes", x_title="Episode Range", y_title="Number of Shows",
@@ -249,30 +312,12 @@ def process_for_overview(data, current_tab, graph_class, user_name):
         responsive=True, config=ep_range
     )
 
-    seasons = []
-    # not using generator as it becomes hard to read
-    for raw, title in zip(seasons_raw, ("Up Until,", f"In {current_year},")):
-        loaded = json.loads(raw)
-
-        seasons.append(
-            expanding_layout(dmc.Text(title, size="sm"), *(
-                number_card_format_2(
-                    season.capitalize(), seasons_maps[season][0],
-                    value=value[0] if value[0] else 0, percent_value=(value[1] if value[1] else 0) * 100,
-                    class_name=current_tab, color=seasons_maps[season][1])
-                for [season, value] in zip(loaded["index"], loaded["data"])
-            ), style=dict(padding="3px")))
-
-    yield splide_container(
-        *seasons, class_name=graph_class, splide_options=SplideOptions(autoplay=True, type="loop", width="250px")
-    )
-
     airing = json.loads(airing_dist)
 
     if not airing["data"]:
         yield dmc.Alert(
             dmc.Text(f"{user_name} is not Watching any Animes which are currently airing"),
-            color="orange", title="No Data", withCloseButton=True, variant="light",
+            color="orange", title="No Data", withCloseButton=True,
             icon=[dmc.Image(src=view_dashboard.no_data)])
     else:
         yield core_graph(
@@ -413,14 +458,17 @@ def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_
         apply_shimmer=False, index=3, prefix=tab_name, class_name=graph_class, responsive=True
     )
 
+    labels = ["Actual", "Cumulative", "Weekly"]
+
+    tabs = [dmc.TabsPanel(children=plot_1, value=labels[0]),
+            dmc.TabsPanel(children=plot_2, value=labels[1]),
+            dmc.TabsPanel(
+                value=labels[2],
+                children=weekly_fat
+            )]
+
     return dmc.Tabs(
         [
-            dmc.Tab(children=plot_1, label="Actual"),
-            dmc.Tab(children=plot_2, label="Cumulative"),
-            dmc.Tab(
-                label="Weekly",
-                children=weekly_fat
-            )
-        ], color="orange", variant="pills"
+            *tabs, dmc.TabsList([dmc.Tab(_, value=_) for _ in labels])
+        ], color="orange", variant="pills", value="Actual", persistence=True, persistence_type="session"
     )
-

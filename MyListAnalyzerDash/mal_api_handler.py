@@ -147,8 +147,8 @@ class VerySimpleMALSession(CoreMALSession):
     def anime_list(self, session, embed_url=None, user_name="@me", sort_order="list_updated_at", offset=0, limit=10):
         fields = "genres,list_status{start_date,finish_date,num_times_rewatched,rewatch_value,priority,score}," \
                  "start_date,end_date,mean,rank,popularity,created_at,updated_at,num_episodes,media_type,source," \
-                 "average_episode_duration,rating,studios,start_season,num_list_users,num_scoring_users,nsfw,status," \
-                 "broadcast"
+                 "average_episode_duration,rating,studios,start_season,nsfw,status," \
+                 "broadcast,num_scoring_users,num_list_users,num_favorites"
 
         stats, response = extract_perf(session.get(
             self.postfix(user_name, "animelist"), params={
@@ -170,5 +170,9 @@ class VerySimpleMALSession(CoreMALSession):
             )
             next_page = _raw.get("paging", {}).get("next", "")
             _raw = _raw.get("data", [])
+
+            # Reducing size
+            for row in _raw:
+                row["node"].get("main_picture", dict(medium="")).pop("medium")
 
         return _raw, _perf, next_page, next_page == ""

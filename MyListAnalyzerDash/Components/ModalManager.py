@@ -1,6 +1,7 @@
 import typing
 from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback, html
 import dash_mantine_components as dmc
+from MyListAnalyzerDash.Components.tooltip import floating_tooltip
 
 
 def modal_basic_check(clicked, is_opened):
@@ -90,8 +91,8 @@ def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, def
     extras.update(id=id_) if id_ else ...
 
     return dmc.Text(
-        html.I(
-            "Not Yet Updated", **extras,
-            className=class_name
-        ), size=size
-    )
+            html.I(
+                "Not Yet Updated", **extras,
+                className=class_name
+            ), size=size
+        )
