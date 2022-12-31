@@ -71,11 +71,10 @@ class HomePage:
     def show_view(self):
         return expanding_layout(
             *(
-                dcc.Link(
-                    expanding_layout(
-                        dmc.Text(link_text, color="blue", underline=True),
-                        dmc.Text(desc, size="xs", color="orange"), align="center", position="center"
-                    ), className="single_card", href=href, title=desc, refresh=True
+                expanding_layout(
+                    dmc.Anchor(link_text, href=href, refresh=True),
+                    dmc.Text(desc, size="xs", color="orange"),
+                    align="center", position="center", class_name="single_card"
                 ) for link_text, href, desc in home_page.apps
             ))
 

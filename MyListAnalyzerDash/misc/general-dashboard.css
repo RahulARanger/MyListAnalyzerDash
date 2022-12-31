@@ -112,7 +112,7 @@ div.Overview-graphs[id^='{"index":2']{
 
 .Recently.splide{
     box-sizing: border-box;
-    width: calc(100vw - 6px);
+    width: calc(100vw - 9px);
 }
 
 .Recently.belt{

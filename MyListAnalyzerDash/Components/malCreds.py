@@ -1,14 +1,12 @@
-import logging
 import typing
 from MyListAnalyzerDash.mappings.callback_proto import AuthAction
-from dash import no_update, html, Input, Output, State, ctx, callback, dcc, clientside_callback
+from dash import no_update, html, Input, Output, State, ctx, callback, clientside_callback
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.mappings.enums import mal_creds_modal, css_classes
 from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
 from MyListAnalyzerDash.Components.notifications import show_notifications
 from MyListAnalyzerDash.utils import CookieHandler, get_a_proper_url
-from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, for_time
-from MyListAnalyzerDash.Components.buttons import icon_butt_img
+from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, get_modal_id, relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout
 
 
@@ -25,7 +23,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                     dmc.Avatar(size="xl", radius="xl", id=mal_creds_modal.pfp, alt="Your Pfp, if Logged in"),
                     dmc.Text(
                         expanding_layout(
-                            "Hi, ", dmc.Text(id=mal_creds_modal.client_name), direction="row"),
+                            "Hi,", dmc.Anchor(id=mal_creds_modal.client_name, href=""), direction="row"),
                         color="orange", size="sm"
                     ),
                     expanding_layout(
@@ -40,21 +38,17 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                     spacing="md", align="center", position="center"
                 ),
                 dmc.Space(h=20),
-                dmc.Text(mal_creds_modal.access, size="sm", color="red"),
-                dmc.Space(h=20),
-                expanding_layout(
-                    dcc.Link(
-                        icon_butt_img("https://api.iconify.design/bx/link-external.svg?color=gray", "redirect-mal"),
-                        href="", target="_blank",
-                        id=mal_creds_modal.link_id),
-                    dmc.Text(
-                        mal_creds_modal.last_prefix, id=mal_creds_modal.last_prefix_id, size="xs", color="orange",
-                        style={"fontStyle": "italic"}), position="apart", spacing="md", align="center", direction="row",
-                )
+                dmc.Text(mal_creds_modal.access, size="sm", color="blue")
             ]
         )
 
-        return get_modal(mal_creds_modal.triggerId, mal_creds_modal.title, body, ease_close=False)
+        return get_modal(
+            mal_creds_modal.triggerId, expanding_layout(
+                mal_creds_modal.title,
+                relative_time_stamp_but_calc_in_good_way(mal_creds_modal.last_prefix_id, size="xs"),
+                position="apart", spacing="md", align="flex-end", direction="row",
+            ), body, ease_close=False
+        )
 
     def init(self) -> typing.NoReturn:
         make_modal_alive(mal_creds_modal.triggerId)
@@ -64,7 +58,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                 Output(mal_creds_modal.client_name, "children"),
                 Output(mal_creds_modal.pfp, "src"),
                 Output(mal_creds_modal.location, "href"),
-                Output(mal_creds_modal.last_prefix_id, "lineClamp"),
+                Output(mal_creds_modal.last_prefix_id, "data-time-stamp"),
                 Output(mal_creds_modal.triggerId, "className")
             ],
             [
@@ -76,14 +70,18 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
             self.login
         )
 
-        for_time(mal_creds_modal.last_prefix_id)
+        relative_time_stamp_but_calc_in_good_way(
+            mal_creds_modal.last_prefix_id,
+            Input(get_modal_id(mal_creds_modal.triggerId), "opened"),
+            add_callback=True
+        )
 
         clientside_callback(
             """function(name){
                 const redirect_to = name ? `profile/${name}` : "";
                 return `https://myanimelist.net/${redirect_to}`;
             }""",
-            Output(mal_creds_modal.link_id, "href"),
+            Output(mal_creds_modal.client_name, "href"),
             Input(mal_creds_modal.client_name, "children")
         )
 
@@ -112,6 +110,9 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
         is_error = self.error in self.cookies
         is_code = self.code in self.cookies
 
+        if is_error or is_code:
+            action.trigger = css_classes.jump
+
         if is_error:
             action.note = show_notifications(
                 "Failed to Login, please refer error below: ",
@@ -120,9 +121,6 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
             return
 
         note = None
-
-        if is_error or is_code:
-            action.trigger = css_classes.jump
 
         if is_code:
             status, note = self.authorize(self.cookies.pop(self.code), location)
@@ -144,7 +142,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
         if logged_in:
             for check in ("client_id", "client_secret"):
                 response.pop(check) if check in response else ...
-            self.set_cookie_with_expiry(key, response)
+            self.set_cookie_with_expiry(key, response, response["asked"])
 
         if not response:
             action.note = show_notifications(
@@ -163,7 +161,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
 
         action.note = show_notifications(
             mal_creds_modal.loggedIn,
-            "You can now ",
+            "Please refer to the", dmc.Anchor("dashboards", href=""), "for which you now have access to",
             color="green",
             auto_close=2500
         ) if logged_in else no_update
@@ -172,7 +170,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
         action.pic = response.get("picture", "")
         action.last_update = formatted
 
-    def logout(self) -> dmc.Notification:
+    def logout(self):
         if self.settings not in self.cookies:
             return show_notifications(
                 "Not logged in",

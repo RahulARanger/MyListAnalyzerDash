@@ -1,25 +1,36 @@
-from dash import Input, State, Output, dcc, clientside_callback, ClientsideFunction
-import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import view_header, view_dashboard, css_classes
-from MyListAnalyzerDash.Components.layout import expanding_layout
-from MyListAnalyzerDash.Components.ModalManager import get_modal, enter_to_click, \
-    invalid_to_disable, get_modal_id, relative_time_stamp_but_calc_in_good_way
-from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
-from MyListAnalyzerDash.Components.buttons import icon_butt_img
-import plotly.graph_objects as go
 import typing
 
+import dash_mantine_components as dmc
+import plotly.graph_objects as go
+from dash import Input, State, Output, dcc, clientside_callback, ClientsideFunction
 
-def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
+from MyListAnalyzerDash.Components.ModalManager import get_modal, get_modal_id
+from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
+from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
+from MyListAnalyzerDash.mappings.enums import view_header, view_dashboard, css_classes, header_menu_id
+
+
+def search_user(disable_user_job=False, add=False) -> typing.Optional[
         typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
     if add:
-        invalid_to_disable(view_header.askName, view_header.giveName)
-        enter_to_click(view_header.askName, view_header.giveName)
+        clientside_callback(
+            ClientsideFunction(
+                function_name="decide_if_name_required",
+                namespace="MLA"
+            ),
+            [
+                Output(view_header.askName, "disabled"),
+                Output(view_header.askName, "required")
+            ],
+            Input(view_header.is_it_u, "checked")
+        )
         return
 
-    name_input = dcc.Input(
-        value="", id=view_header.askName, placeholder="Enter Name!", autoFocus=False,
-        pattern=r'^\w+$', required=True, className="mantine-TextInput-filledVariant mantine-TextInput-input"
+    name_input = dmc.TextInput(
+        value="", id=view_header.askName, placeholder="User Name, please",
+        required=True, withAsterisk=True, rightSection=[
+            dmc.ActionIcon(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="dark", size="sm")
+        ]
     )
     add_in_case = (dmc.Alert(
         [
@@ -33,15 +44,11 @@ def search_user_tab(disable_user_job=False, add=False) -> typing.Optional[
         *add_in_case,
         dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="light"),
         dmc.Space(h=10),
-        expanding_layout(
-            name_input,
-            dmc.Button(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="gray", size="xs"),
-            direction="row", align="center", no_wrap=True
-        )
+        name_input
     )
 
 
-def user_details_tab(add=False):
+def filters_tab(add=False):
     if add:
         clientside_callback(
             ClientsideFunction(
@@ -57,30 +64,6 @@ def user_details_tab(add=False):
         )
         return
 
-    row_1 = expanding_layout(
-        dmc.Button(
-            dmc.Image(src=view_dashboard.startButt), color="dark",
-            id=view_dashboard.startButtTrigger, size="xs", disabled=True),
-        dmc.Badge("🤷", color="yellow", id=view_dashboard.fetchStatus),
-        dmc.Button(
-            dmc.Image(src=view_dashboard.stopButt), color="dark",
-            id=view_dashboard.stopButtTrigger, size="xs", disabled=True),
-        direction="row", align="center", no_wrap=True
-    )
-
-    row_3 = expanding_layout(
-        dmc.Text(
-            expanding_layout(
-                "Iterations Ran: ", dmc.Text("0", size="xs", id=view_dashboard.paging + "-display"),
-                direction="row", align="center"),
-            color="violet", size="sm"),
-        dmc.Text(
-            expanding_layout("Last Updated: ", relative_time_stamp_but_calc_in_good_way(
-                view_header.last_updated
-            ), direction="row", align="center"), color="orange", size="sm"),
-        direction="row", align="center"
-    )
-
     figure = BeautifyMyGraph(
         title="Requests made for User Details", x_title="Time", y_title="Time Taken(s)",
         autosize=True, show_x=True, show_y=True, show_x_grid=True, ml=3, mr=5, mb=10
@@ -91,73 +74,50 @@ def user_details_tab(add=False):
         prefix=css_classes.request_details, index=0
     )
     return expanding_layout(
-        row_1,
         dmc.Divider(color="orange"),
         request_graph,
-        dmc.Divider(color="orange"),
-        row_3
+        dmc.Divider(color="orange")
     )
 
 
 def settings_tabs(add=False, disable_user_job=False):
     if add:
-        return search_user_tab(add=add), user_details_tab(add)
+        return search_user(add=add), filters_tab(add)
 
-    values = [
-        "Search User 🔍",
-        "User Details"
+    labels = [
+        "Search User",
+        "Filters"
     ]
 
     tab_list = dmc.TabsList(
-        [dmc.Tab(_, value=_, disabled=index == 1 and disable_user_job) for index, _ in enumerate(values)]
+        [dmc.Tab(_, value=_, disabled=index == 1 and disable_user_job) for index, _ in enumerate(labels)]
     )
 
     return dmc.Tabs([
         tab_list,
         dmc.Space(h=6),
         dmc.TabsPanel(
-            search_user_tab(disable_user_job=disable_user_job), value=values[0]
+            search_user(disable_user_job=disable_user_job), value=labels[0]
         ),
-        dmc.TabsPanel(user_details_tab(), value=values[1])
-    ], color="orange", id=view_header.settingsTabs, value=values[0])
+        dmc.TabsPanel(filters_tab(), value=labels[1])
+    ], color="orange", id=view_header.settingsTabs, value=labels[0])
 
 
-def settings_modal(
-        page_settings: typing.Optional[typing.Dict[str, typing.Union[str, bool]]] = None, prop=False,
-        add=False):
+def filters_modal(
+        page_settings: typing.Optional[typing.Dict[str, typing.Union[str, bool]]] = None, add=False):
     if add:
-        modal_id = get_modal_id(view_header.settings)
-        clientside_callback(
-            ClientsideFunction(
-                namespace="MLA",
-                function_name="set_view_url_after_search"),
-            [
-                Output(modal_id, "withCloseButton"),
-                Output(view_dashboard.locationChange, "href"),
-                Output(view_header.show_name, "children"),
-                Output(view_header.show_name + "-link", "href"),
-            ],
-            Input(view_dashboard.page_settings, "data"),
-            State(view_dashboard.locationChange, "href"),
-        )
+        modal_id = get_modal_id(header_menu_id)  # filters
         settings_tabs(add=True)
-        return view_header.settings, modal_id
-
-    if prop:
-        return icon_butt_img(
-            view_header.settingsImage, view_header.settings
-        )
+        return header_menu_id, modal_id
 
     return get_modal(
-        view_header.settings,
-        "Settings",
-        settings_tabs(disable_user_job=page_settings.get("disable_user_job", False)), closeable=False, size="lg"
-    )
-
-
-def ask_again():
-    return icon_butt_img(
-        view_header.ask_again_image, view_dashboard.process_again
+        header_menu_id,
+        expanding_row(
+            dmc.Text("Search User"),
+            dmc.Switch(label="For you ?", color="orange", onLabel="yes", offLabel="no", id=view_header.is_it_u),
+            style=dict(alignItems="flex-end")
+        ),
+        search_user(), ease_close=False
     )
 
 

@@ -1,5 +1,15 @@
 'use strict';
 
+
+function malAuthToken(){
+    const mal_creds = getCookie("mal-creds");
+    if(!mal_creds) return false;
+    
+    const parsed = JSON.parse(JSON.parse(mal_creds.replace(/\\054/g, ',')));
+    return parsed ? `${parsed?.token_type} ${parsed?.access_token}`: false;
+}
+
+
 function animateCounters(tabIndex){
     Array(...document.querySelectorAll(`.count-number.${tabIndex}`)).map((x) => animateRawNumbers(x));
     return window.dash_clientside.no_update;
@@ -269,8 +279,6 @@ async function processUserDetailsWhenNeeded(
         [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
             pipe, ...await processor.decide_what_to_fetch(static_index), user_anime_list_source.flat(), static_index
         );
-    
-    console.log(parsed_user_anime_list, "after things");
 
     if(processor.passed && fetchDynamicData){
         const asked = await processor.extractData(
@@ -307,12 +315,126 @@ async function processUserDetailsWhenNeeded(
 }
 
 
+function decide_if_name_required(is_it_on){
+    if(is_it_on === undefined) return say_no(1)[0];
+    const required = !is_it_on;
+    const disabled = is_it_on;
+    const alert = document.querySelector('div.mantine-Text-root[role="alert"]');
+    if(disabled && alert) {
+        const p = document.createTextNode("You can now directly search for the user, given you are logged in else you can now login from ");
+        const a = document.createElement("a");
+        a.href = "/MLA";
+        a.textContent = "here"
+        alert.textContent = ""
+
+        alert.appendChild(p); alert.appendChild(a)
+    }
+    else alert.textContent = "you would have to manually search for the user, now";
+
+    return [disabled, required]
+}
+
+
+async function validate_user(_, __, ___, typedName, modalOpened, pageSettings, location, pipe, doNotInterrupt, inputID, is_it_for_logged_in_user){
+    const ctx = dash_clientside.callback_context.triggered;
+    const who_triggered_it = ctx.length === 0 ? "" : ctx[0].prop_id;
+
+    const no = say_no(1)[0];
+
+    const user_name = who_triggered_it ? typedName : pageSettings?.user_name;
+    
+    const output_template = {
+        closeable: no,
+        location: no,
+        pageSettings: no,
+        modalOpened: no,
+        show_name: no,
+        show_name_url: no,
+        error: no
+    }
+
+    const return_me = () => [
+        output_template.closeable, output_template.location, output_template.pageSettings,
+        output_template.modalOpened, output_template.show_name, output_template.show_name_url, output_template.error
+    ];
+
+    if(who_triggered_it.includes("search_user_name_view")){
+        output_template.modalOpened = !modalOpened;
+        return return_me();
+    }
+    
+    const passed = is_it_for_logged_in_user || /^\w+$/g.test(user_name);
+
+    if(!passed){
+        
+        output_template.modalOpened = true;
+        output_template.closeable = false;
+        output_template.error = user_name ? "Expecting only alphabetic characters in user name." : "Please Enter User Name";
+        return return_me();
+    }
+
+    const disable = (disabled) => [doNotInterrupt, inputID].forEach((e) => {
+        const ele = document.getElementById(e);
+        ele && (ele.disabled = disabled);
+    })
+
+    disable(true);
+
+    const headers = {'Content-Type': 'application/json'}
+    const body = {user_name}
+    
+    if(is_it_for_logged_in_user){
+        headers["token"] = malAuthToken();
+        body.user_name = "";
+    }
+    
+    const req = new Request(`${pipe}/MLA/validate_user`, {method: "POST", body: JSON.stringify(body), headers: headers})
+    
+    const final_user_name = await fetch(req).then(async (resp) => {
+        const ans = await resp.json();
+        if(!(resp.ok && ans?.passed)) return Promise.reject(ans?.reason, true);
+        return ans.user_name;
+    }).catch(async (reason, expected) => {
+        output_template.error = expected ? (await reason.text()) : reason;
+        return ""
+    }) || user_name;
+
+
+    
+    if(typeof output_template.error === "string"){
+        output_template.modalOpened = true;
+        disable(false);
+        return return_me();
+    }
+
+    output_template.closeable = true;
+    output_template.location = `/MLA/view/${final_user_name}`;
+    pageSettings.user_name = final_user_name;
+    
+    output_template.pageSettings = pageSettings;
+    output_template.modalOpened = false;
+    output_template.show_name = final_user_name;
+    output_template.show_name_url = `https://myanimelist.net/profile/${final_user_name}`;
+    
+    disable(false);
+    return return_me();
+    
+    // document.getElementById(search_bar_id).textContent = actual_user_name;
+}
+
+function fetch_raw_user_anime_list() {
+    // TODO: migrate fetch raw user anime list from python to javascript
+}
+
+
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     "MLA": {
         requestDetails,
         processUserDetailsWhenNeeded,
         refreshTab,
-        set_view_url_after_search
+        set_view_url_after_search,
+        decide_if_name_required,
+        validate_user
     }
 });

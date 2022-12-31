@@ -4,18 +4,16 @@ from datetime import datetime
 
 import dash_mantine_components as dmc
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
     html
 from dash.dash_table import DataTable
 
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    number_card_format_2, SplideOptions, number_card_format_3, card_format_4, relative_color
+    SplideOptions, number_card_format_3, card_format_4, relative_color
 from MyListAnalyzerDash.Components.collection import fixed_menu
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, seasons_maps, \
-    status_light_colors
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, mla_stores
 from MyListAnalyzerDash.utils import genre_link, studio_link
 
 
@@ -46,8 +44,8 @@ class ViewDashboard:
             [
                 Output(dict(type=view_dashboard.tabs, index=ALL), "data"),
                 Output(view_dashboard.userJobDetailsNote, "children"),
-                Output(view_dashboard.userDetailsJobResult, "data"),
-                Output(view_dashboard.recent_anime, "data"),
+                Output(mla_stores.anime_list, "data"),
+                Output(mla_stores.recent_anime_list, "data"),
                 Output(view_dashboard.process_again, "id")
             ],
             [
@@ -57,7 +55,7 @@ class ViewDashboard:
             ],
             [
                 # Timer Status
-                State(view_dashboard.fetchStatus, "color"),
+                State(view_dashboard.startButtTrigger, "color"),
                 # BackEnd URL
                 State("pipe", "data"),
                 # tab_labels
@@ -65,8 +63,8 @@ class ViewDashboard:
                 # Data Sources
                 State(view_dashboard.page_settings, "data"),
                 State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
-                State(view_dashboard.userDetailsJobResult, "data"),
-                State(view_dashboard.recent_anime, "data"),
+                State(mla_stores.anime_list, "data"),
+                State(mla_stores.recent_anime_list, "data"),
                 State(dict(type=view_dashboard.tabs, index=ALL), "data")
             ]
         )
@@ -248,7 +246,7 @@ class ViewDashboard:
                 "740": dict(perPage=2),
                 "620": dict(perPage=1.5),
                 "420": dict(perPage=1.25),
-                "360": dict(perPage=1)
+                "300": dict(perPage=1)
             }
         )
 

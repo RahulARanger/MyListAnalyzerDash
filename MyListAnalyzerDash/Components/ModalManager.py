@@ -1,7 +1,7 @@
-import typing
-from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback, html
 import dash_mantine_components as dmc
-from MyListAnalyzerDash.Components.tooltip import floating_tooltip
+from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback, html
+
+from MyListAnalyzerDash.mappings.enums import css_classes
 
 
 def modal_basic_check(clicked, is_opened):
@@ -27,72 +27,57 @@ def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None):
     )
 
 
-def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md", z_index=200):
+def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md", z_index=200, opacity=.69, blur=.69):
     return dmc.Modal(
         id=get_modal_id(id_),
         title=title, centered=True, children=children, overflow="outside", size=size,
-        closeOnClickOutside=closeable and ease_close,
-        closeOnEscape=closeable and ease_close, withCloseButton=closeable, zIndex=z_index
+        closeOnClickOutside=closeable and ease_close, zIndex=z_index,
+        closeOnEscape=closeable and ease_close, withCloseButton=closeable,
+        overlayOpacity=opacity, overlayBlur=blur, overlayColor="transparent"
     )
 
 
-def for_time(display_time_in, then="lineClamp", other=None):
-    # expecting some dmc.Text for lineClamp
-    return clientside_callback(
-        ClientsideFunction(
-            namespace="handleData",
-            function_name="formatDateTime"
-        ),
-        Output(display_time_in, "children"),
-        Input(display_time_in if not other else other, then)
-    )
-
-
-def enter_to_click(text_id, button_id, action="n_submit"):
-    clientside_callback(
-        ClientsideFunction(
-            namespace="eventListenerThings",
-            function_name="enterToClick"
-        ),
-        Output(button_id, "id"),
-        Input(text_id, action),
-        [
-            State(text_id, "id"),
-            State(button_id, "id"),
-        ]
-    )
-
-
-def invalid_to_disable(text_id: str, button_id: str, action: str = "value") -> typing.NoReturn:
-    clientside_callback(
-        ClientsideFunction(
-            namespace="eventListenerThings",
-            function_name="invalidToDisable"
-        ),
-        Output(button_id, "disabled"),
-        Input(text_id, action),
-        State(text_id, "id")
-    )
-
-
-def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name="", size="sm"):
+def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=css_classes.time_format, size="sm", isMS=False):
     if add_callback:
+        inputs = Input(id_, "data-time-stamp")
+
+        if args:
+            inputs = [inputs, *args]
+
         return clientside_callback(
             ClientsideFunction(
                 namespace="eventListenerThings",
                 function_name="formatTimeStamp"
             ),
             Output(id_, "id"),
-            [Input(id_, "data-time-stamp"), *args],
+            inputs,
             State(id_, "id"),
             prevent_initial_call=True
         )
-    extras = {"data-time-stamp": default}
+    extras = {"data-time-stamp": default, "data-is-ms": "" if not isMS else "true"}
     extras.update(id=id_) if id_ else ...
 
     return dmc.Text(
-            html.I(
-                "Not Yet Updated", **extras,
-                className=class_name
-            ), size=size
+        html.I(
+            "Not Yet Updated", **extras,
+            className=class_name
+        ), size=size
+    )
+
+
+def timestamp_from_store(store_id, *args, class_name=css_classes.time_format, add=False):
+    stamp_id = store_id + "time-stamp"
+    if add:
+        relative_time_stamp_but_calc_in_good_way(stamp_id, *args, add_callback=True)
+        return clientside_callback(
+            ClientsideFunction(
+                function_name="takeThingsAndGiveThat",
+                namespace="handleData"
+            ),
+            Output(stamp_id, "data-time-stamp"),
+            Input(store_id, "modified_timestamp")
         )
+
+    return relative_time_stamp_but_calc_in_good_way(
+        stamp_id, class_name=class_name, isMS=True
+    )

@@ -22,8 +22,9 @@ view_header = namedtuple(
     [
         "settings", "askName", "getName", "requestDetails",
         "re_fetch", "genresCount", "studiosCount", "addUser", "giveName", "appName", "short_name",
-        "home", "show_name", "resultForSearch", "validateNote", "settingsTabs", "settingsImage", "addImage",
-        "searchAlert", "ask_again_image", "last_updated"
+        "home", "show_name", "resultForSearch", "validateNote", "settingsTabs", "addImage",
+        "searchAlert", "ask_again_image", "last_updated", "menu", "downloading", "timeStamp",
+        "is_it_u", "stampsModal"
     ]
 )(
     "view-settings", "ask-user-name", "get-user-name", "request-details",
@@ -31,12 +32,15 @@ view_header = namedtuple(
     'https://api.iconify.design/ant-design/user-add-outlined.svg?color=darkorange', "give-name", "MyListAnalyzer",
     "MLA",
     "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-settings-tabs",
-    "https://api.iconify.design/line-md/beer-alt-filled-loop.svg?color=darkorange",
     "https://api.iconify.design/line-md/plus.svg?color=darkorange",
     "We can only search for the public users. If any filters needed beforehand, Please apply them as provided in the "
     "filters tab",
     "https://api.iconify.design/line-md/rotate-270.svg?color=green",
-    "last-asked-user-details-job-mla"
+    "last-asked-user-details-job-mla",
+    "https://api.iconify.design/line-md/close-to-menu-transition.svg?color=darkorange",
+    "'https://api.iconify.design/line-md/downloading-loop.svg?color=darkorange",
+    "https://api.iconify.design/mdi/recent.svg?color=gold",
+    "view-user-for-you", "view-store-stamps-last-updated-mla"
 )
 
 dashboard = namedtuple(
@@ -47,7 +51,7 @@ view_dashboard = namedtuple(
     "viewDashBoard",
     [
         "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
-        "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "stopButt", "paging",
+        "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
         "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color", "process_again",
         "recent_anime"
@@ -58,7 +62,6 @@ view_dashboard = namedtuple(
     "Please Note, When Stopped, we will be deleting everything that was collected before",
     "Starting Timer...", "mla-page_settings",
     "https://api.iconify.design/codicon/run-above.svg?color=green",
-    "https://api.iconify.design/codicon/run-errors.svg?color=red",
     "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view",
     "note-user-job-details",
     ["teal", "blue", "pink"], ["Overview", "Recently"],
@@ -70,7 +73,7 @@ view_dashboard = namedtuple(
 
 creds_modal = namedtuple(
     "CredsModal", [
-        "notify", "client_name", "login", "pfp", "link_text", "link_id", "logout",
+        "notify", "client_name", "login", "pfp", "link_text", "logout",
         "location", "title", "description", "access", "loggedIn", "triggerId", "loadingNote", "last_prefix",
         "last_prefix_id", "logo"
     ]
@@ -83,12 +86,11 @@ mal_creds_modal = creds_modal(
         "login": "ur-mal-login",
         "pfp": "ur-mal-pfp",
         "link_text": "MAL",
-        "link_id": "ur-mal-link-id",
         "logout": "ur-mal-logout",
         "location": "ur-mal-location",
         "title": "MyAnimeList Login",
         "description": "By Logging in with MAL, you agree with certain things,",
-        "access": "Please login if and only if you are okay for this application to utilize your data",
+        "access": "Note: No Data will be stored on server side. So you can login without worrying about it.",
         "loggedIn": "Logged in MyAnimeList Successfully",
         "triggerId": "trigger_modal_for_mal",
         "loadingNote": "loading-process-mal",
@@ -123,9 +125,41 @@ recent_status = namedtuple(
 
 recent_status_color = recent_status("blue", "green", "yellow")
 
-seasons_maps = {
-    "winter": ["https://api.iconify.design/game-icons/cold-heart.svg?color=lightblue", "gray"],
-    "spring": ["https://api.iconify.design/ph/tree-fill.svg?color=green", "green"],
-    "fall": ["https://api.iconify.design/noto/fallen-leaf.svg", "orange"],
-    "summer": ["https://api.iconify.design/line-md/sun-rising-filled-loop.svg?color=darkorange", "yellow"]
-}
+header_menu_item = namedtuple("MenuItem", [
+    "id", "title", "image_src", "desc"
+])
+
+header_menu_id = "search_user_name_view"
+
+header_menu_items = [
+    header_menu_item(
+        header_menu_id, "Search User",
+        "https://api.iconify.design/line-md/search-twotone.svg?color=lightblue",
+        "Want to change the user ?, you can search here"
+    ),
+    header_menu_item(
+        "filter-user-view-anime-list", "Filters",
+        "https://api.iconify.design/line-md/coffee-twotone-loop.svg?color=darkorange"
+        "&flip=vertical", "You can apply filters on various things before fetching"),
+    header_menu_item(
+        view_dashboard.startButtTrigger, "User Anime List",
+        "https://api.iconify.design/line-md/clipboard-list-twotone.svg?color=darkorange",
+        "For Fetching User Anime List"),
+    header_menu_item(
+        view_dashboard.process_again, "Fetch Again",
+        "https://api.iconify.design/line-md/download-loop.svg?color=lightgreen",
+        "For re-calculating things in the current active tab")
+]
+
+mla_stores = namedtuple(
+    "Store", [
+        "anime_list", "recent_anime_list"
+    ]
+)("user-anime-list-mla-view", "user-recent-anime-list-mla-view")
+
+
+recent_anime_list = header_menu_item(
+    "_", "Recent Anime List",
+    header_menu_items[2].image_src,
+    "User's list of Animes that were updated recently"
+)

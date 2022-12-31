@@ -8,7 +8,9 @@ const renderer = new DashRenderer();
         "/MLA/assets/index.js"
     ]
 
-    const allowed_extensions = [];
+    const allowed_extensions = [
+        "https://unpkg.com/dash.nprogress@latest/dist/dash.nprogress.js"
+    ];
     const MLA_Prefixed = (page) => new RegExp(`^https?:\/\/.*\/MLA\/${page}`);
 
     if(

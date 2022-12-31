@@ -1,11 +1,16 @@
-import dash_mantine_components as dmc
-from MyListAnalyzerDash.Components.layout import expanding_layout
 import typing
-from dash import dcc, clientside_callback, Input, html
+
+import dash_mantine_components as dmc
+from dash import dcc, Input, html
+
 from MyListAnalyzerDash import __version__
-from MyListAnalyzerDash.mappings.enums import view_header
-from MyListAnalyzerDash.Components.collection import settings_modal, ask_again
-from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way, get_modal_id
+from MyListAnalyzerDash.Components.ModalManager import timestamp_from_store, get_modal_id, make_modal_alive, get_modal
+from MyListAnalyzerDash.Components.buttons import icon_butt_img
+from MyListAnalyzerDash.Components.collection import filters_modal
+from MyListAnalyzerDash.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.table import MakeTable
+from MyListAnalyzerDash.Components.tooltip import set_tooltip
+from MyListAnalyzerDash.mappings.enums import view_header, header_menu_items, mla_stores, recent_anime_list
 
 
 class CommonHeaderComponent:
@@ -27,7 +32,8 @@ class CommonHeaderComponent:
                 *(tuple() if not inside_header else inside_header),
                 spacing="sm", direction="row", align="center", position="right"
             ), direction="row"
-        ), height="35px", pl=6, pt=3, pb=3, pr=3, zIndex=1, withBorder=True, style=dict(backgroundColor="transparent", width="100vw"))
+        ), height="35px", pl=6, pt=3, pb=3, pr=3, zIndex=1, withBorder=True,
+            style=dict(backgroundColor="transparent", width="100vw"))
 
 
 class ViewHeaderComponent(CommonHeaderComponent):
@@ -37,23 +43,40 @@ class ViewHeaderComponent(CommonHeaderComponent):
         self.queries = view_header
 
     def handle_callbacks(self):
-        modal_first = settings_modal(add=True)
+        make_modal_alive(view_header.stampsModal)
+        modal_first = filters_modal(add=True)
+        [timestamp_from_store(
+            _, Input(get_modal_id(view_header.stampsModal), "opened"), add=True
+        ) for _ in (mla_stores.anime_list, mla_stores.recent_anime_list)]
 
-        relative_time_stamp_but_calc_in_good_way(
-            view_header.last_updated,
-            Input(view_header.settingsTabs, "active"),
-            Input(get_modal_id(view_header.settings), "opened"),
-            add_callback=True
-        )
         return modal_first
 
     def inside_header(self, page_settings):
-        user_name = page_settings.get("user_name", "")
 
-        link = view_header.show_name + '-link'
-        return settings_modal(page_settings), dcc.Link(
-            dmc.Badge(color="orange", id=view_header.show_name, children=user_name), href="", id=link, target="_blank"
-        ), settings_modal(prop=True), ask_again()
+        user_name = page_settings.get("user_name", "")
+        menu_items = [
+            dmc.MenuItem(
+                set_tooltip(
+                    menu_item.title,
+                    menu_item.desc
+                ), id=menu_item.id, icon=dmc.Image(src=menu_item.image_src)
+            )
+            for index, menu_item in enumerate(header_menu_items)
+        ]
+
+        return filters_modal(page_settings), timestamps_modal(), dmc.Badge(
+            dmc.Anchor(user_name, id=view_header.show_name, target="_blank", href="", color="orange"), color="orange"), dmc.Menu(
+            [dmc.MenuTarget(
+                icon_butt_img(
+                    "https://api.iconify.design/line-md/close-to-menu-transition.svg?color=darkorange",
+                    "_sample"
+                )
+            ),
+                dmc.MenuDropdown(menu_items)], withArrow=True
+        ),  icon_butt_img(
+                    view_header.timeStamp,
+                    view_header.stampsModal
+                )
 
 
 def header_link(title, short, url, version=__version__):
@@ -86,3 +109,23 @@ def header_link(title, short, url, version=__version__):
             }
         )
     ]
+
+
+def timestamps_modal():
+    draft = MakeTable()
+    draft.set_headers(("Source Name", "Time Stamp"))
+
+    for menu_item, _id in zip(
+            (header_menu_items[2], recent_anime_list),
+            (mla_stores.anime_list, mla_stores.recent_anime_list)
+    ):
+        draft.add_cell(menu_item.title)
+        draft.add_cell(timestamp_from_store(_id))
+        draft.make_row()
+
+    return get_modal(
+        view_header.stampsModal,
+        "Time Stamps",
+        draft(),
+        size="xs", opacity=1
+    )

@@ -1,20 +1,19 @@
-import json
-import math
-import pathlib
-import typing
-from collections import namedtuple
 import datetime
+import json
+import pathlib
 import urllib.parse
-from flask import request
-import dash_mantine_components as dmc
-from dash import callback_context, dcc, html, MATCH
+from collections import namedtuple
 from datetime import datetime, timezone
 
+import dash_mantine_components as dmc
+import math
+from dash import callback_context, dcc, html
+from flask import request
+
 parent = pathlib.Path(__file__).parent
-repo_parent_path = "https://github.com/RahulARanger/MAL-Remainder/blob/main"
 
 
-def get_mapping(prefix):
+def get_mapping(prefix: str):
     raw = json.loads((parent / "mappings" / f"{prefix}_mapping.json").read_text())
     template = namedtuple(f"{prefix}Template", raw)
     return template(**raw)
@@ -22,16 +21,6 @@ def get_mapping(prefix):
 
 def starry_bg():
     return [html.Div(id=f"stars{_}") for _ in ("", 2, 3)]
-
-
-def get_marked(prefix, force=False, add_limit=True, limit=500):
-    path = (parent.parent / prefix) if force else (parent / "mappings" / f"{prefix}_marked.md")
-    raw = path.read_text()
-
-    if add_limit and len(raw) > limit:
-        raw = raw[: limit] + f"... [Read More From]({repo_parent_path}/{path.relative_to(parent.parent.parent)})"
-
-    return dcc.Markdown(raw)
 
 
 def time_format():
@@ -72,9 +61,9 @@ class CookieHandler:
     def __truediv__(self, other: str) -> dict:
         return json.loads(other if other else "{}")
 
-    def set_cookie_with_expiry(self, key, value):
+    def set_cookie_with_expiry(self, key, value, time):
         # one day before (in seconds)
-        self.set_expiry(key, value, math.floor(float(value["asked"]) / 1000 - (60 * 60 * 24)))
+        self.set_expiry(key, value, math.floor(float(time) / 1000 - (60 * 60 * 24)))
 
     def set_expiry(self, key, value, expiry: int):
         callback_context.response.set_cookie(key, self.cookies * value, expiry)
