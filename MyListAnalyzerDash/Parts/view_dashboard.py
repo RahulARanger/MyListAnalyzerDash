@@ -152,7 +152,7 @@ class ViewDashboard:
                 is_percent=False
             )
             for spent in time_spent
-        ), splide_options=SplideOptions(autoplay=True, type="loop", width="210px"))
+        ), splide_options=SplideOptions(autoplay=True, type="loop", width="175px"), style=dict(margin="auto 0"))
 
         cards.insert(1, spent_container)
 
@@ -173,7 +173,7 @@ class ViewDashboard:
                 color="grape"
             ),
             number_card_format_1(
-                number=data.get("avg_score", 0), is_percent=False,
+                number=data.get("avg_score", 0) if data.get("avg_score", 0) else "No scores given yet", is_percent=False,
                 label="Mean Score", class_name=page,
                 color=relative_color(data.get("avg_score", 0), 10)
             ),
@@ -187,12 +187,12 @@ class ViewDashboard:
                 "Mostly seen Studio",
                 "cyan", page, url=studio_link(data.get("studio_link"))
             ),
-            style=dict(gap="1rem", alignContent="center", alignItems="center", justifyContent="center")
+            style=dict(alignContent="center", alignItems="center", justifyContent="center")
         )
 
         fourth_row = expanding_row(
             wht_the_dog_dng, ep_range,
-            style=dict(gap="1rem", alignContent="center", alignItems="center", justifyContent="center")
+            style=dict(alignContent="center", alignItems="center", justifyContent="center")
         )
 
         fifth_row = rating_over_years

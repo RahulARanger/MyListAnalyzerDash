@@ -9,9 +9,9 @@
 }
 
 .number-card{
-    padding: 15px;
-    min-width: calc(1.5vw + 100px);
-    min-height: 50px;
+    padding: 13px;
+    min-width: calc(1.5vw + 96px); /* reverse 69 */
+    min-height: 45px;
     flex-flow: column nowrap !important;
     justify-content: flex-start !important;
     

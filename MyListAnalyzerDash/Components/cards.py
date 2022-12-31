@@ -148,7 +148,8 @@ def splide_container(
         *slides: Component,
         class_name: str = "",
         id_="",
-        splide_options: SplideOptions = SplideOptions()
+        splide_options: SplideOptions = SplideOptions(),
+        style=None
 ):
     splide_class = f"splide {class_name}"
     child = html.Div(
@@ -160,8 +161,11 @@ def splide_container(
     extras = {"data-splide": splide_options.embeded()}
     extras.update(id=id_) if id_ else ...
 
+    _style = dict() if not style else style
+    _style["minWidth"] = "20%"
+
     return html.Section(
-        child, className=splide_class, **extras, style=dict(minWidth="20%")
+        child, className=splide_class, **extras, style=_style
     )
 
 
