@@ -54,7 +54,7 @@ view_dashboard = namedtuple(
         "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
         "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color", "process_again",
-        "recent_anime"
+        "recent_anime", "showMoreAbtSpecial"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
@@ -68,7 +68,7 @@ view_dashboard = namedtuple(
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
     "indigo", "run-process-job-again-view-mla",
-    "view-dashboard-recent-anime-view"
+    "view-dashboard-recent-anime-view", "show-more-abt-special-overview"
 )
 
 creds_modal = namedtuple(
@@ -163,3 +163,27 @@ recent_anime_list = header_menu_item(
     header_menu_items[2].image_src,
     "User's list of Animes that were updated recently"
 )
+
+
+helper = namedtuple(
+    "HelperIcon", [
+        "open"
+    ]
+)("https://api.iconify.design/material-symbols/open-in-new-sharp.svg?color=gray")
+
+
+special_card_for_anime = namedtuple(
+    "SpecialAnimeCard",
+    [
+        "key", "label", "color"
+    ], defaults=dict(color="yellow")
+)
+
+overview_cards = [
+    special_card_for_anime("pop", "Top Popular Anime", "yellow"),
+    special_card_for_anime("recent", "Most Recently Updated", "orange"),
+    special_card_for_anime("top", "Top Scoring Anime", "gray"),
+    special_card_for_anime("oldest", "Oldest Anime", "purple"),
+    special_card_for_anime("recently_completed_movie", "Recent Movie Completed", "indigo"),
+    special_card_for_anime("longest_spent", "Longest Time Spent", "blue")
+]

@@ -32,6 +32,21 @@ class SplideOptions:
     def embeded(self):
         return json.dumps(asdict(self))
 
+    @classmethod
+    def with_breakpoints(cls):
+        return dict(
+            mediaQuery="max",
+            breakpoints={
+                "1120": dict(perPage=3.5),
+                "980": dict(perPage=3),
+                "860": dict(perPage=2.5),
+                "740": dict(perPage=2),
+                "620": dict(perPage=1.5),
+                "420": dict(perPage=1.25),
+                "300": dict(perPage=1)
+            }
+        )
+
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
     return dmc.Paper(
@@ -103,7 +118,8 @@ def _divider(label: str = "", color: str = "gray"):
 
 def number_card_format_1(
         number=0, label="...", another=-1, color="green", class_name=None, is_percent=True,
-        ref_number=-1, ref_another=-1
+        ref_number=-1, ref_another=-1,
+        main_class=None
 ):
     references = []
     references.append(floating_tooltip(
@@ -123,7 +139,7 @@ def number_card_format_1(
         _number_layout(*numbers),
         dmc.Space(h=1),
         _divider(" ".join(label.capitalize().split("_")), color),
-        class_name=f"number-card {class_name}")
+        class_name=f"number-card {class_name} {main_class}")
 
 
 def card_format_4(text, label, color, class_name, size="lg", url=None):
@@ -253,28 +269,50 @@ def number_parameter(label, value, class_name, is_percent=False):
         spacing=2, align="flexStart", position="left")
 
 
-def special_anime_card(name, url, picture, second_row, special_label, special_color, *parameters):
+def special_anime_card(name, url, picture, special_label, special_color, *parameters):
     return home_card(
         expanding_row(
-            dmc.Avatar(src=picture, size="xl"),
-            dmc.Space(w=5),
+            *((dmc.Image(src=picture, width=75, height=97, fit="contain"),) if picture else tuple()),
             expanding_layout(
-                dmc.Anchor(name, href=url),
-                second_row,
-                expanding_row(*parameters), position="start", align="flexStart", spacing=4
-            ), style=dict(justifyContent="flexStart", alignItems="flexStart")
-        ),
-        expanding_layout(dmc.Divider(
+                dmc.Anchor(
+                    name,
+                    href=url
+                ),
+                dmc.Progress(value=26, color="pink"),
+                expanding_row(
+                    expanding_layout(
+                        dmc.Text("Popularity:", color="gray", size="sm"),
+                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
+                    ),
+                    expanding_layout(
+                        dmc.Text("Popularity:", color="gray", size="sm"),
+                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
+                    ),
+                    expanding_layout(
+                        dmc.Text("Popularity:", color="gray", size="sm"),
+                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
+                    ), style=dict(columnGap="3px", justifyContent="flex-start")
+                )
+            )
+        ), dmc.Divider(
             label=dmc.Text(
                 special_label,
                 weight="bold",
                 style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
             color=special_color, labelPosition="center", size="md"),
-            direction="column"
-        ), as_card="home-card", style=dict(padding="10px")
+        as_card="anime_card", style=dict(padding="6px"), spacing=0
     )
 
 
 def relative_color(value, full):
     relative = value / full
     return "green" if relative > 0.89 else "teal" if relative > 0.85 else "lime" if relative > 0.75 else "yellow" if relative <= .69 else "orange" if relative <= 5 else "red"
+
+
+def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections):
+    return dmc.Progress(
+        sections=[
+            dict(value=(watched / total) * 1e2, color=watched_color, tooltip=status),
+            *other_sections
+        ], animate=animate
+    )

@@ -3,7 +3,7 @@ from dash import dcc, html, get_app
 import dash_mantine_components as dmc
 from MyListAnalyzerDash.utils import starry_bg
 from MyListAnalyzerDash.Components.malCreds import MalCredsModal
-from MyListAnalyzerDash.Components.layout import expanding_layout
+from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.buttons import button_with_icon
 from MyListAnalyzerDash.Components.notifications import provider
 from MyListAnalyzerDash.mappings.enums import main_app, home_page, mal_creds_modal
@@ -37,16 +37,16 @@ class HomePage:
         tabs = dmc.Tabs([
                 tab_list,
                 dmc.Space(h=5),
-                *tab_meat], color="orange", className="home_card", loop=True, value=labels[0])
+                *tab_meat], color="orange", className="home_card", loop=True, value=labels[0],
+            style=dict(
+                verticalAlign="center", maxHeight=f"{paper_height}px", maxWidth="300px"
+            )
+        )
 
         return [
             *starry_bg(),
             dcc.Location(mal_creds_modal.location),
-            dmc.Affix(
-                tabs
-                , position={"top": f"calc(50% - {paper_height // 2}px)", "left": "calc(50% - 150px)"},
-                style={"width": "300px", "height": f"{paper_height}px"}
-            ),
+            dmc.Center(tabs, style=dict(height="100%")),
             provider(mal_creds_modal.notify),
             html.Div([self.mal_creds.inside], id="modals")
         ]

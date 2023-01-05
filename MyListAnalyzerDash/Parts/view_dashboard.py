@@ -1,20 +1,21 @@
 import json
 import typing
 from datetime import datetime
-
 import dash_mantine_components as dmc
+import plotly.colors as colors
 import plotly.graph_objects as go
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
-    html
-from dash.dash_table import DataTable
-
+    html, no_update
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    SplideOptions, number_card_format_3, card_format_4, relative_color
-from MyListAnalyzerDash.Components.collection import fixed_menu
-from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph, style_dash_table
+    SplideOptions, number_card_format_3, card_format_4, relative_color, special_anime_card
+from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, mla_stores
-from MyListAnalyzerDash.utils import genre_link, studio_link
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, \
+    mla_stores, helper, overview_cards
+from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure
+from MyListAnalyzerDash.Components.buttons import icon_butt_img
+from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, get_modal_id
+from MyListAnalyzerDash.Components.table import MakeTable
 
 
 class ViewDashboard:
@@ -70,7 +71,10 @@ class ViewDashboard:
         )
 
         callback(
-            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+            [
+                Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+                Output(get_modal_id(view_dashboard.showMoreAbtSpecial), "children")
+            ],
             [
                 Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data"),
                 Input(view_dashboard.page_settings, "data")
@@ -84,6 +88,15 @@ class ViewDashboard:
                 Input(view_dashboard.page_settings, "data")
             ]
         )(self.process_recently_data)
+
+        make_modal_alive(view_dashboard.showMoreAbtSpecial, ask_first=False)
+
+    @property
+    def modals(self):
+        yield get_modal(
+            view_dashboard.showMoreAbtSpecial,
+            "Know more"
+        )
 
     def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
@@ -128,43 +141,41 @@ class ViewDashboard:
         if not data:
             return no_data(
                 "Please wait until the data gets processed.", force=True
-            )
+            ), no_update
 
-        page, graph_class = self.tab_details(0)
+        tab_index = 0
+        page, graph_class = self.tab_details(tab_index)
         user_name = page_settings.get("user_name")
 
         try:
-            time_spent, row_1, row_2, rating_over_years, ep_range, wht_the_dog_dng, wht_the_dog_dng_know_more = process_for_overview(
-                data, page, graph_class, user_name)
+            cards = general_info(data, page)
+            belt, table = self.special_anime_belt_in_overview(data, tab_index)
+            time_spent = data.get("time_spent", "Not Known")
+            second_row = status_dist(data, page)
+            status_for_airing_ones_in_list = self.currently_airing_details(data, user_name, tab_index)
+            ep_range = self.episode_range(data, tab_index)
+            rating_dist = self.rating_dist(data, tab_index)
+
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
 
-        cards = [
-            number_card_format_1(
-                number=value, label=label,
-                color=color, class_name=page, is_percent=False)
-            for value, label, color in row_1
-        ]
-
-        spent_container = splide_container(*(
-            number_card_format_1(
+        spent_container = basic_swiper_structure(
+            "time_spent",
+            *(number_card_format_1(
                 number=spent[0], label=spent[1], color=view_dashboard.time_spent_color, class_name=page,
-                is_percent=False
+                main_class="swiper-slide", is_percent=False
             )
-            for spent in time_spent
-        ), splide_options=SplideOptions(autoplay=True, type="loop", width="175px"), style=dict(margin="auto 0"))
+                for spent in time_spent)
+        )
 
         cards.insert(1, spent_container)
 
-        first_row = expanding_row(*cards, style=dict(justifyContent="center"))
+        gap = "3px"
 
-        second_row = expanding_row(*(
-            number_card_format_1(
-                number=value, is_percent=True, label=label.capitalize(),
-                class_name=page, another=exact,
-                color=color
-            ) for label, (exact, value), color in row_2
-        ))
+        first_row = expanding_row(
+            *cards,
+            style=dict(gap="6px")
+        )
 
         third_row = expanding_row(
             number_card_format_1(
@@ -173,7 +184,8 @@ class ViewDashboard:
                 color="grape"
             ),
             number_card_format_1(
-                number=data.get("avg_score", 0) if data.get("avg_score", 0) else "No scores given yet", is_percent=False,
+                number=data.get("avg_score", 0) if data.get("avg_score", 0) else "No scores given yet",
+                is_percent=False,
                 label="Mean Score", class_name=page,
                 color=relative_color(data.get("avg_score", 0), 10)
             ),
@@ -187,20 +199,27 @@ class ViewDashboard:
                 "Mostly seen Studio",
                 "cyan", page, url=studio_link(data.get("studio_link"))
             ),
-            style=dict(alignContent="center", alignItems="center", justifyContent="center")
+            style=dict(gap=gap)
         )
 
         fourth_row = expanding_row(
-            wht_the_dog_dng, ep_range,
-            style=dict(alignContent="center", alignItems="center", justifyContent="center")
+            ep_range, rating_dist,
+            style=dict(alignContent="center", alignItems="center", justifyContent="center", gap=gap)
         )
 
-        fifth_row = rating_over_years
+        rows = expanding_row(
+            expanding_layout(
+                first_row, second_row, third_row,
+                position="flexStart", no_wrap=True
+            ),
+            status_for_airing_ones_in_list,
+            style=dict(alignItems="center")
+        )
 
         return [
-            __ for _ in (first_row, second_row, third_row, fourth_row, fifth_row) for __ in
-            [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=3)]
-        ]
+            __ for _ in (belt, rows, fourth_row) for __ in
+            [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=1)]
+        ], table
 
     def process_recently_data(self, data, page_settings):
         if not data:
@@ -212,17 +231,6 @@ class ViewDashboard:
 
         user_name = page_settings.get("user_name", "")
         recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
-
-        # menu = fixed_menu(
-        #     side_ways=[
-        #         dmc.Text(expanding_layout(
-        #             dmc.Text(user_name, color="orange", size="sm"), f"last Updated:",
-        #             relative_time_stamp_but_calc_in_good_way(
-        #                 False, class_name=css_classes.time_format, default=data["recently_updated_at"]
-        #             ), direction="row"
-        #         ), size="sm")
-        #     ]
-        # )
 
         recently_updated_plots = recently_updated_trend_comp(
             json.loads(data.get("recently_updated_day_wise", "{}")),
@@ -237,7 +245,7 @@ class ViewDashboard:
         ]
 
         splide_options = SplideOptions(
-            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoScroll=dict(speed=1),
+            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoplay=True,
             mediaQuery="max",
             breakpoints={
                 "1120": dict(perPage=3.5),
@@ -256,126 +264,174 @@ class ViewDashboard:
             dmc.Space(h=3), belt, dmc.Space(h=2), recently_updated_plots
         )
 
+    def special_anime_belt_in_overview(self, data, index):
+        class_name, _ = self.tab_details(index)
+        specials = data.get("specials", {})
 
-def process_for_overview(data, current_tab, graph_class, user_name):
-    row_1 = data["row_1"]
-    time_spent = data["time_spent"]
-    row_2 = json.loads(data["row_2"])
-    ep_range_raw, airing_dist, airing_detail = data["row_3"]
+        cards = []
+        raw = {}
 
-    rating_over_years = data["rating_over_years"]
+        tabs = []
+        tab_children = []
+        first = None
 
-    yield time_spent
-    yield zip(row_1["values"], row_1["keys"], view_dashboard.row_1_colors)
+        for card in overview_cards:
+            if not specials.get(card.key, False):
+                continue
 
-    yield zip(
-        map(lambda x: getattr(status_labels, x), row_2["index"]),
-        row_2["data"], map(lambda x: getattr(status_colors, x), row_2["index"])
-    )
-    # above is for the cards
+            if not first:
+                first = card.key
 
-    ep_range = Config()
-    ep_range.scroll_zoom = False
+            value = json.loads(specials.get(card.key))
+            raw[card.label] = value
+            cards.append(
+                special_anime_card(
+                    value["node.title"],
+                    "/", value["node.main_picture.large"],
+                    card.label, card.color
+                )
+            )
 
-    ratings = rating_over_years["ratings"]
+            tabs.append(dmc.Tab(card.label, value=card.key))
+            table = MakeTable()
+            table.set_headers(("Key", "Value"))
 
-    fig = go.Figure(
-        data=[go.Bar(x=ratings, y=rating_over_years["frames"][0])],
-        layout=go.Layout(
-            yaxis=dict(range=[0, rating_over_years["max_y_range"]], autorange=False),
-            updatemenus=[dict(
-                type="buttons",
-                buttons=[dict(label="Play",
-                              method="animate",
-                              args=[None])])]
-        ),
-        frames=[go.Frame(data=[go.Bar(x=ratings, y=value)]) for value in rating_over_years["frames"][1:]]
-    )
+            for key, value in value.items():
+                table.add_cell(key)
+                table.add_cell(value)
+                table.make_row()
 
-    yield core_graph(
-        BeautifyMyGraph(
-            title="Seasons over years", x_title="years", y_title="Seasons",
-            show_x=True, show_y=True
-        ).handle_subject(fig),
-        apply_shimmer=False, index=3, prefix=current_tab, class_name=graph_class,
-        responsive=True
-    )
+            tab_children.append(dmc.TabsPanel(table(), value=card.key))
 
-    yield core_graph(
-        BeautifyMyGraph(
-            title="Range of Anime Episodes", x_title="Episode Range", y_title="Number of Shows",
-            show_x=True, show_y=True, show_y_grid=True, autosize=True).handle_subject(
-            ep_bins_plot(json.loads(ep_range_raw))),
-        apply_shimmer=False, index=1, prefix=current_tab, class_name=graph_class,
-        responsive=True, config=ep_range
-    )
+        splide_options = SplideOptions(
+            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoplay=True,
+            **SplideOptions.with_breakpoints()
+        )
 
-    airing = json.loads(airing_dist)
+        if first:
+            table = dmc.Tabs([dmc.TabsList(tabs), *tab_children], value=first)
+        else:
+            table = "No Data Found"
 
-    if not airing["data"]:
-        yield dmc.Alert(
-            dmc.Text(f"{user_name} is not Watching any Animes which are currently airing"),
-            color="orange", title="No Data", withCloseButton=True,
-            icon=[dmc.Image(src=view_dashboard.no_data)])
-    else:
-        yield core_graph(
+        return html.Section([
+            splide_container(
+                *cards, splide_options=splide_options, class_name=f"belt {class_name}"
+            ),
+            html.Span(icon_butt_img(
+                helper.open, view_dashboard.showMoreAbtSpecial
+            ), style=dict(position="absolute", top="3px", right="10px")),
+        ]), table
+
+    def currently_airing_details(self, data, user_name, index):
+        prefix, class_name = self.tab_details(index)
+
+        airing = json.loads(data.get("status_for_currently_airing", "{}"))
+        if not airing["data"]:
+            return dmc.Alert(
+                dmc.Text(f"{user_name} is not Watching any Animes which are currently airing"),
+                color="dark", title="No Data",
+                variant="filled", style=dict(maxWidth="300px"),
+                icon=[dmc.Image(src=view_dashboard.no_data)])
+
+        figure = go.Figure(
+            go.Pie(
+                hovertemplate="<b>%{label}</b>: %{value} || %{percent}<extra></extra>",
+                labels=tuple(map(lambda x: getattr(status_labels, x), airing["index"])), values=airing["data"],
+                marker=dict(
+                    colors=tuple(map(lambda x: getattr(status_light_colors, x), airing["index"])),
+                    line=dict(width=2, color="#18191A")),
+                textinfo="label+percent", pull=[
+                    0.2 if status_labels.watching == getattr(status_labels, _) else 0 for _ in airing["index"]]
+            ),
+        )
+
+        return core_graph(
             BeautifyMyGraph(
                 title="Currently Airing"
-            ).handle_subject(currently_airing_pie(airing)), apply_shimmer=False, index=2,
-            prefix=current_tab, class_name=graph_class, responsive=True)
+            ).handle_subject(figure), apply_shimmer=False, index=1,
+            prefix=prefix, class_name=class_name, responsive=True)
 
-    yield airing_detail
+    def episode_range(self, data, index):
+        raw = json.loads(data.get("ep_range", "{}"))
+        prefix, class_name = self.tab_details(index)
 
+        fig = go.Figure()
+        x = tuple(raw.get("key_0", {}).values())
+        y = tuple(raw.get("ep_range", {}).values())
+        _colors = [
+            colors.qualitative.Dark2[1] if int(_color) else colors.qualitative.Set2[2] for _color in
+            raw.get("color", {}).values()]
 
-def ep_bins_plot(series):
-    fig = go.Figure()
-
-    series["index"].pop()
-    colors = series["data"].pop()
-
-    bar_trace = go.Bar(
-        x=series["index"], y=series["data"], text=series["data"], textposition="auto",
-        marker=dict(color=colors, line=dict(width=2, color="#18191A")),
-        hovertemplate="<b>[%{x}]</b>: %{y}<extra></extra>"
-    )
-    fig.add_trace(bar_trace)
-
-    return fig
-
-
-def currently_airing_pie(airing):
-    return go.Figure(
-        go.Pie(
-            hovertemplate="<b>%{label}</b>: %{value} || %{percent}<extra></extra>",
-            labels=tuple(map(lambda x: getattr(status_labels, x), airing["index"])), values=airing["data"],
+        bar_trace = go.Bar(
+            x=x, y=y, text=y, textposition="auto",
             marker=dict(
-                colors=tuple(map(lambda x: getattr(status_light_colors, x), airing["index"])),
+                color=_colors,
                 line=dict(width=2, color="#18191A")),
-            textinfo="label+percent", pull=[
-                0.2 if status_labels.watching == getattr(status_labels, _) else 0 for _ in airing["index"]]
-        ),
-    )
+            hovertemplate="<b>[%{x}]</b>: %{y}<extra></extra>"
+        )
+        fig.add_trace(bar_trace)
+
+        ep_range = Config()
+        ep_range.scroll_zoom = False
+
+        return core_graph(
+            BeautifyMyGraph(
+                title="Range of Anime Episodes", x_title="Episode Range", y_title="Anime Count",
+                show_x=True, show_y=True, show_y_grid=True, autosize=True).handle_subject(fig),
+            apply_shimmer=False, index=2, prefix=prefix, class_name=class_name,
+            responsive=True, config=ep_range
+        )
+
+    def rating_dist(self, data, index):
+        prefix, class_name = self.tab_details(index)
+
+        rating_dist = json.loads(data.get("rating_dist", {}))
+        ratings = tuple(rating_dist.keys())
+        values = tuple(rating_dist.values())
+
+        figure = go.Figure(
+            go.Pie(
+                labels=ratings, values=values,
+                textinfo="label+percent",
+                marker=dict(
+                    colors=colors.sequential.Burg,
+                    line=dict(width=.69, color=colors.sequential.Burg[-1])
+                )
+            ),
+        )
+
+        return core_graph(
+            BeautifyMyGraph(
+                title=f"Age Rating over the animes",
+                mt=10
+            ).handle_subject(figure), apply_shimmer=False, index=3,
+            prefix=prefix, class_name=class_name, responsive=True)
 
 
-def gen_table_for_airing_details(raw):
-    filter_options = dict(case="insensitive")
-    cols = (dict(name="Title", id="node.title", filter_options=filter_options),
-            dict(name="Status", id="list_status.status", filter_options=filter_options))
-    style_header, style_data, style_cell = style_dash_table()
-
-    return DataTable(
-        data=raw, columns=cols,
-        style_header=style_header, style_data=style_data, style_table=dict(
-            minWidth="calc(150px + 3vw)", maxHeight="calc(100vh - 43vh - 69px)", overflowX="auto", overflowY="auto"),
-        style_cell=style_cell,
-        filter_action="native",
-        sort_action="native",
-    )
+def general_info(data, page):
+    row_1 = data["row_1"]
+    # SAMPLE: {'values': [111, 2, 8], 'keys': ['Total Animes', 'Watching', 'Not Yet Aired']}
+    return [
+        number_card_format_1(
+            number=value, label=label,
+            color=color, class_name=page, is_percent=False)
+        for label, value, color in zip(row_1.get("keys", []), row_1.get("values", []), view_dashboard.row_1_colors)
+    ]
 
 
-def over_view_s_over_view(raw):
-    table = dmc.MenuItem("Currently Airing - Table", color="orange")
-    return fixed_menu(table)
+def status_dist(data, page):
+    row_2 = json.loads(data["row_2"])
+    # SAMPLE: {
+    # 'index': ['completed', 'plan_to_watch', 'on_hold', 'dropped'],
+    # 'data': [[69, 62.1621621622], [37, 33.33333], [2, 1.8018], [1, 0.9009]]}
+
+    return expanding_row(*(
+        number_card_format_1(
+            number=number, is_percent=True, label=getattr(status_labels, index).capitalize(),
+            class_name=page, another=exact,
+            color=getattr(status_colors, index)
+        ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
+    ), style=dict(gap="4px"))
 
 
 def timely_updated_at(time_stamps: typing.Sequence[int], graph_class: str, tab_name: str):
@@ -470,3 +526,4 @@ def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_
             *tabs, dmc.TabsList([dmc.Tab(_, value=_) for _ in labels])
         ], color="orange", variant="pills", value="Actual", persistence=True, persistence_type="session"
     )
+

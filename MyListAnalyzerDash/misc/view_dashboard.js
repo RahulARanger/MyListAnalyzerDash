@@ -61,6 +61,7 @@ function setColorBasedOnRankParser(){
 
 function refreshTab(_, label_id){
     enable_splide();
+    enable_swiper_for_view_dashboard();
     animateCounters(label_id?.index);
     formatTimers();
     setColorBasedOnRankParser();
@@ -328,8 +329,9 @@ function decide_if_name_required(is_it_on){
         alert.textContent = ""
 
         alert.appendChild(p); alert.appendChild(a)
-    }
-    else alert.textContent = "you would have to manually search for the user, now";
+    }    
+    if(!disabled && alert)
+        alert.textContent = "you would have to manually search for the user, now";
 
     return [disabled, required]
 }
@@ -425,6 +427,34 @@ async function validate_user(_, __, ___, typedName, modalOpened, pageSettings, l
 function fetch_raw_user_anime_list() {
     // TODO: migrate fetch raw user anime list from python to javascript
 }
+
+
+const swiper_options = {
+    time_spent: {
+        loop: true,
+        grabCursor: true,
+        speed: 5e2,
+        autoplay: {
+            delay: 2.5e3,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true
+        },
+        navigation: {enabled: false},
+        slidesPerView: "auto",
+        effect: "coverflow"
+    }
+}
+
+
+
+function enable_swiper_for_view_dashboard(){
+    document.querySelectorAll(".swiper").forEach(
+        function(element){
+            element.swiper ? element.swiper.update() : new Swiper(element, swiper_options[element.id])
+        }
+    );
+}
+
 
 
 

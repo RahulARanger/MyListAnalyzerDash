@@ -10,7 +10,7 @@ app: dash.Dash = get_app()
 
 
 def layout():
-    return [page.layout(0), from_css("home-page.css")]
+    return html.Div([page.layout(0), from_css("home-page.css")])
 
 
 register_page(__name__, path="/MLA", title=home_page.name, description=home_page.description, layout=layout)

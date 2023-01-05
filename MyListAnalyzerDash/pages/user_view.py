@@ -2,6 +2,7 @@ from dash import register_page
 from MyListAnalyzerDash.Parts.view_page import ViewPage
 from MyListAnalyzerDash.utils import from_css
 from collections import namedtuple
+from dash import html
 
 page_template = namedtuple(
     "PageTemplate", ["title", "description", "user_job", "path", "is_template", "layout"]
@@ -9,15 +10,17 @@ page_template = namedtuple(
 
 page = ViewPage()
 page.connect_callbacks()
-common_css = from_css("user-view.css"), from_css("general-dashboard.css")
+common_css = from_css("user-view.css"), from_css("general-dashboard.css"), from_css("https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css", path="")
 
 
 def whole_layout(name=""):
-    return *page.layout(name), *common_css
+    return html.Div(
+        [*page.layout(name), *common_css]
+    )
 
 
 def layout_for_recently_tab(name=""):
-    return *page.layout(name, disable_user_job=True), *common_css
+    return html.Div([*page.layout(name, disable_user_job=True), *common_css])
 
 
 user_view_requested = page_template(

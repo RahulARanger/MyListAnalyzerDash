@@ -100,9 +100,17 @@ def get_profile_link(name, id_):
 def from_css(file_name, path="/MLA/assets/"):
     return html.Link(href=path + file_name, rel="stylesheet")
 
+
 def genre_link(id_):
-    return f"https://myanimelist.net/anime/genre/{id_}"
+    return f"https://myanimelist.net/anime/ genre/{id_}"
 
 
 def studio_link(id_):
     return f"https://myanimelist.net/anime/producer/{id_}"
+
+
+def basic_swiper_structure(id_, *slides):
+    return html.Div(
+        html.Div(slides, className="swiper-wrapper"),
+        className="swiper", id=id_
+    )

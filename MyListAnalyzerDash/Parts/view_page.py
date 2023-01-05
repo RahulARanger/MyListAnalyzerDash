@@ -94,16 +94,16 @@ class ViewPage:
             dcc.Store(id=mla_stores.anime_list), dcc.Store(id=view_dashboard.paging),
             dcc.Store(id=mla_stores.recent_anime_list),
             dcc.Location(id=view_dashboard.locationChange, refresh=False), *starry_bg(),
-            dmc.Affix(self.header.layout(page_settings), position={"top": 0, "left": 0}), dmc.LoadingOverlay([
-                dmc.ScrollArea(self.dashboard.layout(page_settings), type="hover", className="home half-elf"),
-            ], loaderProps=main_app.loadingProps), html.Section(list(self.modals), id="modals"),
+            dmc.LoadingOverlay([
+                self.header.layout(page_settings),
+                dmc.ScrollArea(
+                    self.dashboard.layout(page_settings),
+                    type="auto", className="scroll-board"),
+            ], loaderProps=main_app.loadingProps, p=0, className="home"
+            ), html.Section([*self.header.modals(page_settings), *self.dashboard.modals], id="modals"),
             html.Aside(id=view_dashboard.tempDataStore), provider(
                 view_dashboard.startDetails, view_header.resultForSearch,
                 view_header.validateNote, view_dashboard.userJobDetailsNote)]
-
-    @property
-    def modals(self):
-        yield tuple()
 
     def fetch_things(self, user_name, _, interval, temp_data, paging):
         proto = DataCollectionProto1()

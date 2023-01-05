@@ -12,7 +12,7 @@ def get_modal_id(id_prefix):
     return id_prefix + "_modal_"
 
 
-def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None):
+def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None, ask_first=True):
     modal_id = get_modal_id(prop_id) if not modal_id else modal_id
 
     get_app().clientside_callback(
@@ -23,7 +23,8 @@ def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None):
         Output(modal_id, "opened"),
         Input(prop_id, prop_action),
         # Since prop action can be different we don't have pattern matching callbacks
-        State(modal_id, "opened")
+        State(modal_id, "opened"),
+        prevent_initial_call=ask_first
     )
 
 

@@ -33,7 +33,7 @@ class CommonHeaderComponent:
                 spacing="sm", direction="row", align="center", position="right"
             ), direction="row"
         ), height="35px", pl=6, pt=3, pb=3, pr=3, zIndex=1, withBorder=True,
-            style=dict(backgroundColor="transparent", width="100vw"))
+            style=dict(backgroundColor="transparent", width="100vw"), className="view-header")
 
 
 class ViewHeaderComponent(CommonHeaderComponent):
@@ -51,6 +51,11 @@ class ViewHeaderComponent(CommonHeaderComponent):
 
         return modal_first
 
+    @classmethod
+    def modals(cls, page_settings):
+        yield filters_modal(page_settings)
+        yield timestamps_modal()
+
     def inside_header(self, page_settings):
 
         user_name = page_settings.get("user_name", "")
@@ -64,7 +69,7 @@ class ViewHeaderComponent(CommonHeaderComponent):
             for index, menu_item in enumerate(header_menu_items)
         ]
 
-        return filters_modal(page_settings), timestamps_modal(), dmc.Badge(
+        return dmc.Badge(
             dmc.Anchor(user_name, id=view_header.show_name, target="_blank", href="", color="orange"), color="orange"), dmc.Menu(
             [dmc.MenuTarget(
                 icon_butt_img(
@@ -127,5 +132,5 @@ def timestamps_modal():
         view_header.stampsModal,
         "Time Stamps",
         draft(),
-        size="xs", opacity=1
+        size="xs", opacity=1, blur=0
     )

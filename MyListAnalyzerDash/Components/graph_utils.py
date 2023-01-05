@@ -70,8 +70,8 @@ class BeautifyMyGraph(GraphInfo):
         # in case u need to return multiple but handle only one figure ?, then return casually
 
     def handle_subject(self, figure: go.Figure) -> go.Figure:
-        font_family = '"segoe ui" Helvetica'
-        font = dict(family=font_family, size=10)
+        font_family = 'Arial Helvetica Barlow'
+        font = dict(family=font_family, size=12)
 
         title_font = font.copy()
         title_font["size"] += 2
@@ -132,9 +132,11 @@ class Config:
     butt_to_remove = ["zoom"]
     butts_to_add = ["drawopenpath", "eraseshape"]
     scroll_zoom = False
+    editable = False
 
     def to_dict(self):
         return {
+            "editable": self.editable,
             "modeBarButtonsToAdd": self.butts_to_add,
             "modeBarButtonsToRemove": self.butt_to_remove,
             "displaylogo": False,
