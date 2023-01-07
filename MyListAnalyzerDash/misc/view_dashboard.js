@@ -11,7 +11,9 @@ function malAuthToken(){
 
 
 function animateCounters(tabIndex){
-    Array(...document.querySelectorAll(`.count-number.${tabIndex}`)).map((x) => animateRawNumbers(x));
+    const class_str = tabIndex ? `.count-number.${tabIndex}` : ".count-number";
+    
+    Array(...document.querySelectorAll(class_str)).map((x) => animateRawNumbers(x));
     return window.dash_clientside.no_update;
 }
 
@@ -441,7 +443,12 @@ const swiper_options = {
         },
         navigation: {enabled: false},
         slidesPerView: "auto",
-        effect: "coverflow"
+        effect: "coverflow",
+        on: {
+            init: function(){
+                animateCounters(); // some clones also needs to be counted
+            }
+        }
     },
     
     special_belt: {
@@ -454,9 +461,23 @@ const swiper_options = {
             pauseOnMouseEnter: true
         },
         navigation: {enabled: false},
-        slidesPerView: 3.5,
+        slidesPerView: 1,
         spaceBetween: 10,
         freeMode: true,
+        breakpoints: {
+            3e2: {slidesPerView: 1},
+            430: {slidesPerView: 1.25},
+            5e2: {slidesPerView: 1.5},
+            720: {slidesPerView: 2},
+            860: {slidesPerView: 2.5},
+            1e3: {slidesPerView: 3},
+            12e2: {slidesPerView: 3.5}
+        },
+        on: {
+            init: function(){
+                animateCounters();
+            }
+        }
     }
 }
 

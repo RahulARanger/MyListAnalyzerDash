@@ -6,11 +6,10 @@
 }
 
 
-.request-details{
-    height: 200px;
-    width: 100%;
+.scroll-board{
+    height: calc(97% - 20px) !important;
+    flex-shrink: 1;
 }
-
 
 .number-card{
     width: calc(1.5vw + 96px);
@@ -146,12 +145,6 @@ div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2'], di
     height: calc(90vh - 300px);
 }
 
-.scroll-board{
-    height: calc(97vh - 20px);
-    flex-shrink: 1;
-}
-
-
 
 div.Overview-graphs{
     height: 245px;
@@ -183,7 +176,7 @@ div.Overview-graphs[id^='{"index":2']{
 
 
 #special_belt{
-    height: 130px;
+    height: 135px;
     width: 97vw;
 }
 
