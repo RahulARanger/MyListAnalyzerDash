@@ -100,7 +100,7 @@ class ViewPage:
                     self.dashboard.layout(page_settings),
                     type="auto", className="scroll-board"),
             ], loaderProps=main_app.loadingProps, p=0, className="home"
-            ), html.Section([*self.header.modals(page_settings), *self.dashboard.modals], id="modals"),
+            ), html.Section([*self.header.modals(page_settings)], id="modals"),
             html.Aside(id=view_dashboard.tempDataStore), provider(
                 view_dashboard.startDetails, view_header.resultForSearch,
                 view_header.validateNote, view_dashboard.userJobDetailsNote)]

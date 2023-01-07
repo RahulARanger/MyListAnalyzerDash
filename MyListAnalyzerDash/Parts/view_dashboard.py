@@ -1,21 +1,20 @@
 import json
 import typing
 from datetime import datetime
+
 import dash_mantine_components as dmc
 import plotly.colors as colors
 import plotly.graph_objects as go
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
-    html, no_update
+    html
+
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    SplideOptions, number_card_format_3, card_format_4, relative_color, special_anime_card
+    SplideOptions, number_card_format_3, card_format_4, relative_color, special_anime_card, number_comp
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, \
-    mla_stores, helper, overview_cards
-from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure
-from MyListAnalyzerDash.Components.buttons import icon_butt_img
-from MyListAnalyzerDash.Components.ModalManager import make_modal_alive, get_modal, get_modal_id
-from MyListAnalyzerDash.Components.table import MakeTable
+    mla_stores, overview_cards
+from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure, anime_link
 
 
 class ViewDashboard:
@@ -71,10 +70,7 @@ class ViewDashboard:
         )
 
         callback(
-            [
-                Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
-                Output(get_modal_id(view_dashboard.showMoreAbtSpecial), "children")
-            ],
+            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
             [
                 Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data"),
                 Input(view_dashboard.page_settings, "data")
@@ -88,15 +84,6 @@ class ViewDashboard:
                 Input(view_dashboard.page_settings, "data")
             ]
         )(self.process_recently_data)
-
-        make_modal_alive(view_dashboard.showMoreAbtSpecial, ask_first=False)
-
-    @property
-    def modals(self):
-        yield get_modal(
-            view_dashboard.showMoreAbtSpecial,
-            "Know more"
-        )
 
     def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
@@ -141,7 +128,7 @@ class ViewDashboard:
         if not data:
             return no_data(
                 "Please wait until the data gets processed.", force=True
-            ), no_update
+            )
 
         tab_index = 0
         page, graph_class = self.tab_details(tab_index)
@@ -149,7 +136,7 @@ class ViewDashboard:
 
         try:
             cards = general_info(data, page)
-            belt, table = self.special_anime_belt_in_overview(data, tab_index)
+            belt = self.special_anime_belt_in_overview(data, tab_index)
             time_spent = data.get("time_spent", "Not Known")
             second_row = status_dist(data, page)
             status_for_airing_ones_in_list = self.currently_airing_details(data, user_name, tab_index)
@@ -219,7 +206,7 @@ class ViewDashboard:
         return [
             __ for _ in (belt, rows, fourth_row) for __ in
             [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=1)]
-        ], table
+        ]
 
     def process_recently_data(self, data, page_settings):
         if not data:
@@ -271,56 +258,62 @@ class ViewDashboard:
         cards = []
         raw = {}
 
-        tabs = []
-        tab_children = []
-        first = None
-
         for card in overview_cards:
             if not specials.get(card.key, False):
                 continue
 
-            if not first:
-                first = card.key
-
-            value = json.loads(specials.get(card.key))
+            value = specials.get(card.key)
             raw[card.label] = value
+
+            name, _id, pic = value["general"]
+            total, watched, spent, status = value["progress"]
+            fav, start_date, end_date = value["required_parameters"]
+            special_value, about = value["special"]
+            _info = value["info"]
+            info = [
+                dmc.Text([_, dmc.Space(h=1)])
+                for _ in (
+                    "List Status",
+                    "------------",
+                    f"Start Date: {_info[0]}",
+                    f"End Date: {_info[1]}",
+                    f"Updated at: {_info[-1]}"
+                )
+            ]
+
+            fav = number_comp(fav, False, "light", class_name, size="xs")
+
+            progress = dmc.Progress(
+                animate=status == "watching",
+                striped=True,
+                sections=[
+                    dict(
+                        value=100 if not total else ((watched / total) * 100),
+                        color=getattr(status_colors, status),
+                        tooltip=[
+                            dmc.Text(f"Time Spent: {spent}"),
+                            dmc.Space(h=2),
+                            dmc.Text(f"Status: {getattr(status_labels, status)}")
+                        ]
+                    )
+                ]
+            )
+
             cards.append(
                 special_anime_card(
-                    value["node.title"],
-                    "/", value["node.main_picture.large"],
-                    card.label, card.color
+                    name, anime_link(_id), pic,
+                    card.label, card.color,
+                    progress,
+                    about, special_value,
+                    info,
+                    fav, start_date, end_date,
+                    class_name="swiper-slide"
                 )
             )
 
-            tabs.append(dmc.Tab(card.label, value=card.key))
-            table = MakeTable()
-            table.set_headers(("Key", "Value"))
-
-            for key, value in value.items():
-                table.add_cell(key)
-                table.add_cell(value)
-                table.make_row()
-
-            tab_children.append(dmc.TabsPanel(table(), value=card.key))
-
-        splide_options = SplideOptions(
-            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoplay=True,
-            **SplideOptions.with_breakpoints()
+        return basic_swiper_structure(
+                "special_belt", *cards
         )
-
-        if first:
-            table = dmc.Tabs([dmc.TabsList(tabs), *tab_children], value=first)
-        else:
-            table = "No Data Found"
-
-        return html.Section([
-            splide_container(
-                *cards, splide_options=splide_options, class_name=f"belt {class_name}"
-            ),
-            html.Span(icon_butt_img(
-                helper.open, view_dashboard.showMoreAbtSpecial
-            ), style=dict(position="absolute", top="3px", right="10px")),
-        ]), table
 
     def currently_airing_details(self, data, user_name, index):
         prefix, class_name = self.tab_details(index)
@@ -431,7 +424,7 @@ def status_dist(data, page):
             class_name=page, another=exact,
             color=getattr(status_colors, index)
         ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
-    ), style=dict(gap="4px"))
+    ), style=dict(gap="4px", justifyContent="center"))
 
 
 def timely_updated_at(time_stamps: typing.Sequence[int], graph_class: str, tab_name: str):

@@ -114,3 +114,7 @@ def basic_swiper_structure(id_, *slides):
         html.Div(slides, className="swiper-wrapper"),
         className="swiper", id=id_
     )
+
+
+def anime_link(id_):
+    return f"https://myanimelist.net/anime/{id_}"

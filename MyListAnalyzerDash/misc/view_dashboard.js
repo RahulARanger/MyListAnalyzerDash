@@ -59,9 +59,9 @@ function setColorBasedOnRankParser(){
 }
 
 
-function refreshTab(_, label_id){
+function refreshTab(_, label_id, soft_refresh){
     enable_splide();
-    enable_swiper_for_view_dashboard();
+    enable_swiper_for_view_dashboard(soft_refresh);
     animateCounters(label_id?.index);
     formatTimers();
     setColorBasedOnRankParser();
@@ -99,7 +99,7 @@ class ProcessUserDetails{
         this.tab_name = tab_name;
         this.user_name = user_name;
 
-        refreshTab(null, tab_names[this.tab_index]);
+        refreshTab(null, tab_names[this.tab_index], true);
     }
 
     async fetchStaticData(
@@ -442,15 +442,40 @@ const swiper_options = {
         navigation: {enabled: false},
         slidesPerView: "auto",
         effect: "coverflow"
+    },
+    
+    special_belt: {
+        loop: true,
+        grabCursor: true,
+        speed: 10e3,
+        autoplay: {
+            delay: 0,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true
+        },
+        navigation: {enabled: false},
+        slidesPerView: 3.5,
+        spaceBetween: 10,
+        freeMode: true,
     }
 }
 
 
 
-function enable_swiper_for_view_dashboard(){
+function enable_swiper_for_view_dashboard(soft_refresh){
     document.querySelectorAll(".swiper").forEach(
         function(element){
-            element.swiper ? element.swiper.update() : new Swiper(element, swiper_options[element.id])
+            if(!element.swiper){
+                new Swiper(element, swiper_options[element.id])
+                return 
+            }
+            if(soft_refresh){
+                element.swiper.update()
+                return;
+            }
+
+            element.swiper.destroy(true); // if in case new data is added
+            new Swiper(element, swiper_options[element.id]);
         }
     );
 }

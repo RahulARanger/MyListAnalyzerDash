@@ -9,7 +9,7 @@ from dash.dependencies import Component
 
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color
+from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
 
 
@@ -256,7 +256,7 @@ def number_card_format_3(
             dmc.Badge(status_label, color=status_color, size="sm"),
             relative_time_stamp_but_calc_in_good_way(
                 False, default=time_stamp,
-                size="sm", class_name=css_classes.time_format
+                size="sm"
             )
         ), class_name=f"{class_name} belt"
     )
@@ -269,30 +269,35 @@ def number_parameter(label, value, class_name, is_percent=False):
         spacing=2, align="flexStart", position="left")
 
 
-def special_anime_card(name, url, picture, special_label, special_color, *parameters):
-    return home_card(
+def special_anime_card(name, url, picture, special_label, special_color, progress, special_about, special_value, _info, *parameters, class_name=""):
+    text_limit = 24
+    info = floating_tooltip(
+        dmc.ActionIcon(
+            dmc.Image(src=helper.info), size="sm"
+        ),
+        label=_info,
+        multiline=True, width=190
+    )
+
+    return expanding_layout(
         expanding_row(
-            *((dmc.Image(src=picture, width=75, height=97, fit="contain"),) if picture else tuple()),
+            dmc.Image(src=picture, width=75, height=97, fit="contain"),
             expanding_layout(
-                dmc.Anchor(
-                    name,
-                    href=url
+                set_tooltip(
+                    dmc.Anchor(
+                        name[: text_limit] + ("..." if len(name) > text_limit else ""),
+                        href=url, size="sm", target="_blank"
+                    ), label=name
                 ),
-                dmc.Progress(value=26, color="pink"),
+                progress,
                 expanding_row(
-                    expanding_layout(
-                        dmc.Text("Popularity:", color="gray", size="sm"),
-                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
-                    ),
-                    expanding_layout(
-                        dmc.Text("Popularity:", color="gray", size="sm"),
-                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
-                    ),
-                    expanding_layout(
-                        dmc.Text("Popularity:", color="gray", size="sm"),
-                        dmc.Text("2323", size="xs", weight="bold"), spacing=2, align="flexStart", position="left"
-                    ), style=dict(columnGap="3px", justifyContent="flex-start")
-                )
+                    *(expanding_layout(
+                        dmc.Text(label, color="gray", size="sm"),
+                        dmc.Text(value, size="xs", weight="bold"), spacing=2, align="flexStart", position="left",
+                        no_wrap=True
+                    ) for label, value in zip(("Favs", "Start Date", "Finish Date"), parameters)),
+                    info, style=dict(columnGap="3px", justifyContent="flex-start")
+                ), no_wrap=True
             )
         ), dmc.Divider(
             label=dmc.Text(
@@ -300,7 +305,11 @@ def special_anime_card(name, url, picture, special_label, special_color, *parame
                 weight="bold",
                 style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
             color=special_color, labelPosition="center", size="md"),
-        as_card="anime_card", style=dict(padding="6px"), spacing=0
+        floating_tooltip(
+            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="0px"), size="xs", color="yellow"),
+            label=special_about
+        ),
+        class_name=f"anime_card {class_name}", style=dict(padding="3px")
     )
 
 

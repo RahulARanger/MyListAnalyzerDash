@@ -10,7 +10,7 @@ page_template = namedtuple(
 
 page = ViewPage()
 page.connect_callbacks()
-common_css = from_css("user-view.css"), from_css("general-dashboard.css"), from_css("https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css", path="")
+common_css = from_css("general-dashboard.css"), 
 
 
 def whole_layout(name=""):

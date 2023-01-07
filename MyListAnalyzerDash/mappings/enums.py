@@ -54,7 +54,7 @@ view_dashboard = namedtuple(
         "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "paging",
         "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
         "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color", "process_again",
-        "recent_anime", "showMoreAbtSpecial"
+        "recent_anime"
     ]
 )(
     "view-collect", "view-user-job", "user-view-location", "user-view-ask",
@@ -68,7 +68,7 @@ view_dashboard = namedtuple(
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
     "indigo", "run-process-job-again-view-mla",
-    "view-dashboard-recent-anime-view", "show-more-abt-special-overview"
+    "view-dashboard-recent-anime-view"
 )
 
 creds_modal = namedtuple(
@@ -167,9 +167,13 @@ recent_anime_list = header_menu_item(
 
 helper = namedtuple(
     "HelperIcon", [
-        "open"
+        "open",
+        "info"
     ]
-)("https://api.iconify.design/material-symbols/open-in-new-sharp.svg?color=gray")
+)(
+    "https://api.iconify.design/material-symbols/open-in-new-sharp.svg?color=gray",
+    "https://api.iconify.design/ic/round-info.svg?color=lightblue"
+)
 
 
 special_card_for_anime = namedtuple(

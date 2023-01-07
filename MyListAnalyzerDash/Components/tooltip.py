@@ -8,11 +8,16 @@ def set_tooltip(inside, label, pos="bottom", zIndex=1, color="dark"):
     )
 
 
-def floating_tooltip(inside, label, pos="bottom", zIndex=1, color="dark"):
+def floating_tooltip(inside, label, pos="bottom", zIndex=1, color="dark", multiline=False, width=""):
+    defaults = dict()
+    if width:
+        defaults["width"] = width
+
     return dmc.FloatingTooltip(
         label=label,
         color=color,
         position=pos,
         children=inside,
-        zIndex=zIndex
+        zIndex=zIndex,
+        multiline=multiline, **defaults
     )
