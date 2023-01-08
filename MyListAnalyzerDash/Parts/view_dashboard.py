@@ -85,6 +85,19 @@ class ViewDashboard:
             ]
         )(self.process_recently_data)
 
+        clientside_callback(
+            ClientsideFunction(
+                function_name="plotForRecentlyTab",
+                namespace="MLAPlots"
+            ),
+            Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "id"),
+            Input(dict(type=postfix_tab, index=view_dashboard.tab_names[1]), "children"),
+            [
+                State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
+                State(view_dashboard.page_settings, "data")
+            ]
+        )
+
     def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
         tab_butt = view_dashboard.tabs + self.tab_butt
@@ -104,7 +117,7 @@ class ViewDashboard:
                     no_data("Please wait until results are fetched", force=True),
                     pr=15, pb=5, mb=10,
                     id=dict(type=postfix_tab, index=page), style={"backgroundColor": "transparent"}),
-                    visible=False, animate=True), value=page, id=dict(type=tab_butt, index=page)))
+                    visible=False, animate=True), value=page, id=dict(type=tab_butt, index=page), p=6))
             store.append(
                 dcc.Store(storage_type="memory", id=dict(type=view_dashboard.tabs, index=page), data="")
             )
@@ -161,7 +174,7 @@ class ViewDashboard:
 
         first_row = expanding_row(
             *cards,
-            style=dict(gap="6px")
+            style=dict(gap="6px", justifyContent="center")
         )
 
         third_row = expanding_row(
@@ -186,7 +199,7 @@ class ViewDashboard:
                 "Mostly seen Studio",
                 "cyan", page, url=studio_link(data.get("studio_link"))
             ),
-            style=dict(gap=gap)
+            style=dict(gap=gap, justifyContent="center")
         )
 
         fourth_row = expanding_row(
@@ -214,41 +227,34 @@ class ViewDashboard:
                 "Please wait until the data gets processed.", force=True
             )
 
-        current_tab, graph_class = self.tab_details(1)
+        tab_index = 1
+        current_tab, graph_class = self.tab_details(tab_index)
 
         user_name = page_settings.get("user_name", "")
         recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
 
-        recently_updated_plots = recently_updated_trend_comp(
-            json.loads(data.get("recently_updated_day_wise", "{}")),
-            data.get("recently_updated_cum_sum", []),
-            current_tab, graph_class, user_name
+        recently_updated_plots = self.recently_trend(
+            tab_index, json.loads(data.get("recently_updated_day_wise", "{}")),
+            data.get("recently_updated_cum_sum", []), user_name
         )
 
-        cards = [
-            number_card_format_3(
-                current_tab, index, *_
-            ) for index, _ in enumerate(recently_updated_animes)
+        # cards = [
+        #     number_card_format_3(
+        #         current_tab, index, *_
+        #     ) for index, _ in enumerate(recently_updated_animes)
+        # ]
+
+        charts = [
+            "weekly-progress-recently-view"
         ]
 
-        splide_options = SplideOptions(
-            type="loop", width="", perPage=4, gap=".69rem", padding="6px", autoplay=True,
-            mediaQuery="max",
-            breakpoints={
-                "1120": dict(perPage=3.5),
-                "980": dict(perPage=3),
-                "860": dict(perPage=2.5),
-                "740": dict(perPage=2),
-                "620": dict(perPage=1.5),
-                "420": dict(perPage=1.25),
-                "300": dict(perPage=1)
-            }
+        row_1 = expanding_row(
+            recently_updated_plots, html.Div(id=charts[0], className=current_tab), style=dict(gap="3px")
         )
 
-        belt = splide_container(*cards, splide_options=splide_options, class_name=current_tab)
-
         return expanding_layout(
-            dmc.Space(h=3), belt, dmc.Space(h=2), recently_updated_plots
+            row_1,
+            spacing="sm"
         )
 
     def special_anime_belt_in_overview(self, data, index):
@@ -291,7 +297,7 @@ class ViewDashboard:
                         value=100 if not total else ((watched / total) * 100),
                         color=getattr(status_colors, status),
                         tooltip=[
-                            dmc.Text(f"Time Spent: {spent}"),
+                            dmc.Text(f"Time Spent: {spent}hr{'s' if int(spent) > 1 else ''}"),
                             dmc.Space(h=2),
                             dmc.Text(f"Status: {getattr(status_labels, status)}")
                         ]
@@ -312,7 +318,7 @@ class ViewDashboard:
             )
 
         return basic_swiper_structure(
-                "special_belt", *cards
+            "special_belt", *cards
         )
 
     def currently_airing_details(self, data, user_name, index):
@@ -400,6 +406,65 @@ class ViewDashboard:
             ).handle_subject(figure), apply_shimmer=False, index=3,
             prefix=prefix, class_name=class_name, responsive=True)
 
+    def recently_trend(self, index, raw, cum_sum, user_name):
+        tab_name, graph_class = self.tab_details(index)
+
+        to_dates = [
+            datetime(*_)
+            for _ in raw.get("columns", [])
+        ]
+
+        up_until, total, diff, not_comp, re_watched = raw.get("data", [tuple() for _ in range(5)])
+
+        config = Config()
+        config.butts_to_add.clear()
+
+        plot_with_actual_data = go.Figure()
+        plot_with_cum_sum = go.Figure()
+
+        marker = dict(color="darkorange")
+        line = dict(shape="spline")
+        mode = "markers+lines"
+
+        trace = go.Scatter(
+            x=to_dates, y=diff, mode=mode, marker=marker, line=line
+        )
+
+        plot_with_actual_data.add_trace(trace)
+
+        trace = go.Scatter(
+            x=to_dates, y=cum_sum, mode=mode, marker=marker, line=line)
+
+        plot_with_cum_sum.add_trace(trace)
+
+        plot_1 = core_graph(
+            BeautifyMyGraph(
+                title=f"Recently updated animes by days",
+                show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
+            ).handle_subject(plot_with_actual_data), apply_shimmer=False, index=1,
+            prefix=tab_name, class_name=graph_class, responsive=True, config=config)
+
+        plot_2 = core_graph(
+            BeautifyMyGraph(
+                title=f"{user_name}'s recent progressive updates",
+                show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
+            ).handle_subject(plot_with_cum_sum), apply_shimmer=False, index=2,
+            prefix=tab_name, class_name=graph_class, responsive=True, config=config)
+
+        labels = ["Actual", "Cumulative"]
+
+        tabs = [dmc.TabsPanel(children=plot_1, value=labels[0]),
+                dmc.TabsPanel(children=plot_2, value=labels[1])]
+
+        return dmc.Tabs(
+            [
+                *tabs,
+                dmc.TabsList(
+                    expanding_row(*[dmc.Tab(_, value=_) for _ in labels], style=dict(justifyContent="flex-end")))
+            ], color="orange", variant="pills", value="Actual", persistence=True, persistence_type="session",
+            className=tab_name, p=6, style=dict(flexGrow=.1)
+        )
+
 
 def general_info(data, page):
     row_1 = data["row_1"]
@@ -425,98 +490,4 @@ def status_dist(data, page):
             color=getattr(status_colors, index)
         ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
     ), style=dict(gap="4px", justifyContent="center"))
-
-
-def timely_updated_at(time_stamps: typing.Sequence[int], graph_class: str, tab_name: str):
-    date_times = [
-        datetime.fromtimestamp(time_stamp) for time_stamp in time_stamps
-    ]
-
-    violin_plot = go.Figure()
-    violin_plot.add_trace(
-        go.Violin(
-            x=date_times
-        )
-    )
-
-    return core_graph(
-        BeautifyMyGraph(
-            title="When did the User Update",
-            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True
-        ).handle_subject(violin_plot), apply_shimmer=False, index=2,
-        prefix=tab_name, class_name=graph_class, responsive=True)
-
-
-def recently_updated_trend_comp(recently_updated_data, cum_sum, tab_name, graph_class, user_name):
-    to_dates = [
-        datetime(*_)
-        for _ in recently_updated_data.get("columns", [])
-    ]
-
-    up_until, total, diff, not_comp, re_watched = recently_updated_data.get("data", [tuple() for _ in range(5)])
-
-    plot_with_actual_data = go.Figure()
-    plot_with_cum_sum = go.Figure()
-
-    marker = dict(color="darkorange")
-    line = dict(shape="spline")
-    mode = "markers+lines"
-
-    trace = go.Scatter(
-        x=to_dates, y=diff, mode=mode, marker=marker, line=line
-    )
-
-    plot_with_actual_data.add_trace(trace)
-
-    trace = go.Scatter(
-        x=to_dates, y=cum_sum, mode=mode, marker=marker, line=line)
-
-    plot_with_cum_sum.add_trace(trace)
-
-    plot_1 = core_graph(
-        BeautifyMyGraph(
-            title=f"Recently updated animes by days",
-            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
-        ).handle_subject(plot_with_actual_data), apply_shimmer=False, index=1,
-        prefix=tab_name, class_name=graph_class, responsive=True)
-
-    plot_2 = core_graph(
-        BeautifyMyGraph(
-            title=f"{user_name}'s recent progressive updates",
-            show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
-        ).handle_subject(plot_with_cum_sum), apply_shimmer=False, index=2,
-        prefix=tab_name, class_name=graph_class, responsive=True)
-
-    _weeks = [
-        _.strftime("%A") for _ in to_dates
-    ]
-
-    fig = go.Figure()
-    trace = go.Violin(
-        x=_weeks, y=diff
-    )
-
-    fig.add_trace(trace)
-
-    weekly_fat = core_graph(
-        BeautifyMyGraph(
-            title=f"{user_name}'s weekly updates", show_x=True, show_x_grid=True, show_y=True
-        ).handle_subject(fig),
-        apply_shimmer=False, index=3, prefix=tab_name, class_name=graph_class, responsive=True
-    )
-
-    labels = ["Actual", "Cumulative", "Weekly"]
-
-    tabs = [dmc.TabsPanel(children=plot_1, value=labels[0]),
-            dmc.TabsPanel(children=plot_2, value=labels[1]),
-            dmc.TabsPanel(
-                value=labels[2],
-                children=weekly_fat
-            )]
-
-    return dmc.Tabs(
-        [
-            *tabs, dmc.TabsList([dmc.Tab(_, value=_) for _ in labels])
-        ], color="orange", variant="pills", value="Actual", persistence=True, persistence_type="session"
-    )
 

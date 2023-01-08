@@ -102,7 +102,7 @@ def from_css(file_name, path="/MLA/assets/"):
 
 
 def genre_link(id_):
-    return f"https://myanimelist.net/anime/ genre/{id_}"
+    return f"https://myanimelist.net/anime/genre/{id_}"
 
 
 def studio_link(id_):

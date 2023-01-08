@@ -184,10 +184,10 @@ special_card_for_anime = namedtuple(
 )
 
 overview_cards = [
-    special_card_for_anime("pop", "Top Popular Anime", "yellow"),
+    special_card_for_anime("pop", "Popular Anime", "yellow"),
     special_card_for_anime("recent", "Most Recently Updated", "orange"),
     special_card_for_anime("top", "Top Scoring Anime", "gray"),
-    special_card_for_anime("oldest", "Oldest Anime", "purple"),
+    special_card_for_anime("oldest", "Oldest Anime", "grape"),
     special_card_for_anime("recently_completed_movie", "Recent Movie Completed", "indigo"),
     special_card_for_anime("longest_spent", "Longest Time Spent", "blue")
 ]

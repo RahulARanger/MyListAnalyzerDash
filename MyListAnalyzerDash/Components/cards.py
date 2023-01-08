@@ -146,7 +146,7 @@ def card_format_4(text, label, color, class_name, size="lg", url=None):
     return expanding_row(
         expanding_row(
             dmc.Text(text, size=size, color=color, weight="bold") if not url else dmc.Anchor(
-                text, size=size, color=color, href=url, weight="bold"), style=dict(justifyContent="center")
+                text, size=size, color=color, href=url, weight="bold", target="_blank"), style=dict(justifyContent="center")
         ),
         dmc.Space(h=1),
         _divider(label, color),
@@ -298,7 +298,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                     ) for label, value in zip(("Favs", "Start Date", "Finish Date"), parameters)),
                     info, style=dict(columnGap="3px", justifyContent="flex-start")
                 ), no_wrap=True
-            )
+            ), style=dict(padding="3px")
         ), dmc.Divider(
             label=dmc.Text(
                 special_label,

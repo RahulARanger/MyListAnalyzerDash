@@ -4,9 +4,10 @@ const renderer = new DashRenderer();
     const url = document.URL;
 
     const extensions = [
-        "https://cdn.jsdelivr.net/combine/npm/@splidejs/splide@4.1.4,npm/@splidejs/splide-extension-auto-scroll@0.5.3",
         "https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js",
-        "/MLA/assets/view_dashboard.js"
+        "https://cdn.jsdelivr.net/npm/echarts@5.4.1/dist/echarts.min.js",
+        "/MLA/assets/view_dashboard.js",
+        "/MLA/assets/view_dashboard_plots.js"
     ]
 
     const allowed_extensions = [
@@ -20,6 +21,7 @@ const renderer = new DashRenderer();
         allowed_extensions.push(extensions[0]);
         allowed_extensions.push(extensions[1]);
         allowed_extensions.push(extensions[2]);
+        allowed_extensions.push(extensions[3]);
     }
 
     const head = document.getElementsByTagName('head')[0];

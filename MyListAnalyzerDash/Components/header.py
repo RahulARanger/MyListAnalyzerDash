@@ -132,5 +132,5 @@ def timestamps_modal():
         view_header.stampsModal,
         "Time Stamps",
         draft(),
-        size="xs", opacity=1, blur=0
+        size="xs", opacity=1, blur=0, ease_close=False
     )

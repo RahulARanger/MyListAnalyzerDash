@@ -62,7 +62,6 @@ function setColorBasedOnRankParser(){
 
 
 function refreshTab(_, label_id, soft_refresh){
-    enable_splide();
     enable_swiper_for_view_dashboard(soft_refresh);
     animateCounters(label_id?.index);
     formatTimers();
