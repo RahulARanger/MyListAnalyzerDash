@@ -1,16 +1,14 @@
 import typing
-
 import dash_mantine_components as dmc
 import plotly.graph_objects as go
-from dash import Input, State, Output, dcc, clientside_callback, ClientsideFunction
-
+from dash import Input, Output, dcc, clientside_callback, ClientsideFunction
 from MyListAnalyzerDash.Components.ModalManager import get_modal, get_modal_id
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, core_graph
-from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzerDash.mappings.enums import view_header, view_dashboard, css_classes, header_menu_id
+from MyListAnalyzerDash.Components.layout import expanding_layout
+from MyListAnalyzerDash.mappings.enums import view_header, css_classes, header_menu_id
 
 
-def search_user(disable_user_job=False, add=False) -> typing.Optional[
+def search_user(default_user_name="", disable_user_job=False, add=False) -> typing.Optional[
         typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
     if add:
         clientside_callback(
@@ -27,7 +25,7 @@ def search_user(disable_user_job=False, add=False) -> typing.Optional[
         return
 
     name_input = dmc.TextInput(
-        value="", id=view_header.askName, placeholder="User Name, please",
+        value=default_user_name, id=view_header.askName, placeholder="User Name, please",
         required=True, withAsterisk=True, rightSection=[
             dmc.ActionIcon(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="dark", size="sm")
         ]
@@ -50,18 +48,6 @@ def search_user(disable_user_job=False, add=False) -> typing.Optional[
 
 def filters_tab(add=False):
     if add:
-        clientside_callback(
-            ClientsideFunction(
-                namespace="MLA",
-                function_name="requestDetails"
-            ),
-            Output({"index": 0, "type": css_classes.request_details}, "figure"),
-            Input(view_dashboard.collectThings, "data"),
-            [
-                State({"index": 0, "type": css_classes.request_details}, "figure"),
-                State(view_dashboard.page_settings, "data")
-            ]
-        )
         return
 
     figure = BeautifyMyGraph(
@@ -80,7 +66,7 @@ def filters_tab(add=False):
     )
 
 
-def settings_tabs(add=False, disable_user_job=False):
+def settings_tabs(page_settings, add=False):
     if add:
         return search_user(add=add), filters_tab(add)
 
@@ -90,14 +76,14 @@ def settings_tabs(add=False, disable_user_job=False):
     ]
 
     tab_list = dmc.TabsList(
-        [dmc.Tab(_, value=_, disabled=index == 1 and disable_user_job) for index, _ in enumerate(labels)]
+        [dmc.Tab(_, value=_, disabled=index == 1) for index, _ in enumerate(labels)]
     )
 
     return dmc.Tabs([
         tab_list,
         dmc.Space(h=6),
         dmc.TabsPanel(
-            search_user(disable_user_job=disable_user_job), value=labels[0]
+            search_user(page_settings.get("user_name", "")), value=labels[0]
         ),
         dmc.TabsPanel(filters_tab(), value=labels[1])
     ], color="orange", id=view_header.settingsTabs, value=labels[0])
@@ -107,17 +93,17 @@ def filters_modal(
         page_settings: typing.Optional[typing.Dict[str, typing.Union[str, bool]]] = None, add=False):
     if add:
         modal_id = get_modal_id(header_menu_id)  # filters
-        settings_tabs(add=True)
+        settings_tabs(page_settings, add=True)
         return header_menu_id, modal_id
 
     return get_modal(
         header_menu_id,
-        expanding_row(
+        expanding_layout(
             dmc.Text("Search User"),
             dmc.Switch(label="For you ?", color="orange", onLabel="yes", offLabel="no", id=view_header.is_it_u),
-            style=dict(alignItems="flex-end")
+            direction="row", no_wrap=True, align="flex-end"
         ),
-        search_user(), ease_close=False
+        search_user(page_settings["user_name"], page_settings["disable_user_job"]), ease_close=False, opened=True
     )
 
 

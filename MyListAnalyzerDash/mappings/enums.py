@@ -43,32 +43,23 @@ view_header = namedtuple(
     "view-user-for-you", "view-store-stamps-last-updated-mla"
 )
 
-dashboard = namedtuple(
-    "Dashboard", ["header", "board", "dcc_graph", "tabRefresh", "whenDidRefresh"]
-)("header", "board", "core-graph-", "tab-refresh", "tab-refresh-when-view")
-
 view_dashboard = namedtuple(
     "viewDashBoard",
     [
-        "collectThings", "userDetailsJobResult", "locationChange", "intervalAsk",
-        "startDetails", "tabs", "stop_note", "start_note", "page_settings", "startButt", "paging",
-        "startButtTrigger", "stopButtTrigger", "fetchStatus", "tempDataStore", "userJobDetailsNote",
-        "row_1_colors", "tab_names", "no_data", "loadingNote", "time_spent_color", "process_again",
-        "recent_anime"
+        "locationChange", "intervalAsk",
+        "startDetails", "tabs", "page_settings",
+        "userJobDetailsNote",
+        "row_1_colors", "tab_names",
+        "no_data", "loadingNote", "time_spent_color", "process_again"
     ]
 )(
-    "view-collect", "view-user-job", "user-view-location", "user-view-ask",
-    "start-details-fetch-view", "view-dashboard-tabs",
-    "Please Note, When Stopped, we will be deleting everything that was collected before",
-    "Starting Timer...", "mla-page_settings",
-    "https://api.iconify.design/codicon/run-above.svg?color=green",
-    "view-results-next-page", "start-interval-view", "stop-interval-view", "job-view-status", "job-raw-store-view",
+    "user-view-location", "user-view-ask",
+    "start-details-fetch-view", "view-dashboard-tabs", "mla-page_settings",
     "note-user-job-details",
     ["teal", "blue", "pink"], ["Overview", "Recently"],
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
-    "indigo", "run-process-job-again-view-mla",
-    "view-dashboard-recent-anime-view"
+    "indigo", "run-process-job-again-view-mla"
 )
 
 creds_modal = namedtuple(
@@ -142,10 +133,6 @@ header_menu_items = [
         "https://api.iconify.design/line-md/coffee-twotone-loop.svg?color=darkorange"
         "&flip=vertical", "You can apply filters on various things before fetching"),
     header_menu_item(
-        view_dashboard.startButtTrigger, "User Anime List",
-        "https://api.iconify.design/line-md/clipboard-list-twotone.svg?color=darkorange",
-        "For Fetching User Anime List"),
-    header_menu_item(
         view_dashboard.process_again, "Fetch Again",
         "https://api.iconify.design/line-md/download-loop.svg?color=lightgreen",
         "For re-calculating things in the current active tab")
@@ -153,9 +140,9 @@ header_menu_items = [
 
 mla_stores = namedtuple(
     "Store", [
-        "anime_list", "recent_anime_list"
+        "anime_list", "recent_anime_list", "tempDataStore"
     ]
-)("user-anime-list-mla-view", "user-recent-anime-list-mla-view")
+)("user-anime-list-mla-view", "user-recent-anime-list-mla-view", "temp-user-anime-list")
 
 
 recent_anime_list = header_menu_item(

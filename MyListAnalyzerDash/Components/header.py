@@ -1,8 +1,6 @@
 import typing
-
 import dash_mantine_components as dmc
 from dash import dcc, Input, html
-
 from MyListAnalyzerDash import __version__
 from MyListAnalyzerDash.Components.ModalManager import timestamp_from_store, get_modal_id, make_modal_alive, get_modal
 from MyListAnalyzerDash.Components.buttons import icon_butt_img

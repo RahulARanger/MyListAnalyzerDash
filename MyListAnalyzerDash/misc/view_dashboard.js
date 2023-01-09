@@ -210,20 +210,21 @@ class ProcessUserDetails{
 
 
 async function processUserDetailsWhenNeeded(
-        timer_is_stopped,
+        raw_list,
         active_tab,
         ___manually_asked,
-        timer_status,
         pipe,
         tab_names,
         page_settings,
-        user_anime_list_source,
         parsed_user_anime_list,
         parsed_recent_animes,
         meta_for_tabs){
 
+    // DO NOT WORRY Raw List is not empty if passed
+
     const ctx = dash_clientside.callback_context.triggered;
     const said_no = say_no(1)[0];    
+    
     // if nobody called you, then say "no_update"
     if(ctx.length === 0) return said_no;
 
@@ -233,53 +234,32 @@ async function processUserDetailsWhenNeeded(
           page_settings?.user_name ?? ""
     );
 
-
     // decide for which will we have to fetch static and dynamic data
     const static_index = true; // means all
 
-    const timer_was_called = ctx[0].prop_id.includes("disabled");
-    const timer_was_called_when_disabled = timer_was_called && timer_is_stopped;
-    
-    const fetchForStaticDataForFirstTime = [
-        timer_was_called_when_disabled,
-         timer_status === "green",
-         user_anime_list_source.length > 0
-    ].every((x) => x);
+    const fetchForStaticDataForFirstTime = ctx[0].prop_id.includes("data");
 
+    // clearing cache because of the static data
     if(fetchForStaticDataForFirstTime)
         switch(static_index){
             case true:{
+                // we are clearing all the existing data if in we fetched static data for the first time
                 meta_for_tabs = meta_for_tabs.map(() => "");
             }
         }
 
-    const fetchDynamicData = (timer_was_called ? timer_was_called_when_disabled : true) && !Boolean(meta_for_tabs[processor.tab_index]);
+    const fetchDynamicData = fetchForStaticDataForFirstTime || !Boolean(meta_for_tabs[processor.tab_index]);
+
+    if(!(fetchDynamicData || fetchForStaticDataForFirstTime))
+        return said_no
 
     const tab_caches = (
         fetchForStaticDataForFirstTime
         ) ? Array(meta_for_tabs.length).fill("") : say_no(meta_for_tabs.length);
 
-    if(!(fetchDynamicData || fetchForStaticDataForFirstTime)){
-        const send_note = user_anime_list_source.length === 0 && timer_is_stopped && timer_status === "green";
-        if(!send_note) return said_no;
-        
-        else return [
-            tab_caches,
-            dmc_notification(
-                false,
-                "red",
-                false,
-                `Requested User: ${processor.user_name} has empty anime list. Please request for other user.`,
-                `Empty Anime List`
-            ),
-            said_no,
-            said_no
-        ]
-    }
-
     if(fetchForStaticDataForFirstTime)
         [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
-            pipe, ...await processor.decide_what_to_fetch(static_index), user_anime_list_source.flat(), static_index
+            pipe, ...await processor.decide_what_to_fetch(static_index), raw_list.flat() ?? [], static_index
         );
 
     if(processor.passed && fetchDynamicData){
@@ -338,7 +318,7 @@ function decide_if_name_required(is_it_on){
 }
 
 
-async function validate_user(_, __, ___, typedName, modalOpened, pageSettings, location, pipe, doNotInterrupt, inputID, is_it_for_logged_in_user){
+async function validate_and_fetch_anime_list(_, __, ___, typedName, modalOpened, pageSettings, location, pipe, doNotInterrupt, inputID, is_it_for_logged_in_user){
     const ctx = dash_clientside.callback_context.triggered;
     const who_triggered_it = ctx.length === 0 ? "" : ctx[0].prop_id;
 
@@ -353,12 +333,14 @@ async function validate_user(_, __, ___, typedName, modalOpened, pageSettings, l
         modalOpened: no,
         show_name: no,
         show_name_url: no,
-        error: no
+        error: no,
+        rawList: no
     }
 
     const return_me = () => [
         output_template.closeable, output_template.location, output_template.pageSettings,
-        output_template.modalOpened, output_template.show_name, output_template.show_name_url, output_template.error
+        output_template.modalOpened, output_template.show_name, output_template.show_name_url, output_template.error,
+        output_template.rawList
     ];
 
     if(who_triggered_it.includes("search_user_name_view")){
@@ -382,27 +364,25 @@ async function validate_user(_, __, ___, typedName, modalOpened, pageSettings, l
     })
 
     disable(true);
-
-    const headers = {'Content-Type': 'application/json'}
-    const body = {user_name}
     
-    if(is_it_for_logged_in_user){
-        headers["token"] = malAuthToken();
-        body.user_name = "";
+    // const req = new Request(`${pipe}/MLA/validate_user`, {method: "POST", body: JSON.stringify(body), headers: headers})
+    let final_user_name = "";
+    
+    const result = await fetchRawUserAnimeList(
+        pipe, is_it_for_logged_in_user ? "" : user_name, is_it_for_logged_in_user,
+        "span[class$='Alert-label']", "div.mantine-Alert-message",
+        "button.mantine-Modal-close"
+    );
+
+    if(result?.failed ?? false){
+        output_template.error = result?.why ?? "empty Reason not sure";
+    } else{
+    if(!result?.result?.at(0)?.length) output_template.error = `${user_name} has empty Anime List`;
+    else{
+        output_template.rawList = result?.result;
+        final_user_name = result?.user_name;}
     }
     
-    const req = new Request(`${pipe}/MLA/validate_user`, {method: "POST", body: JSON.stringify(body), headers: headers})
-    
-    const final_user_name = await fetch(req).then(async (resp) => {
-        const ans = await resp.json();
-        if(!(resp.ok && ans?.passed)) return Promise.reject(ans?.reason, true);
-        return ans.user_name;
-    }).catch(async (reason, expected) => {
-        output_template.error = expected ? (await reason.text()) : reason;
-        return ""
-    }) || user_name;
-
-
     
     if(typeof output_template.error === "string"){
         output_template.modalOpened = true;
@@ -501,6 +481,81 @@ function enable_swiper_for_view_dashboard(soft_refresh){
 }
 
 
+async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, closeWhile){
+    const alert_title = document.querySelector(title);
+    const alert_body = document.querySelector(body);
+    const butt = document.querySelector(closeWhile);
+
+    const old_title = alert_title.textContent;
+    const old_body  = alert_body.textContent;
+    
+    const result = [];
+    let book_mark = "";
+    const headers = {};
+    let why = false;
+    let failed = false;
+    let final_user_name = "";
+    butt && (butt.disabled = true);
+    alert_title.textContent = `Fetching Anime List for the User ${user_name}`
+    alert_body.textContent = "Preparing Request";
+    
+
+    if(use_token)
+        headers["token"] = malAuthToken();
+
+    const incase = async (reason, expected) => {
+        why = expected ? (await reason.text()) : reason;
+        return true;
+    }
+
+    if(use_token){
+        // we need to get the user name in case we are fetching the user list by the user name
+        const req = new Request(
+            `${pipe}/MLA/validateUser`, {method: "GET", headers: headers}
+        );
+
+        failed = await fetch(req).then(async (resp) => {
+            const ans = await resp.json();
+            if(!(resp.ok && ans?.passed)) return Promise.reject(ans?.reason, true);
+            
+            user_name = ans.user_name;
+            alert_body.textContent = "Checking your User Name..."
+            
+            return false;
+        }).catch(incase);
+    }
+
+    for(let round = 0; round < 5; round ++){
+        if(failed) break;
+        
+        alert_body.textContent = `Requested for the 1e3 animes, Until Now asked: ${round + 1} times.`;
+        const req = new Request(
+            `${pipe}/MLA/fetchUserAnimeList?${new URLSearchParams({url: book_mark, user_name}).toString()}`, {method: "GET", headers: headers}
+        );
+        const next = await fetch(req).then(async (resp) => {
+            const ans = await resp.json();
+            if(!(resp.ok && ans?.passed)) return Promise.reject(ans?.reason, true);
+
+            final_user_name = ans.user_name;
+            book_mark = ans.next_page;
+            
+            result.push(ans.raw);
+            alert_body.textContent = "Successfully fetched, Checking if there's more."
+
+            return book_mark;
+
+        }).catch((...args) => {failed = true; incase(...args)});
+
+        if(!next) break;
+    }
+
+    alert_body.textContent = old_body;
+    alert_title.textContent = old_title;
+    butt && (butt.disabled = false);
+
+    return failed ? {why, failed} : {user_name: final_user_name, result};
+}
+
 
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
@@ -510,6 +565,6 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         refreshTab,
         set_view_url_after_search,
         decide_if_name_required,
-        validate_user
+        validate_and_fetch_anime_list
     }
 });

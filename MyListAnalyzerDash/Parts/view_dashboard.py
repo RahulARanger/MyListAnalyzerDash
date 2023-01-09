@@ -1,5 +1,4 @@
 import json
-import typing
 from datetime import datetime
 
 import dash_mantine_components as dmc
@@ -8,8 +7,8 @@ import plotly.graph_objects as go
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
     html
 
-from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, splide_container, \
-    SplideOptions, number_card_format_3, card_format_4, relative_color, special_anime_card, number_comp
+from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, card_format_4, \
+    relative_color, special_anime_card, number_comp
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, \
@@ -43,26 +42,24 @@ class ViewDashboard:
             ),
             [
                 Output(dict(type=view_dashboard.tabs, index=ALL), "data"),
-                Output(view_dashboard.userJobDetailsNote, "children"),
+                Output(view_dashboard.userJobDetailsNote, "children"), # notification
                 Output(mla_stores.anime_list, "data"),
                 Output(mla_stores.recent_anime_list, "data"),
                 Output(view_dashboard.process_again, "id")
             ],
             [
-                Input(view_dashboard.intervalAsk, "disabled"),
+                Input(mla_stores.tempDataStore, "data"),
                 Input(view_dashboard.tabs, "value"),
                 Input(view_dashboard.process_again, "n_clicks")
             ],
             [
                 # Timer Status
-                State(view_dashboard.startButtTrigger, "color"),
                 # BackEnd URL
                 State("pipe", "data"),
                 # tab_labels
                 State(dict(type=postfix_tab, index=ALL), "id"),
                 # Data Sources
                 State(view_dashboard.page_settings, "data"),
-                State(dict(type=view_dashboard.tempDataStore, index=ALL), "data"),
                 State(mla_stores.anime_list, "data"),
                 State(mla_stores.recent_anime_list, "data"),
                 State(dict(type=view_dashboard.tabs, index=ALL), "data")
@@ -94,7 +91,8 @@ class ViewDashboard:
             Input(dict(type=postfix_tab, index=view_dashboard.tab_names[1]), "children"),
             [
                 State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
-                State(view_dashboard.page_settings, "data")
+                State(view_dashboard.page_settings, "data"),
+                State(mla_stores.recent_anime_list, "data")
             ]
         )
 
@@ -296,11 +294,11 @@ class ViewDashboard:
                     dict(
                         value=100 if not total else ((watched / total) * 100),
                         color=getattr(status_colors, status),
-                        tooltip=[
-                            dmc.Text(f"Time Spent: {spent}hr{'s' if int(spent) > 1 else ''}"),
-                            dmc.Space(h=2),
-                            dmc.Text(f"Status: {getattr(status_labels, status)}")
-                        ]
+                        tooltip=expanding_layout(
+                            dmc.Text(f"Time Spent: {spent} hr{'s' if int(spent) > 1 else ''}"),
+                            dmc.Text(f"Status: {getattr(status_labels, status)}"),
+                            dmc.Text(f"Progress: {watched} / {total if total else 'NA'}")
+                        )
                     )
                 ]
             )

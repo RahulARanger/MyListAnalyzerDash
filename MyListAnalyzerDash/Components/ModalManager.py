@@ -28,13 +28,14 @@ def make_modal_alive(prop_id, prop_action="n_clicks", modal_id=None, ask_first=T
     )
 
 
-def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md", z_index=200, opacity=.69, blur=.69):
+def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md", z_index=200, opacity=.69, blur=.69, opened=False):
     return dmc.Modal(
         id=get_modal_id(id_),
         title=title, centered=True, children=children, overflow="outside", size=size,
         closeOnClickOutside=closeable and ease_close, zIndex=z_index,
         closeOnEscape=closeable and ease_close, withCloseButton=closeable,
-        overlayOpacity=opacity, overlayBlur=blur, overlayColor="transparent"
+        overlayOpacity=opacity, overlayBlur=blur, overlayColor="transparent",
+        opened=opened
     )
 
 

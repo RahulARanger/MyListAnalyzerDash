@@ -1,6 +1,26 @@
 const week_days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const recently_e_charts = {}; // be a good boy
 
+
+// USE this if and only if you need to use whole row or column or TABLE
+// not for particular cell
+class Frame{
+    raw;
+    constructor(raw){
+        this.raw = JSON.parse(raw);
+    }
+
+    col(col_index){
+        return this.raw.map((row) => row[col_index]);
+    }
+
+    row(row_index){
+        return this.raw[row_index]
+    }
+}
+
+
+
 function parseWeeksFromStamps(stamps){
     const week_freq = {};
     stamps.forEach(_ => {
@@ -42,28 +62,25 @@ function parseWeeksFromStamps(stamps){
 
 
 function createEChart(element, on){
-    const article = document.createElement("article");
-    article.id = element.id + "-article"
-    element.appendChild(article);
-
-    const chart = echarts.init(article, null, { renderer: on || 'svg' });
-    new ResizeObserver(() => chart.resize()).observe(article);
+    const chart = echarts.init(element, null, { renderer: on || 'svg' });
+    new ResizeObserver(() => chart.resize()).observe(element);
     return chart
 }
 
 
-function plotForRecentlyTab(_, data, page_settings){
+function plotForRecentlyTab(_, data, page_settings, recent_animes){
     const no = window.dash_clientside.no_update;
     
     if(!data) return no;
     
     // VALIDATION
-    const _stamps = Object.values(JSON.parse(data["stamps"]));
-    if(!_stamps) return no;
-    
-    
+    if(!recent_animes) return no;
+
     // DATA POINTS 
-    const stamps = _stamps.map((stamp) => new Date(stamp * 1e3));
+    const frame = new Frame(recent_animes);
+    const stamps = frame.col(5).map((stamp) => new Date(stamp));
+
+    console.log(frame.raw);
     
     // DESTROYING PLOTS
     const week_plot = "weekly-progress-recently-view"; 
