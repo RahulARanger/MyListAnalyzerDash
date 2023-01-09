@@ -405,11 +405,6 @@ async function validate_and_fetch_anime_list(_, __, ___, typedName, modalOpened,
     // document.getElementById(search_bar_id).textContent = actual_user_name;
 }
 
-function fetch_raw_user_anime_list() {
-    // TODO: migrate fetch raw user anime list from python to javascript
-}
-
-
 const swiper_options = {
     time_spent: {
         loop: true,
