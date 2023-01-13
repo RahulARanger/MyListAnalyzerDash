@@ -13,12 +13,13 @@ def expanding_layout(
         reverse=False,
         id_=None,
         no_wrap=False,
-        grow_child=False
+        grow_child=False,
+        grow=True
 ):
     extras = {"id": id_}
     extras.pop("id") if not id_ else ...
 
-    _style = dict(height="100%", flexGrow=1, flexDirection=direction + ("-reverse" if reverse else ""))
+    _style = dict(height="100%", flexGrow=1 if grow else 0, flexDirection=direction + ("-reverse" if reverse else ""))
     _style.update(style) if style else ...
 
     return dmc.Group(

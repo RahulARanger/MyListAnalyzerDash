@@ -1,51 +1,13 @@
-import json
+import logging
 import logging
 import typing
-from dataclasses import dataclass, asdict
-
 import dash_mantine_components as dmc
 from dash import html
-from dash.dependencies import Component
-
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
-from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
-
-
-@dataclass
-class SplideOptions:
-    # Subset of options presented in https://splidejs.com/guides/options
-    type: str = "slide"
-    autoplay: bool = False
-    rewind: bool = False
-    arrows: bool = False
-    pagination: bool = False
-    width: str = "200px"
-    mediaQuery: str = "min"
-    perPage: int = 1
-    gap: str = "0px"
-    padding: str = "0px"
-    autoScroll: typing.Union[typing.Dict[str, int], bool] = False
-    breakpoints: typing.Union[typing.Dict, bool] = False
-
-    def embeded(self):
-        return json.dumps(asdict(self))
-
-    @classmethod
-    def with_breakpoints(cls):
-        return dict(
-            mediaQuery="max",
-            breakpoints={
-                "1120": dict(perPage=3.5),
-                "980": dict(perPage=3),
-                "860": dict(perPage=2.5),
-                "740": dict(perPage=2),
-                "620": dict(perPage=1.5),
-                "420": dict(perPage=1.25),
-                "300": dict(perPage=1)
-            }
-        )
+from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper, status_colors
+from MyListAnalyzerDash.utils import ellipsis_part, anime_link
 
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
@@ -146,42 +108,12 @@ def card_format_4(text, label, color, class_name, size="lg", url=None):
     return expanding_row(
         expanding_row(
             dmc.Text(text, size=size, color=color, weight="bold") if not url else dmc.Anchor(
-                text, size=size, color=color, href=url, weight="bold", target="_blank"), style=dict(justifyContent="center")
+                text, size=size, color=color, href=url, weight="bold", target="_blank"),
+            style=dict(justifyContent="center")
         ),
         dmc.Space(h=1),
         _divider(label, color),
         class_name=f"number-card {class_name}"
-    )
-
-
-def splide_slides(_slides: typing.Tuple[Component]):
-    return [html.Li(
-        card, className="splide__slide"
-    ) for card in _slides]
-
-
-def splide_container(
-        *slides: Component,
-        class_name: str = "",
-        id_="",
-        splide_options: SplideOptions = SplideOptions(),
-        style=None
-):
-    splide_class = f"splide {class_name}"
-    child = html.Div(
-        html.Ul(
-            splide_slides(slides), className="splide__list"
-        ), className="splide__track"
-    ),
-
-    extras = {"data-splide": splide_options.embeded()}
-    extras.update(id=id_) if id_ else ...
-
-    _style = dict() if not style else style
-    _style["minWidth"] = "20%"
-
-    return html.Section(
-        child, className=splide_class, **extras, style=_style
     )
 
 
@@ -269,8 +201,8 @@ def number_parameter(label, value, class_name, is_percent=False):
         spacing=2, align="flexStart", position="left")
 
 
-def special_anime_card(name, url, picture, special_label, special_color, progress, special_about, special_value, _info, *parameters, class_name=""):
-    text_limit = 24
+def special_anime_card(name, url, picture, special_label, special_color, progress, special_about, special_value, _info,
+                       *parameters, class_name=""):
     info = floating_tooltip(
         dmc.ActionIcon(
             dmc.Image(src=helper.info), size="sm"
@@ -281,12 +213,12 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
 
     return expanding_layout(
         expanding_row(
-            dmc.Image(src=picture, width=75, height=97, fit="contain"),
+            dmc.Image(src=picture, width=70, height=102, fit="contain"),
             expanding_layout(
                 set_tooltip(
                     dmc.Anchor(
-                        name[: text_limit] + ("..." if len(name) > text_limit else ""),
-                        href=url, size="sm", target="_blank"
+                        name, href=url, size="sm", target="_blank",
+                        style=ellipsis_part(220)
                     ), label=name
                 ),
                 progress,
@@ -297,8 +229,8 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                         no_wrap=True
                     ) for label, value in zip(("Favs", "Start Date", "Finish Date"), parameters)),
                     info, style=dict(columnGap="3px", justifyContent="flex-start")
-                ), no_wrap=True
-            ), style=dict(padding="3px")
+                ), no_wrap=True, spacing="sm"
+            ), style=dict(padding="1px", gap="2px")
         ), dmc.Divider(
             label=dmc.Text(
                 special_label,
@@ -306,10 +238,10 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                 style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
             color=special_color, labelPosition="center", size="md"),
         floating_tooltip(
-            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="0px"), size="xs", color="yellow"),
+            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="2px"), size="xs", color="yellow"),
             label=special_about
         ),
-        class_name=f"anime_card {class_name}", style=dict(padding="3px")
+        class_name=f"anime_card {class_name}", style=dict(padding="1px"), spacing=0
     )
 
 
@@ -319,9 +251,62 @@ def relative_color(value, full):
 
 
 def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections):
+    value = dict(
+        value=((watched / total) * 1e2) if total > 0 else 100,
+        color=watched_color,
+        tooltip=[dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}")]
+    )
     return dmc.Progress(
         sections=[
-            dict(value=(watched / total) * 1e2, color=watched_color, tooltip=status),
+            value,
             *other_sections
-        ], animate=animate
+        ], animate=animate, size="md"
     )
+
+
+def currently_airing_card(
+        _id, title, img_url, user_started,
+        watched, total, updated_at,
+        source, status, started_week, started_time, started_date,
+        class_name=css_classes.time_format
+):
+    cells = [
+        ("Broadcast Started at", started_date),
+        ("Started at", user_started if user_started else "NA"),
+        ("Broadcast Time", started_time),
+        ("Broadcast Weekday", started_week),
+    ]
+
+    rows = expanding_layout(
+        *(expanding_layout(
+            dmc.Text(cell[0], color="gray", size="sm"),
+            dmc.Text(cell[1], size="xs", weight="bold"),
+            spacing=.5, align="flexStart", position="left", no_wrap=True
+        ) for cell in cells),
+        progress_bar_from_status(
+            watched, total, status, getattr(status_colors, status), animate=status == "watching"
+        ), no_wrap=True
+    )
+
+    footer = expanding_row(
+        set_tooltip(
+            dmc.Anchor(title, href=anime_link(_id), style=ellipsis_part(150), size="sm"),
+            title
+        ),
+        set_tooltip(
+            dmc.Badge(source, color="orange", size="xs"),
+            "Source"
+        ),
+        relative_time_stamp_but_calc_in_good_way(
+            False, default=updated_at, isMS=True, isNotUTC=True,
+            class_name=f"{class_name} rightFix", size="xs"),
+        style=dict(alignItems="center", flexWrap="nowrap"),
+    )
+
+    return expanding_layout(
+        expanding_row(
+            dmc.Image(src=img_url, height=210, fit="cover", width=90),
+            rows, style=dict(gap="10px")
+        ),
+        footer, class_name="swiper-slide"
+    ), status

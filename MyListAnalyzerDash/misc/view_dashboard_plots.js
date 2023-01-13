@@ -79,8 +79,6 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes){
     // DATA POINTS 
     const frame = new Frame(recent_animes);
     const stamps = frame.col(5).map((stamp) => new Date(stamp));
-
-    console.log(frame.raw);
     
     // DESTROYING PLOTS
     const week_plot = "weekly-progress-recently-view"; 

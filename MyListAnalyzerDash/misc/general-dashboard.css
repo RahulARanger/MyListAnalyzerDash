@@ -14,7 +14,7 @@
 }
 
 #time_spent{
-    width: 200px;
+    width: 197px;
 }
 
 #time_spent .swiper-slide{
@@ -134,6 +134,7 @@ div.Overview-graphs[id^='{"index":2']{
   border: 1px solid rgba(150, 150, 150, 0.2);
   border-radius: 5px;
   transition: var(--standard-transition);
+  margin-right: 0px;
   box-shadow: var(--hard-chocolate);
 }
 
@@ -163,6 +164,43 @@ div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
 
 @media only screen and (max-width: 750px){
     div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
-        width: calc(97vw - 29px);
+        width: calc(97vw - 31px);
     }
+}
+
+#currently_airing_cards{
+    min-width: calc(200px + 1.75vw) !important;
+    flex-grow: 2;
+    box-sizing: border-box;
+    max-width: 245px;
+}
+
+#currently_airing_cards .swiper-slide{
+    background-color: rgb(23, 23, 23);
+    box-shadow: var(--hard-chocolate);
+    padding: 6px;
+}
+
+#time_spent{
+    width: 200px;
+    flex-shrink: 1;
+}
+
+
+#time_spent .swiper-slide{
+    height: 45px;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 85%;
+}
+
+.airing_cards{
+    min-width: 298px;
+}
+
+.rightFix{
+    position: fixed;
+    top: 25%;
+    right: 2px;
+    writing-mode: vertical-rl;
 }

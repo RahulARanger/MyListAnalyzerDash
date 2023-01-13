@@ -109,12 +109,24 @@ def studio_link(id_):
     return f"https://myanimelist.net/anime/producer/{id_}"
 
 
-def basic_swiper_structure(id_, *slides):
+def basic_swiper_structure(id_, *slides, class_name=""):
     return html.Div(
-        html.Div(slides, className="swiper-wrapper"),
+        html.Div(slides, className=f"{class_name} swiper-wrapper"),
         className="swiper", id=id_
     )
 
 
 def anime_link(id_):
     return f"https://myanimelist.net/anime/{id_}"
+
+
+def ellipsis_part(width):
+    return dict(width=f"{width}px", textOverflow="ellipsis", whiteSpace="nowrap", overflow="hidden", display="block")
+
+
+def format_stamp(date, also_for_time=False):
+    return date.strftime("%b %d, %Y" if not also_for_time else "%b %d, %Y %H:%M")
+
+
+def read_datetime(date, force=None):
+    date.strptime(date, "%Y-%m-%d %H:%M:%S" if not force else force)

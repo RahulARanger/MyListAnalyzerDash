@@ -452,6 +452,24 @@ const swiper_options = {
                 animateCounters();
             }
         }
+    },
+    currently_airing_cards: {
+        loop: true,
+        grabCursor: true,
+        speed: 5e2,
+        autoplay: {
+            delay: 2.5e3,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true
+        },
+        navigation: {enabled: false},
+        slidesPerView: "auto",
+        effect: "cards",
+        on: {
+            init: function(){
+                animateCounters(); // some clones also needs to be counted
+            }
+        }
     }
 }
 
@@ -551,6 +569,14 @@ async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, cl
     return failed ? {why, failed} : {user_name: final_user_name, result};
 }
 
+function clickToGoCardIndex(_, called_index, swiper_cards_id){
+    const no = say_no(1)[0];
+    const swiper_obj = document.getElementById(swiper_cards_id)?.swiper;
+    if(!swiper_obj) return no;
+    
+    swiper_obj.slideTo(called_index?.index ?? 0);
+    return no;
+}
 
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
@@ -560,6 +586,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         refreshTab,
         set_view_url_after_search,
         decide_if_name_required,
-        validate_and_fetch_anime_list
+        validate_and_fetch_anime_list,
+        clickToGoCardIndex
     }
 });

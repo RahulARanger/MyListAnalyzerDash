@@ -39,7 +39,7 @@ def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md",
     )
 
 
-def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=css_classes.time_format, size="sm", isMS=False):
+def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=css_classes.time_format, size="sm", isMS=False, isNotUTC=False):
     if add_callback:
         inputs = Input(id_, "data-time-stamp")
 
@@ -56,7 +56,12 @@ def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, def
             State(id_, "id"),
             prevent_initial_call=True
         )
-    extras = {"data-time-stamp": default, "data-is-ms": "" if not isMS else "true"}
+    extras = {
+        "data-time-stamp": default,
+        "data-is-ms": "" if not isMS else "true",
+        "data-is-not-utc": "" if not isNotUTC else "true"
+    }
+
     extras.update(id=id_) if id_ else ...
 
     return dmc.Text(

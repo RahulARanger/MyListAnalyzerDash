@@ -8,11 +8,11 @@ from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback
     html
 
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, card_format_4, \
-    relative_color, special_anime_card, number_comp
+    relative_color, special_anime_card, number_comp, currently_airing_card
 from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, status_light_colors, \
-    mla_stores, overview_cards
+from MyListAnalyzerDash.Components.tooltip import set_tooltip
+from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, mla_stores, overview_cards
 from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure, anime_link
 
 
@@ -42,7 +42,7 @@ class ViewDashboard:
             ),
             [
                 Output(dict(type=view_dashboard.tabs, index=ALL), "data"),
-                Output(view_dashboard.userJobDetailsNote, "children"), # notification
+                Output(view_dashboard.userJobDetailsNote, "children"),  # notification
                 Output(mla_stores.anime_list, "data"),
                 Output(mla_stores.recent_anime_list, "data"),
                 Output(view_dashboard.process_again, "id")
@@ -93,6 +93,19 @@ class ViewDashboard:
                 State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
                 State(view_dashboard.page_settings, "data"),
                 State(mla_stores.recent_anime_list, "data")
+            ]
+        )
+
+        clientside_callback(
+            ClientsideFunction(
+                function_name="clickToGoCardIndex",
+                namespace="MLA"
+            ),
+            Output(dict(index=MATCH, section=view_dashboard.clickToGoCards), "id"),
+            Input(dict(index=MATCH, section=view_dashboard.clickToGoCards), "n_clicks"),
+            [
+                State(dict(index=MATCH, section=view_dashboard.clickToGoCards), "id"),
+                State(view_dashboard.currently_airing, "id")
             ]
         )
 
@@ -171,8 +184,7 @@ class ViewDashboard:
         gap = "3px"
 
         first_row = expanding_row(
-            *cards,
-            style=dict(gap="6px", justifyContent="center")
+            *cards, style=dict(gap=gap, justifyContent="center")
         )
 
         third_row = expanding_row(
@@ -211,7 +223,7 @@ class ViewDashboard:
                 position="flexStart", no_wrap=True
             ),
             status_for_airing_ones_in_list,
-            style=dict(alignItems="center")
+            style=dict(alignItems="center", gap=gap, justifyContent="center")
         )
 
         return [
@@ -322,31 +334,51 @@ class ViewDashboard:
     def currently_airing_details(self, data, user_name, index):
         prefix, class_name = self.tab_details(index)
 
-        airing = json.loads(data.get("status_for_currently_airing", "{}"))
-        if not airing["data"]:
+        currently_airing = json.loads(data.get("currently_airing_animes", "{}"))
+
+        if not currently_airing.get("data", ""):
             return dmc.Alert(
                 dmc.Text(f"{user_name} is not Watching any Animes which are currently airing"),
                 color="dark", title="No Data",
                 variant="filled", style=dict(maxWidth="300px"),
                 icon=[dmc.Image(src=view_dashboard.no_data)])
 
-        figure = go.Figure(
-            go.Pie(
-                hovertemplate="<b>%{label}</b>: %{value} || %{percent}<extra></extra>",
-                labels=tuple(map(lambda x: getattr(status_labels, x), airing["index"])), values=airing["data"],
-                marker=dict(
-                    colors=tuple(map(lambda x: getattr(status_light_colors, x), airing["index"])),
-                    line=dict(width=2, color="#18191A")),
-                textinfo="label+percent", pull=[
-                    0.2 if status_labels.watching == getattr(status_labels, _) else 0 for _ in airing["index"]]
-            ),
+        status_map = dict()
+        animes = zip(currently_airing.get("index", []), currently_airing.get("data", []))
+
+        cards = []
+
+        for index, (anime_id, raw) in enumerate(animes):
+            card, status = currently_airing_card(anime_id, *raw)
+            cards.append(card)
+            status_map[status] = status_map.get(status, index)
+
+        inside_hover = expanding_layout(
+            dmc.Text("Currently Airing Animes", size='md', weight="bold"),
+            dmc.Divider(color="orange"),
+            expanding_row(
+                *(
+                    set_tooltip(
+                        dmc.Button(
+                            "".join([__[0].upper() for __ in _.split("_")]), color=getattr(status_colors, _), size="sm",
+                            compact=True, id=dict(
+                                index=status_map[_], section=view_dashboard.clickToGoCards
+                            )),
+                        label=_
+                    )
+                    for _ in status_map
+                )
+            )
         )
 
-        return core_graph(
-            BeautifyMyGraph(
-                title="Currently Airing"
-            ).handle_subject(figure), apply_shimmer=False, index=1,
-            prefix=prefix, class_name=class_name, responsive=True)
+        return dmc.HoverCard(
+            [
+                dmc.HoverCardTarget(basic_swiper_structure(
+                    view_dashboard.currently_airing, *cards
+                )),
+                dmc.HoverCardDropdown(inside_hover)
+            ], className="airing_cards"
+        )
 
     def episode_range(self, data, index):
         raw = json.loads(data.get("ep_range", "{}"))
@@ -487,5 +519,4 @@ def status_dist(data, page):
             class_name=page, another=exact,
             color=getattr(status_colors, index)
         ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
-    ), style=dict(gap="4px", justifyContent="center"))
-
+    ), style=dict(gap="3px", justifyContent="center"))
