@@ -84,6 +84,16 @@ class ViewDashboard:
 
         clientside_callback(
             ClientsideFunction(
+                function_name="plotForOverviewTab",
+                namespace="MLAPlots"
+            ),
+            Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "id"),
+            Input(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+            State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data")
+        )
+
+        clientside_callback(
+            ClientsideFunction(
                 function_name="plotForRecentlyTab",
                 namespace="MLAPlots"
             ),
@@ -164,8 +174,6 @@ class ViewDashboard:
             time_spent = data.get("time_spent", "Not Known")
             second_row = status_dist(data, page)
             status_for_airing_ones_in_list = self.currently_airing_details(data, user_name, tab_index)
-            ep_range = self.episode_range(data, tab_index)
-            rating_dist = self.rating_dist(data, tab_index)
 
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
@@ -213,7 +221,8 @@ class ViewDashboard:
         )
 
         fourth_row = expanding_row(
-            ep_range, rating_dist,
+            html.Article(id=view_dashboard.ep_dist, className=graph_class),
+            html.Article(id=view_dashboard.rating_dist, className=graph_class),
             style=dict(alignContent="center", alignItems="center", justifyContent="center", gap=gap)
         )
 
@@ -379,62 +388,6 @@ class ViewDashboard:
                 dmc.HoverCardDropdown(inside_hover)
             ], className="airing_cards"
         )
-
-    def episode_range(self, data, index):
-        raw = json.loads(data.get("ep_range", "{}"))
-        prefix, class_name = self.tab_details(index)
-
-        fig = go.Figure()
-        x = tuple(raw.get("key_0", {}).values())
-        y = tuple(raw.get("ep_range", {}).values())
-        _colors = [
-            colors.qualitative.Dark2[1] if int(_color) else colors.qualitative.Set2[2] for _color in
-            raw.get("color", {}).values()]
-
-        bar_trace = go.Bar(
-            x=x, y=y, text=y, textposition="auto",
-            marker=dict(
-                color=_colors,
-                line=dict(width=2, color="#18191A")),
-            hovertemplate="<b>[%{x}]</b>: %{y}<extra></extra>"
-        )
-        fig.add_trace(bar_trace)
-
-        ep_range = Config()
-        ep_range.scroll_zoom = False
-
-        return core_graph(
-            BeautifyMyGraph(
-                title="Range of Anime Episodes", x_title="Episode Range", y_title="Anime Count",
-                show_x=True, show_y=True, show_y_grid=True, autosize=True).handle_subject(fig),
-            apply_shimmer=False, index=2, prefix=prefix, class_name=class_name,
-            responsive=True, config=ep_range
-        )
-
-    def rating_dist(self, data, index):
-        prefix, class_name = self.tab_details(index)
-
-        rating_dist = json.loads(data.get("rating_dist", {}))
-        ratings = tuple(rating_dist.keys())
-        values = tuple(rating_dist.values())
-
-        figure = go.Figure(
-            go.Pie(
-                labels=ratings, values=values,
-                textinfo="label+percent",
-                marker=dict(
-                    colors=colors.sequential.Burg,
-                    line=dict(width=.69, color=colors.sequential.Burg[-1])
-                )
-            ),
-        )
-
-        return core_graph(
-            BeautifyMyGraph(
-                title=f"Age Rating over the animes",
-                mt=10
-            ).handle_subject(figure), apply_shimmer=False, index=3,
-            prefix=prefix, class_name=class_name, responsive=True)
 
     def recently_trend(self, index, raw, cum_sum, user_name):
         tab_name, graph_class = self.tab_details(index)

@@ -51,7 +51,8 @@ view_dashboard = namedtuple(
         "userJobDetailsNote",
         "row_1_colors", "tab_names",
         "no_data", "loadingNote", "time_spent_color", "process_again",
-        "currently_airing", "clickToGoCards"
+        "currently_airing", "clickToGoCards",
+        "rating_dist", "ep_dist"
     ]
 )(
     "user-view-location", "user-view-ask",
@@ -61,7 +62,8 @@ view_dashboard = namedtuple(
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
     "indigo", "run-process-job-again-view-mla",
-    "currently_airing_cards", "currently-airing-cards-swiped-to"
+    "currently_airing_cards", "currently-airing-cards-swiped-to",
+    "rating_dist_overview_mla", "ep_dist_overview_mla"
 )
 
 creds_modal = namedtuple(
