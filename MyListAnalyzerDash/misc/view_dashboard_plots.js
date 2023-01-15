@@ -1,5 +1,5 @@
 const week_days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const recently_e_charts = {}; // be a good boy
+const view_e_charts_mla = {}; // be a good boy
 
 // UPDATING THEME
 fetch('/MLA/assets/theme.json')
@@ -10,7 +10,7 @@ fetch('/MLA/assets/theme.json')
 
 
 window.addEventListener('resize', function(){
-  Object.values(recently_e_charts).forEach((plot) => plot?.resize());
+  Object.values(view_e_charts_mla).forEach((plot) => plot?.resize());
 });
 
 
@@ -41,11 +41,7 @@ function createEChart(element, on){
 }
 
 function displayPlots(...plots){
-  plots.forEach((plot) => recently_e_charts[plot]?.dispose());
-}
-
-function updatePlots(...plots){
-  plots.forEach((plot) => recently_e_charts[plot] = plot);
+  plots.forEach((plot) => view_e_charts_mla[plot]?.dispose());
 }
 
 function generalToolBox(){
@@ -108,7 +104,7 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes){
     weekly_plot.setOption(parseWeeksFromStamps(stamps));
     
     // SAVING PLOTS
-    recently_e_charts[week_plot] = weekly_plot;
+    view_e_charts_mla[week_plot] = weekly_plot;
     return no;
 }
 
@@ -195,7 +191,8 @@ function plotForOverviewTab(_, data, page_settings){
     ratings_dist.setOption(plotRatingsDist(JSON.parse(data?.rating_dist) || {}));
     
     // SAVING PLOTS
-    updatePlots(rating_plot, ratings_dist);    
+    view_e_charts_mla[ep_range_plot] = ep_range;
+    view_e_charts_mla[rating_plot] = ratings_dist;
     return no;
 }
 

@@ -230,7 +230,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                     ) for label, value in zip(("Favs", "Start Date", "Finish Date"), parameters)),
                     info, style=dict(columnGap="3px", justifyContent="flex-start")
                 ), no_wrap=True, spacing="sm"
-            ), style=dict(padding="1px", gap="2px")
+            ), style=dict(padding="1px", gap="12px")
         ), dmc.Divider(
             label=dmc.Text(
                 special_label,
