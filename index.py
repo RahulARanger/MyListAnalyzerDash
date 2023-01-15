@@ -31,6 +31,7 @@ class MainApplication:
         self.set_layout()
 
         build_assets(self.app.server)
+        self.app.config.suppress_callback_exceptions = True
 
     @property
     def app(self):
