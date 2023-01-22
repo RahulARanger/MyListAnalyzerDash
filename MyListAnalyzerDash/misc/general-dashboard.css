@@ -42,7 +42,7 @@
 .indicator-number{font-size: 0.6rem;}
 
 
-.Overview-graphs:hover, .number-card:hover, .Recently:hover{
+.Overview-graphs:hover, .number-card:hover, .Recently-graphs:hover{
     border: 1px ridge white;
     box-shadow: inset 0 0 0.5em 0 white, 0 0 0.5em 0 white;
 }
@@ -67,21 +67,17 @@ article.expanding-row{
 #ep_dist_overview_mla, #rating_dist_overview_mla{
     width: calc(169px + 1.75vw);
     box-sizing: border-box;
-    height: 245px;
-    min-height: 150px;
+    height: 260px;
+    min-height: 180px;
     padding: 2px;
 }
 
 #rating_dist_overview_mla {flex-grow: .5;}
 #ep_dist_overview_mla{flex-grow: 1;}
 
-.anime_card{box-shadow: var(--bottom-lift);}
+#special_belt{padding: 6px; height: 135px; width: calc(100vw - 40px);}
 
-.anime_card:hover{box-shadow: var(--hard-chocolate)}
-
-#special_belt{height: 135px; width: calc(100vw - 28px);}
-
-.anime_card, .Recently, .Overview-graphs, .number-card {
+.anime_card, .Overview-graphs, .number-card, .recent_anime, .Recently-graphs {
   border: 1px solid rgba(150, 150, 150, 0.2);
   border-radius: 5px;
   transition: var(--standard-transition);
@@ -89,28 +85,9 @@ article.expanding-row{
   box-shadow: var(--hard-chocolate);
 }
 
-div.Overview-graphs:hover, .number-card:hover  , .anime_card:hover, .Recently:hover{
+div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-graphs:hover, .recent_anime:hover{
     background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1), transparent);
     box-shadow: inset 5px 5px 20px rgba(255, 255, 255, 0.1);
-}
-
-div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
-    height: 250px;
-    max-height: 300px;
-    width: 60vw;    
-}
-
-#weekly-progress-recently-view{
-    min-width: 250px;
-    width: calc(25vw - 30px);
-    height: 300px;
-    flex-grow: 1;
-}
-
-@media only screen and (max-width: 750px){
-    div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
-        width: calc(97vw - 31px);
-    }
 }
 
 #currently_airing_cards{
@@ -131,7 +108,6 @@ div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
     flex-shrink: 1;
 }
 
-
 #time_spent .swiper-slide{
     height: 45px;
     margin-top: auto;
@@ -147,3 +123,31 @@ div.Recently-graphs[id^='{"index":1'], div.Recently-graphs[id^='{"index":2']{
     right: 2px;
     writing-mode: vertical-rl;
 }
+
+#quick-update-history{
+    width: calc(200px + 2.5vw);
+    height: 280px;
+    flex-grow: 1;
+}
+
+#daily-weightage{
+    height: 280px;
+    flex-grow: 1;
+    width: calc(200px + 2vw);
+    min-width: 300px;
+}
+
+#weekly-progress-recently-view{
+    width: calc(150px + 30vw);
+    height: 208px;
+    flex-grow: 1;
+}
+
+#special_belt_for_recent_animes{
+    height: 140px;
+    width: calc(150px + 30vw);
+    flex-grow: 1.5;
+    padding: 10px;
+}
+
+.recent_anime{padding: 6px; flex-direction: column !important;} /*don't remove flex-direction someone is making it row*/

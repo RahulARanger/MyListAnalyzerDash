@@ -115,10 +115,10 @@ status_light_colors = _status_map("#2B4F60", "#FF8243", "#FFCB42", "#FFE300", "#
 status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")
 recent_status = namedtuple(
     "Status", [
-        "Watching", "Completed", "Hold"
+        "Watching", "Completed", "Hold", "Dropped"
     ])
 
-recent_status_color = recent_status("blue", "green", "yellow")
+recent_status_color = recent_status("blue", "green", "yellow", "red")
 
 header_menu_item = namedtuple("MenuItem", [
     "id", "title", "image_src", "desc"

@@ -117,7 +117,7 @@ def card_format_4(text, label, color, class_name, size="lg", url=None):
     )
 
 
-def number_card_format_2(label, icon, value=0, color="red", percent_value=0, class_name=None):
+def number_card_format_2(label, icon, value=0, color="red", class_name=None):
     return expanding_row(
         dmc.Avatar(src=icon, size="lg"),
         expanding_layout(
@@ -132,68 +132,6 @@ def number_card_format_2(label, icon, value=0, color="red", percent_value=0, cla
     )
 
 
-def number_card_format_3(
-        class_name="",
-        index=0,
-        id_="",
-        anime_name="Testing",
-        time_stamp=0,
-        up_until=4,
-        difference=2,
-        status_label="Hold",
-        total=12,
-        re_watching=True,
-        link=""
-):
-    link = link if link else f"https://myanimelist.net/anime/{id_}"
-    try:
-        status_color = getattr(recent_status_color, status_label)
-    except AttributeError:
-        status_color = "red"
-
-    current = up_until - ((-1 if re_watching else 1) * difference)
-    changed = f"{'' if not difference else '-' if re_watching else '+'}{difference}"
-    so = f"{current} {changed} → {up_until}"
-
-    progress = dmc.Progress(
-        sections=[
-            dict(value=(current / total) * 1e2, color="green", tooltip=so),
-            dict(
-                value=(difference / total) * 1e2,
-                color="violet" if re_watching else "indigo", label=changed, tooltip=so
-            )
-        ], animate=status_label == "Watching"
-    ) if total else dmc.Progress(
-        sections=[
-            dict(value=100, color="cyan", tooltip=so, label=so),
-        ], animate=True, striped=True
-    )
-
-    return expanding_layout(
-        expanding_row(
-            set_tooltip(dmc.Anchor(
-                anime_name,
-                href=link, target="_blank", size="lg", align="center",
-                style=dict(textOverflow="ellipsis")
-            ), anime_name),
-            html.Sup(
-                dmc.Text(
-                    html.Span(str(index + 1), **{"data-rank": str(index + 1)}, className=css_classes.rank_index_format),
-                    size="xs", color="yellow"
-                ))
-        ),
-        progress,
-        dmc.Divider(color=status_color),
-        expanding_row(
-            dmc.Badge(status_label, color=status_color, size="sm"),
-            relative_time_stamp_but_calc_in_good_way(
-                False, default=time_stamp,
-                size="sm"
-            )
-        ), class_name=f"{class_name} belt"
-    )
-
-
 def number_parameter(label, value, class_name, is_percent=False):
     return expanding_layout(
         dmc.Text(label, color="gray", size="sm"),
@@ -201,11 +139,20 @@ def number_parameter(label, value, class_name, is_percent=False):
         spacing=2, align="flexStart", position="left")
 
 
+def special_divider(special_label, special_color):
+    return dmc.Divider(
+        label=dmc.Text(
+            special_label,
+            weight="bold",
+            style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
+        color=special_color, labelPosition="center", size="md")
+
+
 def special_anime_card(name, url, picture, special_label, special_color, progress, special_about, special_value, _info,
                        *parameters, class_name=""):
     info = floating_tooltip(
         dmc.ActionIcon(
-            dmc.Image(src=helper.info), size="sm"
+            dmc.Image(src=helper.info), size="xs"
         ),
         label=_info,
         multiline=True, width=190
@@ -231,14 +178,9 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                     info, style=dict(columnGap="3px", justifyContent="flex-start")
                 ), no_wrap=True, spacing="sm"
             ), style=dict(padding="1px", gap="12px")
-        ), dmc.Divider(
-            label=dmc.Text(
-                special_label,
-                weight="bold",
-                style=dict(textShadow="-2px 4px 0 rgba(0, 0, 0, 0.3)")),
-            color=special_color, labelPosition="center", size="md"),
+        ), special_divider(special_label, special_color),
         floating_tooltip(
-            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="2px"), size="xs", color="yellow"),
+            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="2px"), size="xs", color="white"),
             label=special_about
         ),
         class_name=f"anime_card {class_name}", style=dict(padding="1px"), spacing=0
@@ -250,11 +192,12 @@ def relative_color(value, full):
     return "green" if relative > 0.89 else "teal" if relative > 0.85 else "lime" if relative > 0.75 else "yellow" if relative <= .69 else "orange" if relative <= 5 else "red"
 
 
-def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections):
+def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections, label=''):
     value = dict(
         value=((watched / total) * 1e2) if total > 0 else 100,
         color=watched_color,
-        tooltip=[dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}")]
+        tooltip=[dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}")],
+        label=label if label else watched
     )
     return dmc.Progress(
         sections=[
@@ -310,3 +253,40 @@ def currently_airing_card(
         ),
         footer, class_name="swiper-slide"
     ), status
+
+
+def number_card_format_3(
+        anime_id, anime_name, status, total, up_until, time_stamp, difference,
+        re_watching=True,
+        _=False,
+        *extra,
+        special_label="",
+        special_color="orange",
+        class_name="",
+        status_badge=True,
+
+):
+    badges = [dmc.Badge(
+        relative_time_stamp_but_calc_in_good_way(False, default=time_stamp, size="xs", isMS=True), color="orange",
+        size="xs"
+    ), *extra]
+
+    set_tooltip(badges.append(dmc.Badge(status, color=getattr(recent_status_color, status), size="sm")), label="Status") if status_badge else ...
+
+    return expanding_layout(
+        set_tooltip(
+            dmc.Anchor(
+                anime_name, href=anime_link(anime_id), size="sm", target="_blank",
+                style=ellipsis_part(250)
+            ), label=anime_name
+        ),
+        expanding_row(
+            *badges, style=dict(alignItems="center")
+        ),
+        progress_bar_from_status(
+            up_until, total, status, getattr(recent_status_color, status),
+            label=difference
+        ),
+        special_divider(special_label, special_color),
+        class_name=f"{class_name} recent_anime", no_wrap=True, spacing="xs"
+    )

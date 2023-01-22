@@ -1,21 +1,23 @@
+import typing
+
 import dash_mantine_components as dmc
 from dash import html
 
 
 def expanding_layout(
-        *children,
-        spacing="xs",
-        direction="column",
-        position="apart",
-        align="stretch",
-        style=None,
-        class_name=None,
-        reverse=False,
-        id_=None,
-        no_wrap=False,
-        grow_child=False,
-        grow=True
-):
+        *children: object,
+        spacing: str = "xs",
+        direction: str = "column",
+        position: str = "apart",
+        align: str = "stretch",
+        style: typing.Optional[typing.Dict[str, str]] = None,
+        class_name: typing.Optional[str] = None,
+        reverse: typing.Optional[bool] = False,
+        id_: typing.Optional[str] = None,
+        no_wrap: object = False,
+        grow_child: object = False,
+        grow: object = True
+) -> object:
     extras = {"id": id_}
     extras.pop("id") if not id_ else ...
 

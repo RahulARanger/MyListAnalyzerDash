@@ -470,6 +470,29 @@ const swiper_options = {
                 animateCounters(); // some clones also needs to be counted
             }
         }
+    },
+    special_belt_for_recent_animes:  {
+        loop: true,
+        grabCursor: true,
+        speed: 10e3,
+        autoplay: {
+            delay: 0,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true
+        },
+        navigation: {enabled: false},
+        slidesPerView: 2,
+        spaceBetween: 10,
+        freeMode: true,
+        breakpoints: {
+            3e2: {slidesPerView: 1},
+            430: {slidesPerView: 1.25},
+            5e2: {slidesPerView: 1.5},
+            720: {slidesPerView: 2.5},
+            820: {slidesPerView: 1.2},
+            1e3: {slidesPerView: 1.5},
+            12e2: {slidesPerView: 2}
+        }
     }
 }
 

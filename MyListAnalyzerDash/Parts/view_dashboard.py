@@ -1,15 +1,9 @@
 import json
-from datetime import datetime
-
 import dash_mantine_components as dmc
-import plotly.colors as colors
-import plotly.graph_objects as go
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
     html
-
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, card_format_4, \
-    relative_color, special_anime_card, number_comp, currently_airing_card
-from MyListAnalyzerDash.Components.graph_utils import BeautifyMyGraph, Config, core_graph
+    relative_color, special_anime_card, number_comp, currently_airing_card, number_card_format_3
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
 from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, mla_stores, overview_cards
@@ -250,29 +244,27 @@ class ViewDashboard:
         current_tab, graph_class = self.tab_details(tab_index)
 
         user_name = page_settings.get("user_name", "")
-        recently_updated_animes = json.loads(data.get("recently_updated_animes", "{}"))
-
-        recently_updated_plots = self.recently_trend(
-            tab_index, json.loads(data.get("recently_updated_day_wise", "{}")),
-            data.get("recently_updated_cum_sum", []), user_name
-        )
-
-        # cards = [
-        #     number_card_format_3(
-        #         current_tab, index, *_
-        #     ) for index, _ in enumerate(recently_updated_animes)
-        # ]
 
         charts = [
-            "weekly-progress-recently-view"
+            "daily-weightage",
+            "quick-update-history",
+            "weekly-progress-recently-view",
         ]
 
         row_1 = expanding_row(
-            recently_updated_plots, html.Div(id=charts[0], className=current_tab), style=dict(gap="3px")
+            html.Div(id=charts[0], className=graph_class),
+            html.Div(id=charts[1], className=graph_class),
+            style=dict(gap="3px")
         )
+
+        race = html.Div(id=charts[2], className=graph_class)
 
         return expanding_layout(
             row_1,
+            expanding_row(
+                race, self.special_results_for_recent_animes(data.get("special_results"), user_name),
+                style=dict(alignItems="center")
+            ),
             spacing="sm"
         )
 
@@ -389,63 +381,75 @@ class ViewDashboard:
             ], className="airing_cards"
         )
 
-    def recently_trend(self, index, raw, cum_sum, user_name):
-        tab_name, graph_class = self.tab_details(index)
+    def special_results_for_recent_animes(self, raw, user_name):
+        cards = [
+            number_card_format_3(
+                *json.loads(raw.get(key)),
+                special_color=special_color, special_label=special_label, class_name="swiper-slide"
+            )
 
-        to_dates = [
-            datetime(*_)
-            for _ in raw.get("columns", [])
+            for [special_color, special_label], key in
+            zip(
+                (
+                    ("green", "Recently Completed Anime"),
+                    ("blue", "Currently Watching Anime"),
+                    ("red", "Recently Dropped Anime")
+                ),
+                ("Completed", "Watching", "Dropped")
+            ) if key in raw
         ]
 
-        up_until, total, diff, not_comp, re_watched = raw.get("data", [tuple() for _ in range(5)])
+        most_updated = json.loads(raw.get("most_updated", "{}"))
+        cards.append(
+            number_card_format_3(
+                *most_updated, status_badge=False,
+                special_label="Largest Bulk change", special_color="teal", class_name="swiper-slide"
+            )
+        ) if most_updated else ...
 
-        config = Config()
-        config.butts_to_add.clear()
-
-        plot_with_actual_data = go.Figure()
-        plot_with_cum_sum = go.Figure()
-
-        marker = dict(color="darkorange")
-        line = dict(shape="spline")
-        mode = "markers+lines"
-
-        trace = go.Scatter(
-            x=to_dates, y=diff, mode=mode, marker=marker, line=line
+        long_time = raw.get("long_time", {})
+        cards.append(
+            number_card_format_3(
+                long_time["id"], *json.loads(long_time["anime"]), dmc.Badge(long_time["time_took"]),
+                special_color="violet", special_label="Took Long time to reach here", class_name="swiper-slide"
+            )
         )
 
-        plot_with_actual_data.add_trace(trace)
+        records = raw.get("many_records", {})
+        badge = set_tooltip(
+            dmc.Badge(f"Appeared: {records['mode']}", color="pink", size="sm"),
+            label=f"Number of Times, {user_name} has updated this anime")
 
-        trace = go.Scatter(
-            x=to_dates, y=cum_sum, mode=mode, marker=marker, line=line)
+        cards.append(
+            number_card_format_3(
+                *json.loads(records["anime"]), badge, special_color="orange",
+                special_label="Largest Number of updates", class_name="swiper-slide"
+            )
+        )
 
-        plot_with_cum_sum.add_trace(trace)
+        large_change = raw.get("large_change")
+        large_changed_anime = json.loads(large_change["anime"])
+        cards.append(
+            number_card_format_3(
+                large_change["id"], *large_changed_anime,
+                set_tooltip(
+                    dmc.Badge(f"Still: {large_changed_anime[2] - large_changed_anime[3]} eps."),
+                    label="Number of Eps. left for the completion"
+                ),
+                special_color="pink", special_label="Still has long way to complete", class_name="swiper-slide"
+            )
+        )
 
-        plot_1 = core_graph(
-            BeautifyMyGraph(
-                title=f"Recently updated animes by days",
-                show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
-            ).handle_subject(plot_with_actual_data), apply_shimmer=False, index=1,
-            prefix=tab_name, class_name=graph_class, responsive=True, config=config)
+        longest = json.loads(raw.get("longest_title"))
+        cards.append(
+            number_card_format_3(
+                *longest, dmc.Badge(f"Length: {len(longest[1])}", color="teal", size="sm"),
+                special_color="gray", special_label="Longest Title", class_name="swiper-slide"
+            )
+        )
 
-        plot_2 = core_graph(
-            BeautifyMyGraph(
-                title=f"{user_name}'s recent progressive updates",
-                show_x=True, show_y=True, show_x_grid=True, show_y_grid=True, hover_mode="x unified"
-            ).handle_subject(plot_with_cum_sum), apply_shimmer=False, index=2,
-            prefix=tab_name, class_name=graph_class, responsive=True, config=config)
-
-        labels = ["Actual", "Cumulative"]
-
-        tabs = [dmc.TabsPanel(children=plot_1, value=labels[0]),
-                dmc.TabsPanel(children=plot_2, value=labels[1])]
-
-        return dmc.Tabs(
-            [
-                *tabs,
-                dmc.TabsList(
-                    expanding_row(*[dmc.Tab(_, value=_) for _ in labels], style=dict(justifyContent="flex-end")))
-            ], color="orange", variant="pills", value="Actual", persistence=True, persistence_type="session",
-            className=tab_name, p=6, style=dict(flexGrow=.1)
+        return basic_swiper_structure(
+            "special_belt_for_recent_animes", *cards
         )
 
 
