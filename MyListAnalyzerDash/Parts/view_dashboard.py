@@ -355,13 +355,12 @@ class ViewDashboard:
             status_map[status] = status_map.get(status, index)
 
         inside_hover = expanding_layout(
-            dmc.Text("Currently Airing Animes", size='md', weight="bold"),
-            dmc.Divider(color="orange"),
+            dmc.Divider(color="orange", size="lg", label="Currently Airing Animes ~ Recent 10", labelPosition="center"),
             expanding_row(
                 *(
                     set_tooltip(
                         dmc.Button(
-                            "".join([__[0].upper() for __ in _.split("_")]), color=getattr(status_colors, _), size="sm",
+                            "".join([__[0].upper() for __ in _.split("_")]), color=getattr(status_colors, _), size="xs",
                             compact=True, id=dict(
                                 index=status_map[_], section=view_dashboard.clickToGoCards
                             )),
