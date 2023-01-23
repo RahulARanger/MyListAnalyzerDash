@@ -1,6 +1,6 @@
 const week_days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const view_e_charts_mla = {}; // be a good boy
-const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB"}
+const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB", "Hold": "#FCE883"}
 
 // // HELPER FUNCTIONS
 

@@ -393,9 +393,10 @@ class ViewDashboard:
                 (
                     ("green", "Recently Completed Anime"),
                     ("blue", "Currently Watching Anime"),
-                    ("red", "Recently Dropped Anime")
+                    ("yellow", "Recently Set on Hold"),
+                    ("red", "Recently Dropped Anime"),
                 ),
-                ("Completed", "Watching", "Dropped")
+                ("Completed", "Watching", "Hold", "Dropped")
             ) if key in raw
         ]
 
