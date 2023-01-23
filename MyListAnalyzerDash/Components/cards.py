@@ -194,7 +194,7 @@ def relative_color(value, full):
 
 def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections, label=''):
     value = dict(
-        value=((watched / total) * 1e2) if total > 0 else 100,
+        value=((watched / total) * 1e2) if total and total > 0 else 100,
         color=watched_color,
         tooltip=[dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}")],
         label=label if label else watched

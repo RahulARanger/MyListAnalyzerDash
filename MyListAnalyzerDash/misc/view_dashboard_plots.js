@@ -283,7 +283,7 @@ function quickHistory(raw) {
     yAxis: {
       type: 'category',
       inverse: true,
-      // max: 10,
+       max: 10,
       // axisLine: { show: false },
       // axisLabel: { show: false },
       // axisTick: { show: false },
