@@ -4,11 +4,6 @@
 * [📰 Website](website.md)
 * [📦 Packages Used](packages-used.md)
 
-## 🏠 Home Page
-
-* [🪗 My Anime List - Login](home-page/my-anime-list-login.md)
-* [📊 Dashboards](home-page/dashboards.md)
-
 ## 👤 User View Dashboard
 
 * [👋 Introduction](user-view-dashboard/introduction.md)

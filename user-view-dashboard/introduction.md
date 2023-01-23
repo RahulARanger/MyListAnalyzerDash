@@ -12,7 +12,7 @@ You can directly visit this dashboard through this [URL](https://rahularanger.ve
 
 ### Searching a User
 
-![](<../.gitbook/assets/image (2).png>)
+![](<../.gitbook/assets/image (2) (1).png>)
 
 Every User has a name in their MyAnimeList, you can use that name here. you even have a provision to auto-search your user name given that you have already logged in with your MyAnimeList Account.
 
@@ -22,7 +22,7 @@ We can only search for the user who has set their anime list status to the publi
 
 ### Quick Redirect
 
-In order to directly reach a particular user's Dashboard:&#x20;
+In order to directly reach a particular user's Dashboard:
 
 You can always follow the below pattern, [https://rahularanger.vercel.app/MLA/view/{user\_name}](https://rahularanger.vercel.app/MLA/view/)
 

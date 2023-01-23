@@ -24,9 +24,9 @@ $$
 
 ## Second Row
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Cards in the Second Row</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Cards in the Second Row</p></figcaption></figure>
 
-These cards are just the distribution of animes based on the status set by the user.&#x20;
+These cards are just the distribution of animes based on the status set by the user.
 
 ## Third Row
 
@@ -42,11 +42,10 @@ These cards are just the distribution of animes based on the status set by the u
 
 Below are some random sentences. You can read them if you feel they can match with the results above.
 
-I would like to watch animes which has episodes from 12 - 24. I might have added <12 mostly because there are either OVA, Specials related to some show.&#x20;
+I would like to watch animes which has episodes from 12 - 24. I might have added <12 mostly because there are either OVA, Specials related to some show.
 
 I do drop animes but I don't keep mark them "dropped" in my list, I either don't add them to my list or I would just mark it as "On Hold". Not because they are bad, but because I feel "What am I even watching ?". Will try them after trying some more animes.
 
-I don't watch large shows mostly because they are too nice and end too quickly, I end up watching 24 episodes per day missing some classes. In order to maintain my life, For now avoiding them.&#x20;
+I don't watch large shows mostly because they are too nice and end too quickly, I end up watching 24 episodes per day missing some classes. In order to maintain my life, For now avoiding them.
 
 My Highest were [Gintama ](https://myanimelist.net/anime/918/Gintama)and [Bleach](https://myanimelist.net/anime/269/Bleach). would rewatch after sometime. I planned those in my summer holidays.
-
