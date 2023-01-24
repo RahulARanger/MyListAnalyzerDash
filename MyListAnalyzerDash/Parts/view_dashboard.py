@@ -17,16 +17,16 @@ class ViewDashboard:
         self.graph_prefix = "-graphs"
 
     def connect_callbacks(self):
-        postfix_tab = view_dashboard.tabs + self.postfix_tab
+        prefix = view_dashboard.tabs + self.postfix_tab
 
         clientside_callback(
             ClientsideFunction(
                 namespace="MLA",
                 function_name="refreshTab"
             ),
-            Output(dict(type=postfix_tab, index=MATCH), "id"),
-            Input(dict(type=postfix_tab, index=MATCH), "children"),
-            State(dict(type=postfix_tab, index=MATCH), "id")
+            Output(dict(type=prefix, index=MATCH), "id"),
+            Input(dict(type=prefix, index=MATCH), "children"),
+            State(dict(type=prefix, index=MATCH), "id")
         )  # this happens when data is changed
 
         clientside_callback(
@@ -51,7 +51,7 @@ class ViewDashboard:
                 # BackEnd URL
                 State("pipe", "data"),
                 # tab_labels
-                State(dict(type=postfix_tab, index=ALL), "id"),
+                State(dict(type=prefix, index=ALL), "id"),
                 # Data Sources
                 State(view_dashboard.page_settings, "data"),
                 State(mla_stores.anime_list, "data"),
@@ -61,7 +61,7 @@ class ViewDashboard:
         )
 
         callback(
-            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+            Output(dict(type=prefix, index=view_dashboard.tab_names[0]), "children"),
             [
                 Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data"),
                 Input(view_dashboard.page_settings, "data")
@@ -69,7 +69,7 @@ class ViewDashboard:
         )(self.process_for_overview)
 
         callback(
-            Output(dict(type=postfix_tab, index=view_dashboard.tab_names[1]), "children"),
+            Output(dict(type=prefix, index=view_dashboard.tab_names[1]), "children"),
             [
                 Input(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
                 Input(view_dashboard.page_settings, "data")
@@ -82,7 +82,7 @@ class ViewDashboard:
                 namespace="MLAPlots"
             ),
             Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "id"),
-            Input(dict(type=postfix_tab, index=view_dashboard.tab_names[0]), "children"),
+            Input(dict(type=prefix, index=view_dashboard.tab_names[0]), "children"),
             State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data")
         )
 
@@ -92,7 +92,7 @@ class ViewDashboard:
                 namespace="MLAPlots"
             ),
             Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "id"),
-            Input(dict(type=postfix_tab, index=view_dashboard.tab_names[1]), "children"),
+            Input(dict(type=prefix, index=view_dashboard.tab_names[1]), "children"),
             [
                 State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
                 State(view_dashboard.page_settings, "data"),
@@ -262,7 +262,7 @@ class ViewDashboard:
         return expanding_layout(
             row_1,
             expanding_row(
-                race, self.special_results_for_recent_animes(data.get("special_results"), user_name),
+                race, special_results_for_recent_animes(data.get("special_results"), user_name),
                 style=dict(alignItems="center")
             ),
             spacing="sm"
@@ -380,78 +380,6 @@ class ViewDashboard:
             ], className="airing_cards"
         )
 
-    def special_results_for_recent_animes(self, raw, user_name):
-        cards = [
-            number_card_format_3(
-                *json.loads(raw.get(key)),
-                special_color=special_color, special_label=special_label, class_name="swiper-slide"
-            )
-
-            for [special_color, special_label], key in
-            zip(
-                (
-                    ("green", "Recently Completed Anime"),
-                    ("blue", "Currently Watching Anime"),
-                    ("yellow", "Recently Set on Hold"),
-                    ("red", "Recently Dropped Anime"),
-                ),
-                ("Completed", "Watching", "Hold", "Dropped")
-            ) if key in raw
-        ]
-
-        most_updated = json.loads(raw.get("most_updated", "{}"))
-        cards.append(
-            number_card_format_3(
-                *most_updated, status_badge=False,
-                special_label="Largest Bulk change", special_color="teal", class_name="swiper-slide"
-            )
-        ) if most_updated else ...
-
-        long_time = raw.get("long_time", {})
-        cards.append(
-            number_card_format_3(
-                long_time["id"], *json.loads(long_time["anime"]), dmc.Badge(long_time["time_took"]),
-                special_color="violet", special_label="Took Long time to reach here", class_name="swiper-slide"
-            )
-        )
-
-        records = raw.get("many_records", {})
-        badge = set_tooltip(
-            dmc.Badge(f"Appeared: {records['mode']}", color="pink", size="sm"),
-            label=f"Number of Times, {user_name} has updated this anime")
-
-        cards.append(
-            number_card_format_3(
-                *json.loads(records["anime"]), badge, special_color="orange",
-                special_label="Largest Number of updates", class_name="swiper-slide"
-            )
-        )
-
-        large_change = raw.get("large_change")
-        large_changed_anime = json.loads(large_change["anime"])
-        cards.append(
-            number_card_format_3(
-                large_change["id"], *large_changed_anime,
-                set_tooltip(
-                    dmc.Badge(f"Still: {large_changed_anime[2] - large_changed_anime[3]} eps."),
-                    label="Number of Eps. left for the completion"
-                ),
-                special_color="pink", special_label="Still has long way to complete", class_name="swiper-slide"
-            )
-        )
-
-        longest = json.loads(raw.get("longest_title"))
-        cards.append(
-            number_card_format_3(
-                *longest, dmc.Badge(f"Length: {len(longest[1])}", color="teal", size="sm"),
-                special_color="gray", special_label="Longest Title", class_name="swiper-slide"
-            )
-        )
-
-        return basic_swiper_structure(
-            "special_belt_for_recent_animes", *cards
-        )
-
 
 def general_info(data, page):
     row_1 = data["row_1"]
@@ -477,3 +405,82 @@ def status_dist(data, page):
             color=getattr(status_colors, index)
         ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
     ), style=dict(gap="3px", justifyContent="center"))
+
+
+def special_results_for_recent_animes(raw, user_name):
+    rows = [
+        number_card_format_3(
+            raw[key]["id"], *json.loads(raw[key]["anime"]),
+            special_color=special_color, special_label=special_label, class_name="swiper-slide"
+        )
+
+        for [special_color, special_label], key in
+        zip(
+            (
+                ("green", "Recently Completed Anime"),
+                ("blue", "Currently Watching Anime"),
+                ("yellow", "Recently Set on Hold"),
+                ("red", "Recently Dropped Anime"),
+            ),
+            ("Completed", "Watching", "Hold", "Dropped")
+        ) if key in raw
+    ]
+
+    bulk_updated = raw["most_updated"]
+    bulk_update = json.loads(bulk_updated["anime"])
+    diff = set_tooltip(
+        dmc.Badge(f"{bulk_update[5]} Eps were updated", color="yellow"),
+        label=f"{user_name} has updated {bulk_update[5]} Eps at once in {bulk_updated['stamp']}"
+    )
+    rows.append(
+        number_card_format_3(
+            bulk_updated["id"], *bulk_update, diff, status_badge=False,
+            special_label="Largest Bulk change", special_color="teal", class_name="swiper-slide"
+        )
+    ) if bulk_update else ...
+
+    long_time = raw["long_time"]
+    rows.append(
+        number_card_format_3(
+            long_time["id"], *json.loads(long_time["anime"]), dmc.Badge(long_time["time_took"]),
+            special_color="violet", special_label="Took Long time to reach here", class_name="swiper-slide"
+        )
+    )
+
+    records = raw["many_records"]
+    badge = set_tooltip(
+        dmc.Badge(f"Appeared: {records['mode']}", color="pink", size="sm"),
+        label=f"Number of Times, {user_name} has updated this anime")
+
+    rows.append(
+        number_card_format_3(
+            records["id"], *json.loads(records["anime"]), badge, special_color="orange",
+            special_label="Largest Number of updates", class_name="swiper-slide"
+        )
+    )
+
+    large_change = raw["large_change"]
+    large_changed_anime = json.loads(large_change["anime"])
+    rows.append(
+        number_card_format_3(
+            large_change["id"], *large_changed_anime,
+            set_tooltip(
+                dmc.Badge(f"Still: {large_changed_anime[2] - large_changed_anime[3]} eps."),
+                label="Number of Eps. left for the completion"
+            ),
+            special_color="pink", special_label="Still has long way to complete", class_name="swiper-slide"
+        )
+    )
+
+    long_anime = raw["longest_title"]
+    longest = json.loads(long_anime["anime"])
+    rows.append(
+        number_card_format_3(
+            long_anime["id"], *longest, dmc.Badge(f"Length: {len(longest[1])}", color="teal", size="sm"),
+            special_color="gray", special_label="Longest Title", class_name="swiper-slide"
+        )
+    )
+
+    return basic_swiper_structure(
+        "special_belt_for_recent_animes", *rows
+    )
