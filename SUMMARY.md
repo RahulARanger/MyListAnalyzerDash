@@ -1,7 +1,6 @@
 # Table of contents
 
 * [🍊 Introduction](README.md)
-* [📰 Website](website.md)
 * [📦 Packages Used](packages-used.md)
 
 ## 👤 User View Dashboard
