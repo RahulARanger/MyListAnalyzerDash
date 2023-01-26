@@ -24,7 +24,7 @@ view_header = namedtuple(
         "re_fetch", "genresCount", "studiosCount", "addUser", "giveName", "appName", "short_name",
         "home", "show_name", "resultForSearch", "validateNote", "settingsTabs", "addImage",
         "searchAlert", "ask_again_image", "last_updated", "menu", "downloading", "timeStamp",
-        "is_it_u", "stampsModal"
+        "is_it_u", "stampsModal", "ask_for_nsfw"
     ]
 )(
     "view-settings", "ask-user-name", "get-user-name", "request-details",
@@ -33,14 +33,13 @@ view_header = namedtuple(
     "MLA",
     "/MLA", "mla-view-show-name", "validate-mal-user-result", "user-validate-check", "view-settings-tabs",
     "https://api.iconify.design/line-md/plus.svg?color=darkorange",
-    "We can only search for the public users. If any filters needed beforehand, Please apply them as provided in the "
-    "filters tab",
+    "We can only search for the public users and If you are logged in then you can directly search for yourself.",
     "https://api.iconify.design/line-md/rotate-270.svg?color=green",
     "last-asked-user-details-job-mla",
     "https://api.iconify.design/line-md/close-to-menu-transition.svg?color=darkorange",
     "'https://api.iconify.design/line-md/downloading-loop.svg?color=darkorange",
     "https://api.iconify.design/mdi/recent.svg?color=gold",
-    "view-user-for-you", "view-store-stamps-last-updated-mla"
+    "view-user-for-you", "view-store-stamps-last-updated-mla", "ask_that_one_too"
 )
 
 view_dashboard = namedtuple(

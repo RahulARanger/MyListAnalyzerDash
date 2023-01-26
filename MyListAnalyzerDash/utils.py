@@ -127,6 +127,3 @@ def ellipsis_part(width):
 def format_stamp(date, also_for_time=False):
     return date.strftime("%b %d, %Y" if not also_for_time else "%b %d, %Y %H:%M")
 
-
-def read_datetime(date, force=None):
-    date.strptime(date, "%Y-%m-%d %H:%M:%S" if not force else force)

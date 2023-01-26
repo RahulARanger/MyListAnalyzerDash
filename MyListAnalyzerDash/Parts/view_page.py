@@ -45,9 +45,12 @@ class ViewPage:
                 State(view_dashboard.page_settings, "data"),
                 State(view_dashboard.locationChange, "href"),
                 State("pipe", "data"),
+                State(view_header.is_it_u, "checked"),
+                State(view_header.ask_for_nsfw, "checked"),
                 State(view_header.giveName, "id"),
                 State(view_header.askName, "id"),
-                State(view_header.is_it_u, "checked")
+                State(view_header.ask_for_nsfw, "id"),
+                State(view_header.is_it_u, "id"),
             ]
         )
         self.dashboard.connect_callbacks()

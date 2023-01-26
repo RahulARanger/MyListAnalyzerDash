@@ -4,7 +4,7 @@ from dash import dcc, Input, html
 from MyListAnalyzerDash import __version__
 from MyListAnalyzerDash.Components.ModalManager import timestamp_from_store, get_modal_id, make_modal_alive, get_modal
 from MyListAnalyzerDash.Components.buttons import icon_butt_img
-from MyListAnalyzerDash.Components.collection import filters_modal
+from MyListAnalyzerDash.Components.collection import search_user_modal
 from MyListAnalyzerDash.Components.layout import expanding_layout
 from MyListAnalyzerDash.Components.table import MakeTable
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
@@ -42,7 +42,7 @@ class ViewHeaderComponent(CommonHeaderComponent):
 
     def handle_callbacks(self):
         make_modal_alive(view_header.stampsModal)
-        modal_first = filters_modal(add=True)
+        modal_first = search_user_modal(add=True)
         [timestamp_from_store(
             _, Input(get_modal_id(view_header.stampsModal), "opened"), add=True
         ) for _ in (mla_stores.anime_list, mla_stores.recent_anime_list)]
@@ -51,7 +51,7 @@ class ViewHeaderComponent(CommonHeaderComponent):
 
     @classmethod
     def modals(cls, page_settings):
-        yield filters_modal(page_settings)
+        yield search_user_modal(page_settings)
         yield timestamps_modal()
 
     def inside_header(self, page_settings):

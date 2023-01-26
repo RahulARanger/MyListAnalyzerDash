@@ -426,18 +426,17 @@ def special_results_for_recent_animes(raw, user_name):
         ) if key in raw
     ]
 
-    bulk_updated = raw["most_updated"]
-    bulk_update = json.loads(bulk_updated["anime"])
+    bulk_updated = json.loads(raw["most_updated"])
     diff = set_tooltip(
-        dmc.Badge(f"{bulk_update[5]} Eps were updated", color="yellow"),
-        label=f"{user_name} has updated {bulk_update[5]} Eps at once in {bulk_updated['stamp']}"
+        dmc.Badge(f"{bulk_updated[6]} Eps were updated", color="yellow"),
+        label=f"{user_name} has updated {bulk_updated[6]} Eps at once"
     )
     rows.append(
         number_card_format_3(
-            bulk_updated["id"], *bulk_update, diff, status_badge=False,
+            *bulk_updated, diff, status_badge=False,
             special_label="Largest Bulk change", special_color="teal", class_name="swiper-slide"
         )
-    ) if bulk_update else ...
+    )
 
     long_time = raw["long_time"]
     rows.append(
@@ -459,7 +458,7 @@ def special_results_for_recent_animes(raw, user_name):
         )
     )
 
-    large_change = raw["large_change"]
+    large_change = raw["still"]
     large_changed_anime = json.loads(large_change["anime"])
     rows.append(
         number_card_format_3(
@@ -476,7 +475,7 @@ def special_results_for_recent_animes(raw, user_name):
     longest = json.loads(long_anime["anime"])
     rows.append(
         number_card_format_3(
-            long_anime["id"], *longest, dmc.Badge(f"Length: {len(longest[1])}", color="teal", size="sm"),
+            long_anime["id"], *longest, dmc.Badge(f"{len(longest[1])} words", color="teal", size="sm"),
             special_color="gray", special_label="Longest Title", class_name="swiper-slide"
         )
     )

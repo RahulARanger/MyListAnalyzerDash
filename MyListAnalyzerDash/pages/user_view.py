@@ -35,7 +35,8 @@ recent_view_requested = page_template(
 )
 
 recent_view = recent_view_requested._replace(
-    path="/MLA/view-r", description="Dashboard for Recently watched animes for yet to request users", title="Recent - Say"
+    path="/MLA/view-r", description="Dashboard for Recently watched animes for yet to request users",
+    title="Recent - Say"
 )
 
 for _ in (user_view_requested, user_view, recent_view_requested, recent_view):

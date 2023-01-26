@@ -106,8 +106,13 @@ class ProcessUserDetails{
     async fetchStaticData(
         pipe,
          fetchUserAnimeList, fetchRecentAnimeList,
-            userAnimeList
+            userAnimeList, force, alreadyFetchedUserAnimeList, alreadyFetchedRecentAnimeList
         ){
+        
+        const ok_fetch_user_anime_list = force ? fetchUserAnimeList : !alreadyFetchedUserAnimeList;
+        const ok_fetch_recent_anime_list = force ? fetchRecentAnimeList : !alreadyFetchedRecentAnimeList;
+
+        
         const genURL = (end) => `${pipe}/MLA/static/${end}`;
         const no = say_no(1)[0];
 
@@ -120,13 +125,13 @@ class ProcessUserDetails{
         
         // below request is the first request send if needed
 
-        result.push(fetchUserAnimeList ? (await this.__send_request(
+        result.push(ok_fetch_user_anime_list ? (await this.__send_request(
             genURL("UserAnimeList"),
             {...body, data: userAnimeList},
         ))?.user_anime_list : no)
         
         result.push(
-            this.passed && fetchRecentAnimeList ? (await this.__send_request(
+            this.passed && ok_fetch_recent_anime_list ? (await this.__send_request(
                 genURL("RecentAnimeList"),
                 body
             ))?.recent_animes : no
@@ -191,17 +196,17 @@ class ProcessUserDetails{
         }
     }
 
-    async decide_what_to_fetch(static_index){
+    async decide_what_to_fetch(){
         // fetch User Anime List, fetch Recent Anime List
-        switch(static_index){
+        switch(this.tab_name){
             case true: {
                 return [true, true];
             }
-            case 0: { // overview
+            case "Overview": { // overview
                 return [true, false];
             }
 
-            case 1: { // recently
+            case "Recently": { // recently
                 return [false, true];
             }
         }
@@ -239,14 +244,12 @@ async function processUserDetailsWhenNeeded(
 
     const fetchForStaticDataForFirstTime = ctx[0].prop_id.includes("data");
 
-    // clearing cache because of the static data
-    if(fetchForStaticDataForFirstTime)
-        switch(static_index){
-            case true:{
-                // we are clearing all the existing data if in we fetched static data for the first time
-                meta_for_tabs = meta_for_tabs.map(() => "");
-            }
-        }
+    // do not refer to the old data if User anime list was fetched again
+    if(fetchForStaticDataForFirstTime){
+        [parsed_user_anime_list, parsed_recent_animes] = ["", ""];
+        meta_for_tabs = meta_for_tabs.map(() => "");
+    }
+        
 
     const fetchDynamicData = fetchForStaticDataForFirstTime || !Boolean(meta_for_tabs[processor.tab_index]);
 
@@ -257,16 +260,17 @@ async function processUserDetailsWhenNeeded(
         fetchForStaticDataForFirstTime
         ) ? Array(meta_for_tabs.length).fill("") : say_no(meta_for_tabs.length);
 
-    if(fetchForStaticDataForFirstTime)
-        [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
-            pipe, ...await processor.decide_what_to_fetch(static_index), raw_list.flat() ?? [], static_index
-        );
+    [parsed_user_anime_list, parsed_recent_animes] = await processor.fetchStaticData(
+        pipe, ...await processor.decide_what_to_fetch(), raw_list.flat() ?? [], static_index,
+        fetchForStaticDataForFirstTime,  
+        Boolean(parsed_user_anime_list), Boolean(parsed_recent_animes)
+    );
 
     if(processor.passed && fetchDynamicData){
         const asked = await processor.extractData(
             parsed_user_anime_list, parsed_recent_animes
         );
-        
+
         if(asked)
             tab_caches[processor.tab_index] = await processor.fetchDynamicData(pipe, asked);
     }
@@ -318,7 +322,12 @@ function decide_if_name_required(is_it_on){
 }
 
 
-async function validate_and_fetch_anime_list(_, __, ___, typedName, modalOpened, pageSettings, location, pipe, doNotInterrupt, inputID, is_it_for_logged_in_user){
+async function validate_and_fetch_anime_list(
+    _, __, ___,
+     typedName, modalOpened, pageSettings, location, pipe,
+      is_it_for_logged_in_user, bring_nsfw,
+      ...disableThem
+    ){
     const ctx = dash_clientside.callback_context.triggered;
     const who_triggered_it = ctx.length === 0 ? "" : ctx[0].prop_id;
 
@@ -358,7 +367,7 @@ async function validate_and_fetch_anime_list(_, __, ___, typedName, modalOpened,
         return return_me();
     }
 
-    const disable = (disabled) => [doNotInterrupt, inputID].forEach((e) => {
+    const disable = (disabled) => disableThem.forEach((e) => {
         const ele = document.getElementById(e);
         ele && (ele.disabled = disabled);
     })
@@ -371,7 +380,7 @@ async function validate_and_fetch_anime_list(_, __, ___, typedName, modalOpened,
     const result = await fetchRawUserAnimeList(
         pipe, is_it_for_logged_in_user ? "" : user_name, is_it_for_logged_in_user,
         "span[class$='Alert-label']", "div.mantine-Alert-message",
-        "button.mantine-Modal-close"
+        "button.mantine-Modal-close", bring_nsfw
     );
 
     if(result?.failed ?? false){
@@ -517,7 +526,7 @@ function enable_swiper_for_view_dashboard(soft_refresh){
 }
 
 
-async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, closeWhile){
+async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, closeWhile, is_nsfw){
     const alert_title = document.querySelector(title);
     const alert_body = document.querySelector(body);
     const butt = document.querySelector(closeWhile);
@@ -538,6 +547,7 @@ async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, cl
 
     if(use_token)
         headers["token"] = malAuthToken();
+    headers["nsfw"] = is_nsfw;
 
     const incase = async (reason, expected) => {
         why = expected ? (await reason.text()) : reason;
