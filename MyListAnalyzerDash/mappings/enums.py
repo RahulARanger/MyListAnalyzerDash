@@ -13,7 +13,8 @@ home_page = namedtuple("HomePage", [
     "/MLA/", "Home", "Home Page of the MyListAnalyzer, please check the Test Cases tab",
     "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "Allow MyListAnalyzer to access your,",
     [
-        ["View Dashboard", "/MLA/view/", "Dashboard for MyAnimeList Users"]
+        ["View Dashboard", "/MLA/view/", "Dashboard for MyAnimeList Users"],
+        ["View - Recently Dashboard", "/MLA/view-recently/", "Dashboard for the Recent Added Animes for Users"]
     ], "mal-home"
 )
 
