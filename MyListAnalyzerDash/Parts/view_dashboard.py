@@ -121,8 +121,10 @@ class ViewDashboard:
         store = []
         tab_panels = []
 
+        user_job_disabled = page_settings.get("disable_user_job", False)
+
         for index, page in enumerate(view_dashboard.tab_names):
-            if index != 1 and page_settings.get("disable_user_job", False):
+            if index != 1 and user_job_disabled:
                 continue
 
             tabs.append(dmc.Tab(page, value=page))
@@ -143,7 +145,7 @@ class ViewDashboard:
                     dmc.TabsList(tabs), dmc.Space(h=6), *tab_panels, dmc.Space(h=3)
                 ], color="orange",
                 style={"fontSize": "0.5rem"}, id=view_dashboard.tabs, persistence="true",
-                persistence_type="memory", value=view_dashboard.tab_names[0]),
+                persistence_type="memory", value=view_dashboard.tab_names[int(user_job_disabled)]),
             *store
         ])
 

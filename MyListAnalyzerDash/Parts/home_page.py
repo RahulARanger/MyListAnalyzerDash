@@ -17,7 +17,7 @@ class HomePage:
         self.mal_creds.init()
         self.add_routes()
 
-    def inside_children(self, set_active: int):
+    def inside_children(self):
         paper_height = 250
 
         labels = ["Login", "Open"]
@@ -51,9 +51,9 @@ class HomePage:
             html.Div([self.mal_creds.inside], id="modals")
         ]
 
-    def layout(self, tab):
+    def layout(self):
         return dmc.LoadingOverlay(
-            children=self.inside_children(tab),
+            children=self.inside_children(),
             className="home", loaderProps=main_app.loadingProps)
 
     def login_things(self):

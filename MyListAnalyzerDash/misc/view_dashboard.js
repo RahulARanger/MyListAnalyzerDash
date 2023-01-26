@@ -224,9 +224,7 @@ async function processUserDetailsWhenNeeded(
         parsed_user_anime_list,
         parsed_recent_animes,
         meta_for_tabs){
-
     // DO NOT WORRY Raw List is not empty if passed
-
     const ctx = dash_clientside.callback_context.triggered;
     const said_no = say_no(1)[0];    
     
@@ -332,7 +330,6 @@ async function validate_and_fetch_anime_list(
     const who_triggered_it = ctx.length === 0 ? "" : ctx[0].prop_id;
 
     const no = say_no(1)[0];
-
     const user_name = who_triggered_it ? typedName : pageSettings?.user_name;
     
     const output_template = {
@@ -355,52 +352,42 @@ async function validate_and_fetch_anime_list(
     if(who_triggered_it.includes("search_user_name_view")){
         output_template.modalOpened = !modalOpened;
         return return_me();
-    }
-    
+    }    
     const passed = is_it_for_logged_in_user || /^\w+$/g.test(user_name);
-
     if(!passed){
-        
         output_template.modalOpened = true;
         output_template.closeable = false;
         output_template.error = user_name ? "Expecting only alphabetic characters in user name." : "Please Enter User Name";
         return return_me();
     }
-
     const disable = (disabled) => disableThem.forEach((e) => {
         const ele = document.getElementById(e);
         ele && (ele.disabled = disabled);
     })
-
     disable(true);
     
-    // const req = new Request(`${pipe}/MLA/validate_user`, {method: "POST", body: JSON.stringify(body), headers: headers})
     let final_user_name = "";
-    
-    const result = await fetchRawUserAnimeList(
-        pipe, is_it_for_logged_in_user ? "" : user_name, is_it_for_logged_in_user,
-        "span[class$='Alert-label']", "div.mantine-Alert-message",
-        "button.mantine-Modal-close", bring_nsfw
-    );
+    const result = pageSettings?.disable_user_job ? {result: [[true]], user_name: user_name} : (await fetchRawUserAnimeList(
+            pipe, is_it_for_logged_in_user ? "" : user_name, is_it_for_logged_in_user,
+            "span[class$='Alert-label']", "div.mantine-Alert-message",
+            "button.mantine-Modal-close", bring_nsfw
+    ));
 
     if(result?.failed ?? false){
-        output_template.error = result?.why ?? "empty Reason not sure";
+        output_template.error = result?.why ?? "Disconnected from network connection ?";
     } else{
     if(!result?.result?.at(0)?.length) output_template.error = `${user_name} has empty Anime List`;
     else{
         output_template.rawList = result?.result;
         final_user_name = result?.user_name;}
-    }
-    
-    
-    if(typeof output_template.error === "string"){
+    }       
+    if(typeof output_template.error === "string"){  
         output_template.modalOpened = true;
         disable(false);
         return return_me();
     }
-
     output_template.closeable = true;
-    output_template.location = `/MLA/view/${final_user_name}`;
+    output_template.location = `${(/(\/MLA\/view[-\w]*)/gm).exec(location)[0]}/${final_user_name}`;
     pageSettings.user_name = final_user_name;
     
     output_template.pageSettings = pageSettings;
@@ -410,8 +397,6 @@ async function validate_and_fetch_anime_list(
     
     disable(false);
     return return_me();
-    
-    // document.getElementById(search_bar_id).textContent = actual_user_name;
 }
 
 const swiper_options = {

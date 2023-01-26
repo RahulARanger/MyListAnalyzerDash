@@ -4,10 +4,9 @@ from dash import Input, Output, dcc, clientside_callback, ClientsideFunction
 from MyListAnalyzerDash.Components.ModalManager import get_modal, get_modal_id
 from MyListAnalyzerDash.Components.layout import expanding_layout
 from MyListAnalyzerDash.mappings.enums import view_header, header_menu_id
+from MyListAnalyzerDash.Components.tooltip import set_tooltip
 
-
-def search_user(default_user_name="", disable_user_job=False, add=False) -> typing.Optional[
-        typing.Union[typing.Tuple[dict, dict], dmc.MenuItem, dmc.Modal]]:
+def search_user(default_user_name="", add=False):
     if add:
         clientside_callback(
             ClientsideFunction(
@@ -28,16 +27,8 @@ def search_user(default_user_name="", disable_user_job=False, add=False) -> typi
             dmc.ActionIcon(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="dark", size="sm")
         ]
     )
-    add_in_case = (dmc.Alert(
-        [
-            "Some Tabs are disabled because fetching user details is not required. ",
-            "Please visit ", dcc.Link("view", href="/MLA/view"), " in case needed."
-        ],
-        title="Recent Animes are only needed", color="yellow", variant="filled"
-    ),) if disable_user_job else tuple()
 
     return expanding_layout(
-        *add_in_case,
         dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="light"),
         dmc.Space(h=10),
         name_input
@@ -51,15 +42,24 @@ def search_user_modal(
         search_user(add=True)
         return header_menu_id, modal_id
 
+    disable = page_settings["disable_user_job"]
+
+    nsfw = dmc.Switch(
+                label="nsfw", color="red", onLabel="yes", offLabel="no", id=view_header.ask_for_nsfw, disabled=disable)
+
+    nsfw_switch = nsfw if not disable else set_tooltip(
+        nsfw, label="You do not need this for this dashboard"
+    )
+
     return get_modal(
         header_menu_id,
         expanding_layout(
             dmc.Text("Search User"),
             dmc.Switch(label="For you ?", color="orange", onLabel="yes", offLabel="no", id=view_header.is_it_u),
-            dmc.Switch(label="nsfw", color="red", onLabel="yes", offLabel="no", id=view_header.ask_for_nsfw),
+            nsfw_switch,
             direction="row", no_wrap=True, align="flex-end"
         ),
-        search_user(page_settings["user_name"], page_settings["disable_user_job"]), ease_close=False, opened=True
+        search_user(page_settings["user_name"]), ease_close=False, opened=True
     )
 
 

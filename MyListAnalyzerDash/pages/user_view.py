@@ -30,12 +30,12 @@ user_view = user_view_requested._replace(
     path="/MLA/view", description="User View for yet to request user", title="User View - Say")
 
 recent_view_requested = page_template(
-    "Recent", "Dashboard for Recently watched animes for the requested user", False, "/MLA/view-r/<name>",
+    "Recent", "Dashboard for Recently watched animes for the requested user", False, "/MLA/view-recently/<name>",
     True, layout_for_recently_tab
 )
 
 recent_view = recent_view_requested._replace(
-    path="/MLA/view-r", description="Dashboard for Recently watched animes for yet to request users",
+    path="/MLA/view-recently", description="Dashboard for Recently watched animes for yet to request users",
     title="Recent - Say"
 )
 
