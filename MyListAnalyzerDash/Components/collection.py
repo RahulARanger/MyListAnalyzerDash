@@ -1,12 +1,13 @@
 import typing
 import dash_mantine_components as dmc
-from dash import Input, Output, dcc, clientside_callback, ClientsideFunction
+from dash import Input, Output, clientside_callback, ClientsideFunction
 from MyListAnalyzerDash.Components.ModalManager import get_modal, get_modal_id
-from MyListAnalyzerDash.Components.layout import expanding_layout
-from MyListAnalyzerDash.mappings.enums import view_header, header_menu_id
+from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
+from MyListAnalyzerDash.mappings.enums import view_header, header_menu_id
 
-def search_user(default_user_name="", add=False):
+
+def search_user(default_user_name="", disable_user_job=False, add=False):
     if add:
         clientside_callback(
             ClientsideFunction(
@@ -21,17 +22,24 @@ def search_user(default_user_name="", add=False):
         )
         return
 
+    nsfw = dmc.Switch(
+        label="nsfw", color="red", onLabel="yes", offLabel="no", id=view_header.ask_for_nsfw, disabled=disable_user_job)
+
+    nsfw_switch = nsfw if not disable_user_job else set_tooltip(
+        nsfw, label="You do not need this filter now"
+    )
+
     name_input = dmc.TextInput(
         value=default_user_name, id=view_header.askName, placeholder="User Name, please",
         required=True, withAsterisk=True, rightSection=[
             dmc.ActionIcon(dmc.Image(src=view_header.addImage), id=view_header.giveName, color="dark", size="sm")
-        ]
+        ], style=dict(flexGrow=1)
     )
 
     return expanding_layout(
         dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="light"),
         dmc.Space(h=10),
-        name_input
+        expanding_row(name_input, nsfw_switch, style=dict(flexFlow="row nowrap", alignItems="flex-start"))
     )
 
 
@@ -44,22 +52,14 @@ def search_user_modal(
 
     disable = page_settings["disable_user_job"]
 
-    nsfw = dmc.Switch(
-                label="nsfw", color="red", onLabel="yes", offLabel="no", id=view_header.ask_for_nsfw, disabled=disable)
-
-    nsfw_switch = nsfw if not disable else set_tooltip(
-        nsfw, label="You do not need this for this dashboard"
-    )
-
     return get_modal(
         header_menu_id,
         expanding_layout(
-            dmc.Text("Search User"),
+            dmc.Text("Search User", style=dict(flexGrow=1)),
             dmc.Switch(label="For you ?", color="orange", onLabel="yes", offLabel="no", id=view_header.is_it_u),
-            nsfw_switch,
             direction="row", no_wrap=True, align="flex-end"
         ),
-        search_user(page_settings["user_name"]), ease_close=False, opened=True
+        search_user(page_settings["user_name"], disable), ease_close=False, opened=True
     )
 
 

@@ -166,7 +166,7 @@ class ViewDashboard:
 
         try:
             cards = general_info(data, page)
-            belt = self.special_anime_belt_in_overview(data, tab_index)
+            belt = self.special_anime_belt_in_overview(data, tab_index, user_name)
             time_spent = data.get("time_spent", "Not Known")
             second_row = status_dist(data, page)
             status_for_airing_ones_in_list = self.currently_airing_details(data, user_name, tab_index)
@@ -270,7 +270,7 @@ class ViewDashboard:
             spacing="sm"
         )
 
-    def special_anime_belt_in_overview(self, data, index):
+    def special_anime_belt_in_overview(self, data, index, user_name):
         class_name, _ = self.tab_details(index)
         specials = data.get("specials", {})
 
@@ -290,14 +290,10 @@ class ViewDashboard:
             special_value, about = value["special"]
             _info = value["info"]
             info = [
-                dmc.Text([_, dmc.Space(h=1)])
-                for _ in (
-                    "List Status",
-                    "------------",
-                    f"Start Date: {_info[0]}",
-                    f"End Date: {_info[1]}",
-                    f"Updated at: {_info[-1]}"
-                )
+                dmc.Text(f"{user_name}'s Status", color="orange", italic=True),
+                dmc.Text(f"Started at: {_info[0]}"),
+                dmc.Text(f"Finished at: {_info[1]}"),
+                dmc.Text(f"Last Updated at: {_info[-1]}")
             ]
 
             fav = number_comp(fav, False, "light", class_name, size="xs")

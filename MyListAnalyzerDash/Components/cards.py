@@ -165,22 +165,22 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                 set_tooltip(
                     dmc.Anchor(
                         name, href=url, size="sm", target="_blank",
-                        style=ellipsis_part(220)
+                        style=ellipsis_part(250), variant="gradient"
                     ), label=name
                 ),
                 progress,
                 expanding_row(
                     *(expanding_layout(
-                        dmc.Text(label, color="gray", size="sm"),
+                        dmc.Text(label, color="dimmed", size="sm"),
                         dmc.Text(value, size="xs", weight="bold"), spacing=2, align="flexStart", position="left",
                         no_wrap=True
-                    ) for label, value in zip(("Favs", "Start Date", "Finish Date"), parameters)),
+                    ) for label, value in zip(("Favs.", "Start Date", "Finish Date"), parameters)),
                     info, style=dict(columnGap="3px", justifyContent="flex-start")
                 ), no_wrap=True, spacing="sm"
             ), style=dict(padding="1px", gap="12px")
         ), special_divider(special_label, special_color),
         floating_tooltip(
-            dmc.Text(special_value, style=dict(position="absolute", top="0px", right="2px"), size="xs", color="white"),
+            dmc.Text(special_value, size="xs", color="white", className="special-thing"),
             label=special_about
         ),
         class_name=f"anime_card {class_name}", style=dict(padding="1px"), spacing=0
@@ -222,7 +222,7 @@ def currently_airing_card(
 
     rows = expanding_layout(
         *(expanding_layout(
-            dmc.Text(cell[0], color="gray", size="sm"),
+            dmc.Text(cell[0], color="dimmed", size="sm"),
             dmc.Text(cell[1], size="xs", weight="bold"),
             spacing=.5, align="flexStart", position="left", no_wrap=True
         ) for cell in cells),
@@ -242,7 +242,7 @@ def currently_airing_card(
         ),
         relative_time_stamp_but_calc_in_good_way(
             False, default=updated_at, isMS=True, isNotUTC=True,
-            class_name=f"{class_name} rightFix", size="xs"),
+            class_name=f"{class_name} rightFix", size="sm"),
         style=dict(alignItems="center", flexWrap="nowrap"),
     )
 
@@ -277,7 +277,7 @@ def number_card_format_3(
         set_tooltip(
             dmc.Anchor(
                 anime_name, href=anime_link(anime_id), size="sm", target="_blank",
-                style=ellipsis_part(250)
+                style=ellipsis_part(250), variant="gradient"
             ), label=anime_name
         ),
         expanding_row(

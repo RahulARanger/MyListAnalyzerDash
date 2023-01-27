@@ -559,7 +559,7 @@ async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, cl
     for(let round = 0; round < 5; round ++){
         if(failed) break;
         
-        alert_body.textContent = `Requested for the 1e3 animes, Until Now asked: ${round + 1} times.`;
+        alert_body.textContent = round === 0 ? `Fetching Animes from the ${user_name}'s list` : `Fetched ${round}k animes, checking if there is even more...`;
         const req = new Request(
             `${pipe}/MLA/fetchUserAnimeList?${new URLSearchParams({url: book_mark, user_name}).toString()}`, {method: "GET", headers: headers}
         );

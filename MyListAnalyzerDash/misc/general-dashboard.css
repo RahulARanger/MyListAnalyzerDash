@@ -151,3 +151,17 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
 }
 
 .recent_anime{padding: 6px; flex-direction: column !important;} /*don't remove flex-direction someone is making it row*/
+
+.special-thing{
+    position: absolute;
+    bottom: 19px;
+    right: 9px;
+    transition: var(--standard-transition);
+    padding: 2px;
+}
+
+.special-thing:hover{
+    font-size: 2rem;
+    background-color: black;
+    box-shadow: var(--hard-chocolate);
+}
