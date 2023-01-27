@@ -165,7 +165,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                 set_tooltip(
                     dmc.Anchor(
                         name, href=url, size="sm", target="_blank",
-                        style=ellipsis_part(250), variant="gradient"
+                        style=ellipsis_part(220), variant="gradient"
                     ), label=name
                 ),
                 progress,

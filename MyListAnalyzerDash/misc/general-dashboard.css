@@ -10,14 +10,8 @@
     max-width: 200px;
 }
 
-#time_spent{width: 197px;}
-
-#time_spent .swiper-slide{
-    height: 45px;
-    margin-top: auto;
-    margin-bottom: auto;
-    width: 85%;
-}
+#time_spent{width: 196px}
+#time_spent .swiper-slide{width: 82%; margin: auto;}
 
 .number-card{
     padding: 13px;
@@ -101,18 +95,6 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
     background-color: rgb(23, 23, 23);
     box-shadow: var(--hard-chocolate);
     padding: 6px;
-}
-
-#time_spent{
-    width: 200px;
-    flex-shrink: 1;
-}
-
-#time_spent .swiper-slide{
-    height: 45px;
-    margin-top: auto;
-    margin-bottom: auto;
-    width: 85%;
 }
 
 .airing_cards{min-width: 298px;}
