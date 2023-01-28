@@ -8,7 +8,6 @@
 * [👋 Introduction](user-view-dashboard/introduction.md)
 * [🏗 Processes](user-view-dashboard/processes.md)
 * [🎆 Reports](user-view-dashboard/reports/README.md)
-  * [User Details](user-view-dashboard/reports/user-details.md)
   * [Reports - Overview](user-view-dashboard/reports/reports-overview.md)
 
 ## 📥 Data Format

@@ -10,6 +10,8 @@ MyListAnalyzer helps you with Understanding the User's progress over animes trac
 
 If you are watching animes, it is good to track the progress as it could be memorable in the future days.
 
+MyListAnalyzer is hosted on [Vercel](https://vercel.com/) :heart:.
+
 ## Getting Started
 
 #### Login
@@ -21,7 +23,7 @@ Access I could gain:
 1. Edit the progress in the [My Anime List](https://myanimelist.net/) _**{not used}**_
 2. Able to identify your username without manual entry.
 
-![](.gitbook/assets/image.png)
+![](broken-reference)
 
 
 
