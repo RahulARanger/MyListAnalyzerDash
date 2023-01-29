@@ -9,6 +9,7 @@
 * [🏗 Processes](user-view-dashboard/processes.md)
 * [🎆 Reports](user-view-dashboard/reports/README.md)
   * [Reports - Overview](user-view-dashboard/reports/reports-overview.md)
+  * [Reports - Recently](user-view-dashboard/reports/reports-recently.md)
 
 ## 📥 Data Format
 
