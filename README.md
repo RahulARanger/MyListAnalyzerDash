@@ -30,12 +30,12 @@ You could log in from the [Home Page](https://rahularanger.vercel.app/MLA/).
 <figure><img src=".gitbook/assets/logged_in.gif" alt=""><figcaption><p>Logging in from the Home Page</p></figcaption></figure>
 
 {% hint style="info" %}
-The above instruction was recorded in version 0.6.2 and is valid for the above releases, if not will be replaced.
+The above instruction was recorded in version 0.6.2 and is valid even for the above releases. if not, it will be replaced.
 {% endhint %}
 
 ### Dashboards
 
-Currently, View-Dashboard is only prepared but will try to increase the scope if possible.
+Currently, View-Dashboard is the only dashboard prepared but I will try to increase the scope if possible.
 
 #### User View Dashboard
 

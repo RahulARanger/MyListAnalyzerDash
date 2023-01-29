@@ -8,9 +8,7 @@ Based on the data fetched, MyListAnalyzer will now analyze the data to give you 
 
 Results are now based on [_Descriptive analytics_](#user-content-fn-1)[^1], which could give you an overview / brief introduction to the Requested Users' Animelist. It is better to first understand the facts / some events before proceeding with the deeper level of analytics.
 
-You can go through the various tabs. Results are processed if you are selecting the tab for the first time.
-
-<figure><img src="../../.gitbook/assets/switching Tabs (1).gif" alt=""><figcaption><p>Switching Tab for the first time</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/switching Tabs (1).gif" alt=""><figcaption><p>a</p></figcaption></figure>
 
 ### Existing Reports:
 
