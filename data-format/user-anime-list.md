@@ -46,3 +46,15 @@ list_status.finish_date              object
 list_status.spent                   float64
 dtype: object
 ```
+
+{% hint style="info" %}
+Date type - `list_status.start_date` | `list_status.finish_date`&#x20;
+{% endhint %}
+
+{% hint style="info" %}
+Datetime - `node.start_date, node.finish_date, list_status.start_date, list_status.finish_date, list_status.updated_at, node.updated_at`
+{% endhint %}
+
+{% hint style="info" %}
+`list_status.spent` = `list_status.num_episodes_watched` \* `node.average_episode_duration`
+{% endhint %}
