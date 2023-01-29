@@ -4,41 +4,45 @@ description: Format for a user Anime List
 
 # User Anime List
 
-On this page, we can understand how User's AnimeList is stored on the client side after fetching from the raw source.
+#### Data Source: [API Endpoint](https://myanimelist.net/apiconfig/references/api/v2#operation/users\_user\_id\_animelist\_get)
 
-### Table Format
+#### Columns with their data types
 
-| Column Name                         | Data Type  | Description                                                                        |
-| ----------------------------------- | ---------- | ---------------------------------------------------------------------------------- |
-| node.id                             | int        | ID of an Anime                                                                     |
-| node.title                          | str        | Title of an Anime                                                                  |
-| node.main\_picture.large            | str        | URL for an Anime's Main Picture                                                    |
-| node.genres                         | list\[int] | List of id(s) pointing to Genre                                                    |
-| node.start\_date                    | datetime   | start date of an Anime                                                             |
-| node.mean                           | float      | Average Score of an Anime                                                          |
-| node.rank                           | int        | Rank of an Anime based on the Score                                                |
-| node.popularity                     | int        | Popularity Rank of an Anime                                                        |
-| node.created\_at                    | datetime   | Annoucement Date of an Anime                                                       |
-| node.updated\_at                    | datetime   | Date that this record was updated in the Database                                  |
-| node.num\_episodes                  | int        | Number of Episodes of an Anime                                                     |
-| node.media\_type                    | str        | Media type of an Anime                                                             |
-| node.source                         | str        | Source of an anime                                                                 |
-| node.average\_episode\_duration     | int        | Duration of an Anime in seconds                                                    |
-| node.start\_season.season           | str        | Season on which, the anime was started                                             |
-| node.start\_season.year             | str        | year of anime's start date                                                         |
-| node.nsfw                           | str        | badges based on the nsfw                                                           |
-| node.status                         | str        | Status of the Anime \[Currently Airing, Completed, Planned]                        |
-| node.num\_scoring\_users            | int        | Number of Users who have provided score for anime                                  |
-| node.num\_list\_users               | int        | Number of Users who have added this anime in their list                            |
-| node.num\_favorites                 | int        | Number of Users who have marked this anime as their favourite.                     |
-| list\_status.status                 | str        | Status set by the User on this Anime                                               |
-| list\_status.score                  | int        | Score given by the User                                                            |
-| list\_status.num\_episodes\_watched | int        | Number of Episodes watched for User                                                |
-| list\_status.is\_rewatching         | bool       | Is the User Rewatching this anime?                                                 |
-| list\_status.updated\_at            | str        | latest Timestamp of user's recent update on this anime.                            |
-| list\_status.rewatch\_value         | -          | -                                                                                  |
-| list\_status.priority               | -          | -                                                                                  |
-| node.end\_date                      | datetime   | End date of an Anime                                                               |
-| list\_status.finish\_date           | datetime   | Date on which the User has completed this anime.                                   |
-| list\_status.spent                  | int        | seconds spent on this anime, \[num\_episodes\_watched \* Average Episode Duration] |
-
+```markup
+node.id                               int64
+node.title                           object
+node.main_picture.large              object
+node.genres                          object
+node.start_date                      object
+node.end_date                        object
+node.mean                           float64
+node.rank                           float64
+node.popularity                       int64
+node.created_at                      object
+node.updated_at                      object
+node.num_episodes                     int64
+node.media_type                      object
+node.source                          object
+node.average_episode_duration         int64
+node.rating                          object
+node.studios                         object
+node.start_season.year              float64
+node.start_season.season             object
+node.nsfw                            object
+node.status                          object
+node.num_scoring_users                int64
+node.num_list_users                   int64
+node.num_favorites                    int64
+list_status.status                   object
+list_status.score                     int64
+list_status.num_episodes_watched      int64
+list_status.is_rewatching              bool
+list_status.updated_at               object
+list_status.start_date               object
+list_status.num_times_rewatched       int64
+list_status.rewatch_value             int64
+list_status.priority                  int64
+list_status.finish_date              object
+list_status.spent                   float64
+dtype: object
+```
