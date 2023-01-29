@@ -58,10 +58,10 @@ view_dashboard = namedtuple(
     "user-view-location", "user-view-ask",
     "start-details-fetch-view", "view-dashboard-tabs", "mla-page_settings",
     "note-user-job-details",
-    ["teal", "blue", "pink"], ["Overview", "Recently"],
+    ["teal.5", "blue.5", "pink.5"], ["Overview", "Recently"],
     "https://api.iconify.design/line-md/cloud-off-outline-loop.svg?color=gray",
     "loading-user-details-view",
-    "indigo", "run-process-job-again-view-mla",
+    "indigo.5", "run-process-job-again-view-mla",
     "currently_airing_cards", "currently-airing-cards-swiped-to",
     "rating_dist_overview_mla", "ep_dist_overview_mla"
 )
@@ -98,10 +98,10 @@ css_classes = namedtuple(
     "CSSClasses",
     [
         "jump", "customButton", "home_card", "request_details", "number_counter", "as_percent",
-        "time_format", "rank_index_format"
+        "time_format"
     ])(
     "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number",
-    "need_to_time_format", "format_rank_index"
+    "need_to_time_format"
 )
 
 _status_map = namedtuple(
@@ -118,7 +118,7 @@ recent_status = namedtuple(
         "Watching", "Completed", "Hold", "Dropped"
     ])
 
-recent_status_color = recent_status("blue", "green", "yellow", "red")
+recent_status_color = recent_status("blue.6", "lime.6", "yellow.5", "red.6")
 
 header_menu_item = namedtuple("MenuItem", [
     "id", "title", "image_src", "desc"

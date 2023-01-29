@@ -24,49 +24,14 @@ function formatTimers(){
     );
 }
 
-
-function requestDetails(perf, _prev, page_settings){
-    const user_name = page_settings?.user_name ?? "";
-    
-    if(!perf) return say_no(1)[0];
-
-    const previous = structuredClone(_prev);
-    const traces = previous?.data;
-
-    perf.called = formateTime(perf?.called);
-    
-    if(!traces.length)
-        previous.data =  [{
-            'line': {'color': 'orange', 'shape': 'spline'},
-             'mode': 'lines+markers',
-              'x':  [perf?.called], 'y': [perf?.taken],
-               'type': 'scatter'
-        }]
-        
-    else{
-        traces[0]?.x.push(perf?.called);
-        traces[0]?.y.push(perf?.taken);
-    }
-
-
-    return previous;
-}
-
 function failedToAskMALAPI(){
     return ddc_link("Repo", "https://github.com/RahulARanger/MyListAnalyzer")
 }
-
-function setColorBasedOnRankParser(){
-    document.querySelectorAll(".format_rank_index").forEach(setColorBasedOnRank);
-}
-
 
 function refreshTab(_, label_id, soft_refresh){
     enable_swiper_for_view_dashboard(soft_refresh);
     animateCounters(label_id?.index);
     formatTimers();
-    setColorBasedOnRankParser();
-
     return say_no(1)[0];
 }
 
@@ -136,20 +101,17 @@ class ProcessUserDetails{
                 body
             ))?.recent_animes : no
         );
-
         return result;
     }
 
-
-    async fetchDynamicData(pipe, data){
+    async fetchDynamicData(pipe, data, page_settings){
         const url = `${pipe}/MLA/dynamic/${this.tab_name}`;
-
         const body = {data, user_name: this.user_name, timezone: getTimezone()};
         
         switch (this.tab_name) {
             case "Overview":
                 return this.__send_request(
-                    url, body
+                    url, {...body, nsfw: page_settings["nsfw"]}
                 );
             case "Recently": 
                 return this.__send_request(
@@ -270,7 +232,7 @@ async function processUserDetailsWhenNeeded(
         );
 
         if(asked)
-            tab_caches[processor.tab_index] = await processor.fetchDynamicData(pipe, asked);
+            tab_caches[processor.tab_index] = await processor.fetchDynamicData(pipe, asked, page_settings);
     }
     
     const message = [processor.reason];
@@ -396,6 +358,7 @@ async function validate_and_fetch_anime_list(
     output_template.show_name_url = `https://myanimelist.net/profile/${final_user_name}`;
     
     disable(false);
+    output_template.pageSettings["nsfw"] = bring_nsfw;
     return return_me();
 }
 
@@ -435,7 +398,7 @@ const swiper_options = {
         breakpoints: {
             3e2: {slidesPerView: 1},
             430: {slidesPerView: 1.25},
-            5e2: {slidesPerView: 1.5},
+            5.25e2: {slidesPerView: 1.5},
             720: {slidesPerView: 2},
             860: {slidesPerView: 2.5},
             1e3: {slidesPerView: 3},
@@ -599,7 +562,6 @@ function clickToGoCardIndex(_, called_index, swiper_cards_id){
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     "MLA": {
-        requestDetails,
         processUserDetailsWhenNeeded,
         refreshTab,
         set_view_url_after_search,

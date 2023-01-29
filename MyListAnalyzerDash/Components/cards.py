@@ -117,21 +117,6 @@ def card_format_4(text, label, color, class_name, size="lg", url=None):
     )
 
 
-def number_card_format_2(label, icon, value=0, color="red", class_name=None):
-    return expanding_row(
-        dmc.Avatar(src=icon, size="lg"),
-        expanding_layout(
-            expanding_layout(
-                number_comp(value, False, color, class_name),
-                # dmc.Divider(color="gray", orientation="vertical"),
-                # number_comp(percent_value, True, color, class_name, size="md"),
-                direction="row", position="center"
-            ),
-            _divider(label, color)
-        )
-    )
-
-
 def number_parameter(label, value, class_name, is_percent=False):
     return expanding_layout(
         dmc.Text(label, color="gray", size="sm"),
@@ -189,7 +174,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
 
 def relative_color(value, full):
     relative = value / full
-    return "green" if relative > 0.89 else "teal" if relative > 0.85 else "lime" if relative > 0.75 else "yellow" if relative <= .69 else "orange" if relative <= 5 else "red"
+    return "green.9" if relative > 0.89 else "teal.5" if relative > 0.85 else "lime.3" if relative > 0.75 else "yellow" if relative <= .69 else "orange.6" if relative <= 5 else "red.9"
 
 
 def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections, label=''):
@@ -203,7 +188,7 @@ def progress_bar_from_status(watched, total, status, watched_color="green", anim
         sections=[
             value,
             *other_sections
-        ], animate=animate, size="md"
+        ], animate=animate, size="md", style=dict(minHeight="8px")
     )
 
 
@@ -277,7 +262,7 @@ def number_card_format_3(
         set_tooltip(
             dmc.Anchor(
                 anime_name, href=anime_link(anime_id), size="sm", target="_blank",
-                style=ellipsis_part(250), variant="gradient"
+                style=ellipsis_part(250), color="orange.3"
             ), label=anime_name
         ),
         expanding_row(

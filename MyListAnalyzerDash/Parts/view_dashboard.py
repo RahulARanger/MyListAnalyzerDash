@@ -195,7 +195,7 @@ class ViewDashboard:
             number_card_format_1(
                 number=data.get("eps_watched", 0), is_percent=False,
                 label="# Eps. Watched", class_name=page,
-                color="grape"
+                color="grape.6"
             ),
             number_card_format_1(
                 number=data.get("avg_score", 0) if data.get("avg_score", 0) else "No scores given yet",
@@ -206,7 +206,7 @@ class ViewDashboard:
             card_format_4(
                 data.get("mostly_seen_genre", ""),
                 "Mostly seen Genre",
-                "orange", page, url=genre_link(data.get("genre_link"))
+                "orange.5", page, url=genre_link(data.get("genre_link"))
             ),
             card_format_4(
                 data.get("mostly_seen_studio", ""),
@@ -218,6 +218,7 @@ class ViewDashboard:
 
         fourth_row = expanding_row(
             html.Article(id=view_dashboard.ep_dist, className=graph_class),
+            html.Article(id="nsfw", className=graph_class),
             html.Article(id=view_dashboard.rating_dist, className=graph_class),
             style=dict(alignContent="center", alignItems="center", justifyContent="center", gap=gap)
         )
@@ -233,7 +234,7 @@ class ViewDashboard:
 
         return [
             __ for _ in (belt, rows, fourth_row) for __ in
-            [_, dmc.Space(h=3), dmc.Divider(color="dark", style={"opacity": 0.5}), dmc.Space(h=1)]
+            [_, dmc.Space(h=2.5), dmc.Divider(color="gray.8"), dmc.Space(h=2.5)]
         ]
 
     def process_recently_data(self, data, page_settings):
@@ -424,6 +425,18 @@ def special_results_for_recent_animes(raw, user_name):
         ) if key in raw
     ]
 
+    longest = json.loads(raw["longest"]["anime"])
+    diff = set_tooltip(
+        dmc.Badge(f"Total: {longest[3]} Eps.", color="pink.4"),
+        label=f"Total Number of Episodes for this show"
+    )
+    rows.append(
+        number_card_format_3(
+            raw["longest"]["id"], *longest, diff, status_badge=False,
+            special_label="Longest Anime", special_color="indigo", class_name="swiper-slide"
+        )
+    )
+
     bulk_updated = json.loads(raw["most_updated"])
     diff = set_tooltip(
         dmc.Badge(f"{bulk_updated[6]} Eps were updated", color="yellow"),
@@ -439,19 +452,19 @@ def special_results_for_recent_animes(raw, user_name):
     long_time = raw["long_time"]
     rows.append(
         number_card_format_3(
-            long_time["id"], *json.loads(long_time["anime"]), dmc.Badge(long_time["time_took"]),
-            special_color="violet", special_label="Took Long time to reach here", class_name="swiper-slide"
+            long_time["id"], *json.loads(long_time["anime"]), dmc.Badge(long_time["time_took"], color="orange.9"),
+            special_color="cyan.5", special_label="Took Long time to reach here", class_name="swiper-slide"
         )
     )
 
     records = raw["many_records"]
     badge = set_tooltip(
-        dmc.Badge(f"Appeared: {records['mode']}", color="pink", size="sm"),
+        dmc.Badge(f"Appeared: {records['mode']}", color="yellow.8", size="sm"),
         label=f"Number of Times, {user_name} has updated this anime")
 
     rows.append(
         number_card_format_3(
-            records["id"], *json.loads(records["anime"]), badge, special_color="orange",
+            records["id"], *json.loads(records["anime"]), badge, special_color="lime.5",
             special_label="Largest Number of updates", class_name="swiper-slide"
         )
     )
@@ -473,7 +486,7 @@ def special_results_for_recent_animes(raw, user_name):
     longest = json.loads(long_anime["anime"])
     rows.append(
         number_card_format_3(
-            long_anime["id"], *longest, dmc.Badge(f"{len(longest[1])} words", color="teal", size="sm"),
+            long_anime["id"], *longest, dmc.Badge(f"{len(longest[1])} words", color="teal.8", size="sm"),
             special_color="gray", special_label="Longest Title", class_name="swiper-slide"
         )
     )

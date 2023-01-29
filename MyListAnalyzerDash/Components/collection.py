@@ -39,7 +39,7 @@ def search_user(default_user_name="", disable_user_job=False, add=False):
     return expanding_layout(
         dmc.Alert(view_header.searchAlert, color="orange", title="Note", variant="light"),
         dmc.Space(h=10),
-        expanding_row(name_input, nsfw_switch, style=dict(flexFlow="row nowrap", alignItems="flex-start"))
+        expanding_layout(name_input, nsfw_switch)
     )
 
 
