@@ -23,10 +23,6 @@ Access I could gain:
 1. Edit the progress in the [My Anime List](https://myanimelist.net/) _**{not used}**_
 2. Able to identify your username without manual entry.
 
-![](broken-reference)
-
-
-
 Steps to Login
 
 You could log in from the [Home Page](https://rahularanger.vercel.app/MLA/).
