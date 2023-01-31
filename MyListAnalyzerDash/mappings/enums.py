@@ -52,7 +52,7 @@ view_dashboard = namedtuple(
         "row_1_colors", "tab_names",
         "no_data", "loadingNote", "time_spent_color", "process_again",
         "currently_airing", "clickToGoCards",
-        "rating_dist", "ep_dist"
+        "pies", "ep_dist", "pies_in_overview"
     ]
 )(
     "user-view-location", "user-view-ask",
@@ -63,7 +63,7 @@ view_dashboard = namedtuple(
     "loading-user-details-view",
     "indigo.5", "run-process-job-again-view-mla",
     "currently_airing_cards", "currently-airing-cards-swiped-to",
-    "rating_dist_overview_mla", "ep_dist_overview_mla"
+    "pie_dist_overview_mla", "ep_dist_overview_mla", "overview_pies"
 )
 
 creds_modal = namedtuple(

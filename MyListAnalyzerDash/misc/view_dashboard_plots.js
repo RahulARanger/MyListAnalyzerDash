@@ -1,5 +1,5 @@
-const week_days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const view_e_charts_mla = {}; // be a good boy
+const pies_for_dist = "pie_dist_overview_mla";
 const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB", "Hold": "#FCE883"}
 
 // // HELPER FUNCTIONS
@@ -11,44 +11,102 @@ fetch('/MLA/assets/theme.json')
     echarts.registerTheme('essos', theme);
   });
 
-// FOR RESIZING ALL PLOTS FOR THE VIEW DASHBOARD _if present_
-window.addEventListener('resize', function () {
-  Object.values(view_e_charts_mla).forEach((plot) => plot?.resize());
-});
-
-
 // USE this if and only if you need to use whole row or column or TABLE
 // not for particular cell
 class Frame {
   raw;
-  constructor(raw) {
-    this.raw = JSON.parse(raw);
-  }
+  constructor(raw) {this.raw = JSON.parse(raw);}
+  col(col_index) {return this.raw.map((row) => row[col_index]);}
+  row(row_index) {return this.raw[row_index]}
+  rows(...indices){return this.raw.map((row) => indices.map((index) => row[index]))}
+}
 
-  col(col_index) {
-    return this.raw.map((row) => row[col_index]);
+class ConstructEChartOption{
+  raw = {}
+  light = "rgba(255, 255, 255, 0.3)"
+  setTitle(text, size, center, options){
+    this.raw.title = { text, textStyle: { fontSize: size }, left: "center", ...(options || {})}; return this;
   }
-
-  row(row_index) {
-    return this.raw[row_index]
+  setAxis(isX, type, name, showLines, options){
+    const option = {type, name, splitLine: { show: showLines }, ...(options || {})};
+    if(isX) this.raw.xAxis ? this.raw.xAxis.push(option) : (this.raw.xAxis = [option]);
+    else this.raw.yAxis ? this.raw.yAxis.push(option) : (this.raw.yAxis = [option]);
+    return this;
   }
-
-  rows(...indices){
-    return this.raw.map((row) => indices.map((index) => row[index]))
+  toolBox(hide, mark, magic, hide_restore, hide_save, magic_types){
+    const option = {
+      show: !hide, feature: {restore: { show: !hide_restore }, saveAsImage: { show: !hide_save } }
+    }
+    mark && (option.feature.mark = {show: true})
+    magic && (option.feature.magicType = {show: true, type: magic_types ? magic_types : ["line", "bar"]})
+    this.raw.toolbox = option;
+    return this;
+  }
+  setTooltip(triggeredFor, options){
+    this.raw.tooltip = {trigger: triggeredFor, ...(options || {})}  // trigger: item / axis
+    return this;
+  }
+  visualMap(leftText, rightText, min, max){
+    this.raw.visualMap = {
+      orient: "horizontal", left: "center", min, max, text: [leftText, rightText],
+      dimension: 1,
+    }
+    return this;
+  }
+  initSeries(){
+    this.raw.series = [];
+    return this;
+  }
+  barSeries(data, name){
+    this.raw.series.push({
+      data, type: 'bar', name
+    }); return this;
+  }
+  pieSeries(data, name, selectedMode, radius, center){
+    this.raw.series.push({
+      type: 'pie',
+      radius: radius || '65%',
+      name,
+      center: center || ['50%', '50%'],
+      selectedMode: selectedMode || 'multiple',
+      data
+    }); return this;
+  }
+  lineSeries(name, data, smooth, options){
+    this.raw.series.push({type: "line", name, data, smooth, ...(options || {})}); return this;
+  }
+  setLegend(data, options, orient, x, type){
+    this.raw.legend = { orient: orient || 'horizontal', x: x || 'left', data, type: type || "scroll", ...(options || {})}; return this;
+  }
+  label(color, labelLineColor, labelLine){
+    this.raw.label = {color: color || this.light};
+    this.raw.labelLine = {lineStyle: {color: labelLineColor || this.light}, ...(labelLine || {smooth: 0.2, length: 10, length2: 20})}; return this;
+  }
+  pieEmphasis(){
+    this.raw.emphasis = {
+      itemStyle: {shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)'}
+    }; return this;
+  }
+  setGrid(containLabel, options){
+    this.raw.grid = {containLabel, ...options}; return this;
   }
 }
 
 
 // for creating Echart
-function createEChart(element, on) {
+function createEChart(id, on) {
+  const element = document.getElementById(id);
   const chart = echarts.init(element, "essos", { renderer: on || 'svg' });
+  view_e_charts_mla[id] = chart;
   new ResizeObserver(() => chart.resize()).observe(element);
   return chart
 }
 
-// for displaying plots
-function displayPlots(...plots) {
-  plots.forEach((plot) => view_e_charts_mla[plot]?.dispose());
+// for disposing plots
+function disposePlots(...plots) {
+  plots.forEach((plot) => {
+    view_e_charts_mla[plot]?.dispose();
+  });
 }
 
 
@@ -69,68 +127,22 @@ function week_js_to_pandas(week_day, otherWay) {
 
 // // OVERVIEW TAB
 
-
 function ep_range_dist_plot(data) {
   const values = Object.values(data);
   const keys = Object.keys(data);
-
-  return {
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    title: { text: "Range of Anime Episodes", left: "center", textStyle: { fontSize: 16 } },
-    xAxis: { type: "category", data: keys, splitLine: { show: false }, name: "Episode Range" },
-    yAxis: { type: "value", splitLine: { show: false }, name: "Anime Count" },
-    visualMap: {
-      orient: "horizontal", left: "center", min: Math.min(...values), max: Math.max(...values),
-      text: ["Mostly Seen", "Least ones"],
-      dimension: 1,
-    },
-    series: [{
-      data: values,
-      type: "bar"
-    }],
-    toolbox: generalToolBox()
-  };
-
+  return (new ConstructEChartOption()).initSeries().barSeries(values).setTitle("Range of Anime Episodes", 16, true)
+  .setAxis(true, "category", "Episode Range", false, {data: keys})
+  .setAxis(false, "value", "Freq.", false).setTooltip("axis", {axisPointer: {type: "shadow"}})
+  .visualMap("Mostly Seen", "Least Ones", Math.min(...values), Math.max(...values))
+  .toolBox(false, false, true, true, false).raw;
 }
 
 
-function plotRatingsDist(data) {
+function plotPiesDist(data) {
   const ratings = Object.keys(data);
-
-  return {
-    title: { text: "Age Rating over Animes", top: "90%", left: "center", textStyle: { fontSize: 16 } },
-    legend: { orient: 'horizontal', x: 'left', data: ratings, type: "scroll" },
-    tooltip: { trigger: "item", formatter: "{a} ({c} | {d}%)<br/>{b}" },
-    series: [
-      {
-        type: 'pie',
-        radius: '65%',
-        name: "Rating",
-        center: ['50%', '50%'],
-        selectedMode: 'multiple',
-        data: ratings.map(function (label) { return { value: data[label], name: label }; })
-      }
-    ],
-    emphasis: {
-      itemStyle: {
-        shadowBlur: 10,
-        shadowOffsetX: 0,
-        shadowColor: 'rgba(0, 0, 0, 0.5)'
-      }
-    },
-    label: {
-      color: "rgba(255, 255, 255, 0.3)"
-    },
-    labelLine: {
-      lineStyle: {
-        color: "rgba(255, 255, 255, 0.3)"
-      },
-      smooth: 0.2,
-      length: 10,
-      length2: 20
-    },
-    toolbox: { show: true, feature: { saveAsImage: { show: true } } }
-  };
+  return (new ConstructEChartOption()).initSeries().pieSeries(ratings.map(function (label) { return { value: data[label], name: label }; }), "Rating")
+  .setTitle("Age Rating Over Animes", 16, true, {top: "90%"}).setTooltip("item", {formatter: "{a} ({c} | {d}%)<br/>{b}"})
+  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {tv: false}}).raw;
 }
 
 
@@ -138,25 +150,18 @@ function plotForOverviewTab(_, data, page_settings) {
   const no = say_no(1)[0];
   if (!data) return no;
 
-  const ep_range_plot = "ep_dist_overview_mla"
-  const rating_plot = "rating_dist_overview_mla";
-
+  const ep_range_plot = "ep_dist_overview_mla";
   // DESTROYING PLOTS
-  displayPlots(ep_range_plot, rating_plot);
-
+  disposePlots(ep_range_plot, pies_for_dist);
   // INIT PLOTS
-  const ep_range = createEChart(document.getElementById(ep_range_plot));
-  ep_range.setOption(ep_range_dist_plot(JSON.parse(data?.ep_range) || {}))
+  const ep_range = createEChart(ep_range_plot);
+  ep_range.setOption(ep_range_dist_plot(JSON.parse(data?.ep_range) || {}));
 
-  const ratings_dist = createEChart(document.getElementById(rating_plot));
-  ratings_dist.setOption(plotRatingsDist(JSON.parse(data?.rating_dist) || {}));
-
-  // SAVING PLOTS
-  view_e_charts_mla[ep_range_plot] = ep_range;
-  view_e_charts_mla[rating_plot] = ratings_dist;
+  const dist_pie_plot = createEChart(pies_for_dist);
+  const media_dist = JSON.parse(data?.media_dist);
+  dist_pie_plot.setOption({dataset: [Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}})], ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); 
   return no;
 }
-
 
 // // RECENTLY TAB
 
@@ -171,62 +176,15 @@ function weeklyDist(eps_watched_per_week, total_week_days) {
 
   const itemStyle = { color: "#3d3b72" }
   const onHover = { itemStyle: { color: '#f3cec9' } }
-
-
-  return option = {
-    tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    title: { text: "Weekly Frequency", left: "center", textStyle: { fontSize: 14 } },
-    grid: { top: 54, containLabel: true, left: 10, height: "70%" },
-    xAxis: [
-      {
-        type: "category",
-        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        axisPointer: {
-          type: "shadow"
-        },
-        axisTick: {
-          alignWithLabel: true
-        },
-        splitLine: {
-          show: false
-        }
-      }
-    ],
-    yAxis: [
-      {
-        splitLine: {
-          show: false
-        },
-        type: "value",
-        name: "No. of Eps.",
-        axisLabel: {
-          formatter: "{value} eps"
-        }
-      },
-      {
-        splitLine: {
-          show: false
-        },
-        type: "value",
-        name: "Eps / Per wk",
-        axisLabel: {
-          formatter: "{value} / wk"
-        }
-      }
-    ],
-    series: [
-      {
-        type: "bar",
-        name: "Number of Episodes",
-        data: eps_watched_per_week,
-        itemStyle,
-        emphasis: onHover
-      },
-      { name: "Average", data: avg_s, type: "line", yAxisIndex: 1 }
-    ],
-    aria: { enabled: true },
-    toolbox: generalToolBox()
-  };
+  return (new ConstructEChartOption()).initSeries().barSeries(eps_watched_per_week, "Number of Episodes", {itemStyle, emphasis: onHover})
+  .lineSeries("Average", avg_s, true, {yAxisIndex: 1 })
+  .setAxis(true, "category", "Week", false, {nameLocation: "middle", data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], axisPointer: {type: "shadow"}, axisTick: {alignWithLabel: true}})
+  .setAxis(false, "value", "No. of Eps.", false, {axisLabel: {formatter: "{value} eps"}})
+  .setAxis(false, "value", "Eps / Per wk", false, {axisLabel: {formatter: "{value} / wk"}})
+  .setGrid(true, {top: 54, left: 10, height: "69%"})
+  .setTitle("Weekly Frequency", 14, true)
+  .setTooltip("axis", {axisPointer: { type: "shadow" }})
+  .toolBox(false, true, false, true).raw;
 }
 
 
@@ -235,28 +193,11 @@ function dailyWeightage(dailyTable) {
     return new Date(Date.parse(`${date[0]}-${date[1]}-${date[2]}`));
   });
   const y = dailyTable?.data[2];
-
-  return {
-    title: {text: "Day Wise Distribution", left: "center", textStyle: { fontSize: 14 }},
-    tooltip: {trigger: "axis"},
-    xAxis: {splitLine: {show: false},
-      type: "time",
-      nameLocation: "middle"
-    },
-    yAxis: {
-      type: 'value', splitLine: {
-        show: false
-      },
-    },
-    series: [
-      {
-        data: y.map((y_, _) => { return [x[_], y_] }),
-        type: 'line',
-        smooth: true
-      }
-    ]
-  };
-
+  return (new ConstructEChartOption()).initSeries().lineSeries(
+    "Day wise Frequency", y.map((y_, _) => { return [x[_], y_] }), true)
+    .setAxis(true, "time", "Date", false)
+    .setAxis(false, "value", "Freq.", false).setTooltip("axis").setGrid(false)
+    .setTitle("Day Wise Distribution", 14, true).raw;
 }
 
 
@@ -353,12 +294,12 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
   const bar_race = "quick-update-history"
 
   // DESTROYING PLOTS
-  displayPlots(daily_weightage, week_plot, bar_race);
+  disposePlots(daily_weightage, week_plot, bar_race);
 
   // INIT PLOTS
-  const daily_wise = createEChart(document.getElementById(daily_weightage));
-  const weekly_plot = createEChart(document.getElementById(week_plot));
-  const bar_race_plot = createEChart(document.getElementById(bar_race));
+  const daily_wise = createEChart(daily_weightage);
+  const weekly_plot = createEChart(week_plot);
+  const bar_race_plot = createEChart(bar_race);
 
 
   daily_wise.setOption(
@@ -370,12 +311,6 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
   );
 
   bar_race_plot.setOption(quickHistory(frame.rows(0, 1, 2, 3, 4, 5))); // Id, Anime Name, Status, up_until, total
-
-  // SAVING PLOTS
-  view_e_charts_mla[week_plot] = weekly_plot;
-  view_e_charts_mla[daily_weightage] = daily_wise
-  view_e_charts_mla[bar_race] = bar_race_plot;
-
 
   daily_wise.on("mouseover", function (line_data) {
     const date = line_data.data[0];
@@ -443,13 +378,28 @@ template(0);
   return no;
 }
 
+function changeThePiesInOverviewTab(for_called){
+  const no = say_no(1)[0];
+  const chart = view_e_charts_mla[pies_for_dist];
+  if(!chart || dash_clientside.callback_context.triggered.length === 0) return no;
 
+  const title = for_called === "Rating" ? "Age Rating Over Animes" : "Media Type Freq.";
+  const option = chart.getOption();
+  const data_set = option.dataset[0];
+  option.title[0].text = title;
+  option.legend[0].data = data_set.map((obj) => obj.name);
+  option.dataset[0] = option.series[0].data;
+  option.series[0].data = data_set;
+  console.log(option);
+  chart.setOption(option); return no;
+}
 
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
   "MLAPlots": {
     plotForRecentlyTab,
-    plotForOverviewTab
+    plotForOverviewTab,
+    changeThePiesInOverviewTab
   }
 });
 

@@ -113,6 +113,15 @@ class ViewDashboard:
             ]
         )
 
+        clientside_callback(
+            ClientsideFunction(
+                function_name="changeThePiesInOverviewTab",
+                namespace="MLAPlots"
+            ),
+            Output(view_dashboard.pies, "id"),
+            Input(view_dashboard.pies_in_overview, "value")
+        )
+
     def layout(self, page_settings):
         postfix_tab = view_dashboard.tabs + self.postfix_tab
         tab_butt = view_dashboard.tabs + self.tab_butt
@@ -216,10 +225,17 @@ class ViewDashboard:
             style=dict(gap=gap, justifyContent="center")
         )
 
+        pies = html.Article(dmc.Tabs(
+            dmc.TabsList(
+                [dmc.Tab("Rating", value="Rating"), dmc.Tab("Media Type", value="Media Type")]
+            ), color="orange", orientation="vertical", id=view_dashboard.pies_in_overview, variant="pills",
+            value="Rating"
+        ), id=view_dashboard.pies, className=graph_class)
+
         fourth_row = expanding_row(
             html.Article(id=view_dashboard.ep_dist, className=graph_class),
             html.Article(id="nsfw", className=graph_class),
-            html.Article(id=view_dashboard.rating_dist, className=graph_class),
+            pies,
             style=dict(alignContent="center", alignItems="center", justifyContent="center", gap=gap)
         )
 

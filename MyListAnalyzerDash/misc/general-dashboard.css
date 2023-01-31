@@ -58,7 +58,7 @@ article.expanding-row{
     border-radius: 12px;
 }
 
-#ep_dist_overview_mla, #rating_dist_overview_mla{
+#ep_dist_overview_mla, #pie_dist_overview_mla{
     width: calc(169px + 1.75vw);
     box-sizing: border-box;
     height: 260px;
@@ -66,7 +66,7 @@ article.expanding-row{
     padding: 2px;
 }
 
-#rating_dist_overview_mla {flex-grow: .5;}
+#pie_dist_overview_mla {flex-grow: .5;}
 #ep_dist_overview_mla{flex-grow: 1;}
 
 #special_belt{padding: 6px; height: 135px; width: calc(100vw - 40px);}
