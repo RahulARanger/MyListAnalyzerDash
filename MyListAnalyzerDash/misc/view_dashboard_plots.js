@@ -57,9 +57,9 @@ class ConstructEChartOption{
     this.raw.series = [];
     return this;
   }
-  barSeries(data, name){
+  barSeries(data, name, options){
     this.raw.series.push({
-      data, type: 'bar', name
+      data, type: 'bar', name, ...(options || {})
     }); return this;
   }
   pieSeries(data, name, selectedMode, radius, center){
@@ -95,6 +95,7 @@ class ConstructEChartOption{
 
 // for creating Echart
 function createEChart(id, on) {
+  if(view_e_charts_mla[id]) return view_e_charts_mla[id];
   const element = document.getElementById(id);
   const chart = echarts.init(element, "essos", { renderer: on || 'svg' });
   view_e_charts_mla[id] = chart;
@@ -140,9 +141,11 @@ function ep_range_dist_plot(data) {
 
 function plotPiesDist(data) {
   const ratings = Object.keys(data);
-  return (new ConstructEChartOption()).initSeries().pieSeries(ratings.map(function (label) { return { value: data[label], name: label }; }), "Rating")
+  const meta_x = ratings.map(function (label) { return { value: data[label], name: label }; });
+  const opt = (new ConstructEChartOption()).initSeries().pieSeries(meta_x, "Rating")
   .setTitle("Age Rating Over Animes", 16, true, {top: "90%"}).setTooltip("item", {formatter: "{a} ({c} | {d}%)<br/>{b}"})
-  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {tv: false}}).raw;
+  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}, "vertical").raw;
+  opt.meta_x = meta_x; return opt;
 }
 
 
@@ -152,14 +155,14 @@ function plotForOverviewTab(_, data, page_settings) {
 
   const ep_range_plot = "ep_dist_overview_mla";
   // DESTROYING PLOTS
-  disposePlots(ep_range_plot, pies_for_dist);
+  // disposePlots(ep_range_plot, pies_for_dist);
   // INIT PLOTS
   const ep_range = createEChart(ep_range_plot);
   ep_range.setOption(ep_range_dist_plot(JSON.parse(data?.ep_range) || {}));
 
   const dist_pie_plot = createEChart(pies_for_dist);
   const media_dist = JSON.parse(data?.media_dist);
-  dist_pie_plot.setOption({dataset: [Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}})], ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); 
+  dist_pie_plot.setOption({meta: Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}}), ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); dist_pie_plot.setOption({legend: {top: 45, right: 0}});
   return no;
 }
 
@@ -294,7 +297,7 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
   const bar_race = "quick-update-history"
 
   // DESTROYING PLOTS
-  disposePlots(daily_weightage, week_plot, bar_race);
+  // disposePlots(daily_weightage, week_plot, bar_race);
 
   // INIT PLOTS
   const daily_wise = createEChart(daily_weightage);
@@ -354,7 +357,6 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
     daily_wise.setOption({ series: [current_series] })
   })
 
-
   
 const template = function(index){
   const raw_option = bar_race_plot.getOption();
@@ -364,10 +366,8 @@ const template = function(index){
   const series_index = 0;
   const series_data = raw_option.series[0].data ?? [];
   
-  if(index)
-      raw_option.series[series_index].data = [raw[index], ...series_data.filter((row) => row[0] !== raw[index][0])]
-  else
-     raw_option.series[series_index].data = [];
+  if(index) raw_option.series[series_index].data = [raw[index], ...series_data.filter((row) => row[0] !== raw[index][0])]
+  else raw_option.series[series_index].data = [];
   
   index && (raw_option.graphic[0].elements[0].style.text = new Date(raw[index][5]).toLocaleString());
   bar_race_plot.setOption(raw_option);
@@ -383,14 +383,8 @@ function changeThePiesInOverviewTab(for_called){
   const chart = view_e_charts_mla[pies_for_dist];
   if(!chart || dash_clientside.callback_context.triggered.length === 0) return no;
 
-  const title = for_called === "Rating" ? "Age Rating Over Animes" : "Media Type Freq.";
-  const option = chart.getOption();
-  const data_set = option.dataset[0];
-  option.title[0].text = title;
-  option.legend[0].data = data_set.map((obj) => obj.name);
-  option.dataset[0] = option.series[0].data;
-  option.series[0].data = data_set;
-  console.log(option);
+  const option = chart.getOption(); const is_rating = for_called === "Rating"; const title = is_rating ? "Age Rating Over Animes" : "Media Type Freq."; const refer = is_rating ? option.meta_x : option.meta;
+  option.title[0].text = title; option.legend[0].data = refer.map((obj) => obj.name); option.series[0].data = refer;
   chart.setOption(option); return no;
 }
 

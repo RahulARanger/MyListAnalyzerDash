@@ -147,3 +147,18 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
     background-color: black;
     box-shadow: var(--hard-chocolate);
 }
+
+#overview_pies{
+    z-index: 1;
+    position: absolute;
+    bottom: 10px;
+}
+
+/* Swiper Cards are slow in FireFox, below makes some what better like 20% but there's an issue, TODO: to resolve this issue*/
+.swiper-wrapper,
+.swiper-slide{
+   -moz-transform-style: flat;
+   -webkit-transform-style: flat;
+   -ms-transform-style: flat;
+   transform-style: flat;
+}

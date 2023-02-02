@@ -29,9 +29,7 @@ function failedToAskMALAPI(){
 }
 
 function refreshTab(_, label_id, soft_refresh){
-    enable_swiper_for_view_dashboard(soft_refresh);
-    animateCounters(label_id?.index);
-    formatTimers();
+    enable_swiper_for_view_dashboard(soft_refresh); animateCounters(label_id?.index); formatTimers();
     return say_no(1)[0];
 }
 
@@ -458,16 +456,8 @@ const swiper_options = {
 function enable_swiper_for_view_dashboard(soft_refresh){
     document.querySelectorAll(".swiper").forEach(
         function(element){
-            if(!element.swiper){
-                new Swiper(element, swiper_options[element.id])
-                return 
-            }
-            if(soft_refresh){
-                element.swiper.update()
-                return;
-            }
-
-            element.swiper.destroy(true); // if in case new data is added
+            if(element.swiper && soft_refresh){ element.swiper.update(); return ;}
+            if(element.swiper) element.swiper.destroy(true); // if in case new data is added
             new Swiper(element, swiper_options[element.id]);
         }
     );

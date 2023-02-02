@@ -81,7 +81,7 @@ class ViewDashboard:
                 function_name="plotForOverviewTab",
                 namespace="MLAPlots"
             ),
-            Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "id"),
+            Output(view_dashboard.pies_in_overview, "children"),
             Input(dict(type=prefix, index=view_dashboard.tab_names[0]), "children"),
             State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[0]), "data")
         )
@@ -225,12 +225,10 @@ class ViewDashboard:
             style=dict(gap=gap, justifyContent="center")
         )
 
-        pies = html.Article(dmc.Tabs(
-            dmc.TabsList(
+        pies = dmc.Skeleton(dmc.Tabs([dmc.TabsList(
                 [dmc.Tab("Rating", value="Rating"), dmc.Tab("Media Type", value="Media Type")]
-            ), color="orange", orientation="vertical", id=view_dashboard.pies_in_overview, variant="pills",
-            value="Rating"
-        ), id=view_dashboard.pies, className=graph_class)
+            ), dmc.TabsPanel(value="Rating"), dmc.TabsPanel(value="Media Type")], color="orange", orientation="vertical", id=view_dashboard.pies_in_overview,
+            value="Rating"), id=view_dashboard.pies, className=graph_class, visible=False)
 
         fourth_row = expanding_row(
             html.Article(id=view_dashboard.ep_dist, className=graph_class),

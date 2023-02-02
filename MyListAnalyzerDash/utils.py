@@ -110,9 +110,9 @@ def studio_link(id_):
 
 
 def basic_swiper_structure(id_, *slides, class_name=""):
-    return html.Div(
+    return dmc.Skeleton(
         html.Div(slides, className=f"{class_name} swiper-wrapper"),
-        className="swiper", id=id_
+        className="swiper", id=id_, visible=False
     )
 
 
