@@ -1,12 +1,11 @@
 import logging
-import logging
 import typing
 import dash_mantine_components as dmc
 from dash import html
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
-from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper, status_colors
+from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper, list_status_color
 from MyListAnalyzerDash.utils import ellipsis_part, anime_link
 
 
@@ -177,18 +176,26 @@ def relative_color(value, full):
     return "green.9" if relative > 0.89 else "teal.5" if relative > 0.85 else "lime.3" if relative > 0.75 else "yellow" if relative <= .69 else "orange.6" if relative <= 5 else "red.9"
 
 
-def progress_bar_from_status(watched, total, status, watched_color="green", animate=False, *other_sections, label=''):
+def progress_bar_from_status(watched, total, status, extra):
+    progressed = ((watched / total) * 1e2) if total and total > 0 else 100
+    common = [dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}"), *extra]
     value = dict(
-        value=((watched / total) * 1e2) if total and total > 0 else 100,
-        color=watched_color,
-        tooltip=[dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}")],
-        label=label if label else watched
+        value=progressed,
+        color=list_status_color[status].value,
+        tooltip=common,
+        label=f"{watched}"
     )
+    left = dict(
+        value=100 - progressed, color="gray",
+        tooltip=common,
+        label=f"{(total - watched) if total else 'NA'}"
+    )
+
     return dmc.Progress(
         sections=[
             value,
-            *other_sections
-        ], animate=animate, size="md", style=dict(minHeight="8px")
+            left
+        ], animate=status == "Watching", size="md", style=dict(minHeight="8px")
     )
 
 
@@ -212,7 +219,7 @@ def currently_airing_card(
             spacing=.5, align="flexStart", position="left", no_wrap=True
         ) for cell in cells),
         progress_bar_from_status(
-            watched, total, status, getattr(status_colors, status), animate=status == "watching"
+            watched, total, status, list_status_color[status].value
         ), no_wrap=True
     )
 
@@ -231,12 +238,14 @@ def currently_airing_card(
         style=dict(alignItems="center", flexWrap="nowrap"),
     )
 
-    return expanding_layout(
-        expanding_row(
-            dmc.Image(src=img_url, height=210, fit="cover", width=90),
-            rows, style=dict(gap="10px")
-        ),
-        footer, class_name="swiper-slide"
+    return dmc.HoverCard(
+        (dmc.HoverCardTarget(expanding_layout(
+            expanding_row(
+                dmc.Image(src=img_url, height=210, fit="cover", width=90),
+                rows, style=dict(gap="10px")
+            ), footer
+        )), dmc.HoverCardDropdown(dmc.Text(title))), withArrow=True, withinPortal=True, className="swiper-slide",
+        position="left"
     ), status
 
 
@@ -269,8 +278,8 @@ def number_card_format_3(
             *badges, style=dict(alignItems="center")
         ),
         progress_bar_from_status(
-            up_until, total, status, getattr(recent_status_color, status),
-            label=difference
+            up_until, total, status,
+            dmc.Text(f"{'+' if difference > 0 else ''}{difference} Eps")
         ),
         special_divider(special_label, special_color),
         class_name=f"{class_name} recent_anime", no_wrap=True, spacing="xs"

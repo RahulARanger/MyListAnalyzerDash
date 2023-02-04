@@ -6,25 +6,23 @@
 
 .number-card{
     width: calc(1.5vw + 96px);
+    padding: 13px;
     height: 45px;
-    max-width: 200px;
 }
 
-#time_spent{width: 196px}
-#time_spent .swiper-slide{width: 82%; margin: auto;}
-
-.number-card{
-    padding: 13px;
+.number-card, #time_spent{
+    margin: 0.4%;
+    max-width: 225px;
     flex-flow: column nowrap !important;
     justify-content: flex-start !important;
-    
     background-color: transparent;
     flex-grow: 1;
-    margin: 0.4%;
     align-items: center;
     align-content: center;
 }
 
+#time_spent{width: calc(10vw + 100px);}
+#time_spent .swiper-slide{width: 80%; height: 45px;}
 
 .number-card-label{
     font-size: 0.69rem;
@@ -59,7 +57,7 @@ article.expanding-row{
 }
 
 #ep_dist_overview_mla, #pie_dist_overview_mla{
-    width: calc(169px + 1.75vw);
+    width: calc(270px + .69vw);
     box-sizing: border-box;
     height: 260px;
     min-height: 180px;
@@ -69,7 +67,7 @@ article.expanding-row{
 #pie_dist_overview_mla {flex-grow: .5;}
 #ep_dist_overview_mla{flex-grow: 1;}
 
-#special_belt{padding: 6px; height: 135px; width: calc(100vw - 40px);}
+#special_belt_for_recent_animes, #special_belt{padding: 6px; height: 135px; width: calc(100vw - 40px);}
 
 .anime_card, .Overview-graphs, .number-card, .recent_anime, .Recently-graphs {
   border: 1px solid rgba(150, 150, 150, 0.2);
@@ -106,37 +104,12 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
     writing-mode: vertical-rl;
 }
 
-#quick-update-history{
-    width: calc(200px + 2.5vw);
-    height: 280px;
-    flex-grow: 1;
-}
-
-#daily-weightage{
-    height: 280px;
-    flex-grow: 1;
-    width: calc(200px + 2vw);
-    min-width: 300px;
-}
-
-#weekly-progress-recently-view{
-    width: calc(150px + 30vw);
-    height: 208px;
-    flex-grow: 1;
-}
-
-#special_belt_for_recent_animes{
-    height: 140px;
-    width: calc(150px + 30vw);
-    flex-grow: 1.5;
-    padding: 10px;
-}
 
 .recent_anime{padding: 6px; flex-direction: column !important;} /*don't remove flex-direction someone is making it row*/
 
 .special-thing{
     position: absolute;
-    bottom: 19px;
+    bottom: 15px;
     right: 9px;
     transition: var(--standard-transition);
     padding: 2px;
@@ -162,3 +135,4 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
    -ms-transform-style: flat;
    transform-style: flat;
 }
+

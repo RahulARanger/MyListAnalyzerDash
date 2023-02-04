@@ -442,11 +442,11 @@ const swiper_options = {
         breakpoints: {
             3e2: {slidesPerView: 1},
             430: {slidesPerView: 1.25},
-            5e2: {slidesPerView: 1.5},
-            720: {slidesPerView: 2.5},
-            820: {slidesPerView: 1.2},
-            1e3: {slidesPerView: 1.5},
-            12e2: {slidesPerView: 2}
+            5.25e2: {slidesPerView: 1.5},
+            720: {slidesPerView: 2},
+            860: {slidesPerView: 2.5},
+            1e3: {slidesPerView: 3},
+            12e2: {slidesPerView: 3.5}
         }
     }
 }
@@ -458,6 +458,10 @@ function enable_swiper_for_view_dashboard(soft_refresh){
         function(element){
             if(element.swiper && soft_refresh){ element.swiper.update(); return ;}
             if(element.swiper) element.swiper.destroy(true); // if in case new data is added
+            element.querySelectorAll("img").forEach((element) => {
+                element.loading = true;
+                if(!element.nextElementSibling) element.insertAdjacentElement("afterbegin", document.createElement("div", {className: "swiper-lazy-preloader"}))
+            });
             new Swiper(element, swiper_options[element.id]);
         }
     );

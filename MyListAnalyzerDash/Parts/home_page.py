@@ -6,7 +6,7 @@ from MyListAnalyzerDash.Components.malCreds import MalCredsModal
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_scroll
 from MyListAnalyzerDash.Components.buttons import button_with_icon
 from MyListAnalyzerDash.Components.notifications import provider
-from MyListAnalyzerDash.mappings.enums import main_app, home_page, mal_creds_modal
+from MyListAnalyzerDash.mappings.enums import AppEnum, HomeEnum, mal_creds_modal
 
 
 class HomePage:
@@ -60,11 +60,11 @@ class HomePage:
     def layout(self):
         return dmc.LoadingOverlay(
             children=self.inside_children(),
-            className="home", loaderProps=main_app.loadingProps)
+            className="home", loaderProps=AppEnum.loadingProps.value)
 
     def login_things(self):
         return expanding_layout(
-            dmc.Text(home_page.greet, size="xs"),
+            dmc.Text(HomeEnum.greet, size="xs"),
             button_with_icon(
                 "MyAnimeList", id_=mal_creds_modal.triggerId, image_src=mal_creds_modal.logo,
                 size="sm", style=dict(maxWidth="200px")), align="center", position="flexStart"

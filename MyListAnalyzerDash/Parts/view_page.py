@@ -4,7 +4,7 @@ from MyListAnalyzerDash.Components.header import ViewHeaderComponent
 from MyListAnalyzerDash.Components.notifications import provider
 from MyListAnalyzerDash.Parts.view_dashboard import ViewDashboard
 from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
-from MyListAnalyzerDash.mappings.enums import main_app, view_dashboard, view_header, mla_stores
+from MyListAnalyzerDash.mappings.enums import AppEnum, view_dashboard, ViewHeaderEnum, mla_stores
 from MyListAnalyzerDash.utils import starry_bg
 
 
@@ -29,28 +29,28 @@ class ViewPage:
                 Output(view_dashboard.locationChange, "href"),
                 Output(view_dashboard.page_settings, "data"),
                 Output(modal_id, "opened"),
-                Output(view_header.show_name, "children"),
-                Output(view_header.show_name, "href"),
-                Output(view_header.askName, "error"),
+                Output(ViewHeaderEnum.show_name, "children"),
+                Output(ViewHeaderEnum.show_name, "href"),
+                Output(ViewHeaderEnum.askName, "error"),
                 Output(mla_stores.tempDataStore, "data")
             ],
             [
-                Input(view_header.giveName, "n_clicks"),
-                Input(view_header.askName, "debounce"),
+                Input(ViewHeaderEnum.giveName, "n_clicks"),
+                Input(ViewHeaderEnum.askName, "debounce"),
                 Input(id_, "n_clicks")
             ],
             [
-                State(view_header.askName, "value"),
+                State(ViewHeaderEnum.askName, "value"),
                 State(modal_id, "opened"),
                 State(view_dashboard.page_settings, "data"),
                 State(view_dashboard.locationChange, "href"),
                 State("pipe", "data"),
-                State(view_header.is_it_u, "checked"),
-                State(view_header.ask_for_nsfw, "checked"),
-                State(view_header.giveName, "id"),
-                State(view_header.askName, "id"),
-                State(view_header.ask_for_nsfw, "id"),
-                State(view_header.is_it_u, "id"),
+                State(ViewHeaderEnum.is_it_u, "checked"),
+                State(ViewHeaderEnum.ask_for_nsfw, "checked"),
+                State(ViewHeaderEnum.giveName, "id"),
+                State(ViewHeaderEnum.askName, "id"),
+                State(ViewHeaderEnum.ask_for_nsfw, "id"),
+                State(ViewHeaderEnum.is_it_u, "id"),
             ]
         )
         self.dashboard.connect_callbacks()
@@ -71,6 +71,6 @@ class ViewPage:
                 dmc.ScrollArea(
                     self.dashboard.layout(page_settings),
                     type="auto", className="scroll-board"),
-            ], loaderProps=main_app.loadingProps, p=0, className="home"
+            ], loaderProps=AppEnum.loadingProps.value, p=0, className="home"
             ), html.Section([*self.header.modals(page_settings)], id="modals"),
             provider(view_dashboard.userJobDetailsNote)]

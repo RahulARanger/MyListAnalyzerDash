@@ -3,10 +3,11 @@ import dash_mantine_components as dmc
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
     html
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, card_format_4, \
-    relative_color, special_anime_card, number_comp, currently_airing_card, number_card_format_3
+    relative_color, special_anime_card, number_comp, currently_airing_card, number_card_format_3,\
+    progress_bar_from_status
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
-from MyListAnalyzerDash.mappings.enums import view_dashboard, status_colors, status_labels, mla_stores, overview_cards
+from MyListAnalyzerDash.mappings.enums import view_dashboard, list_status_color, mla_stores, overview_cards
 from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure, anime_link
 
 
@@ -178,7 +179,7 @@ class ViewDashboard:
             belt = self.special_anime_belt_in_overview(data, tab_index, user_name)
             time_spent = data.get("time_spent", "Not Known")
             second_row = status_dist(data, page)
-            status_for_airing_ones_in_list = self.currently_airing_details(data, user_name, tab_index)
+            status_for_airing_ones_in_list = self.currently_airing_details(data, user_name)
 
         except Exception as error:
             return error_card("Failed to plot results: %s, Might be server returned invalid results" % (repr(error),))
@@ -188,12 +189,9 @@ class ViewDashboard:
             *(number_card_format_1(
                 number=spent[0], label=spent[1], color=view_dashboard.time_spent_color, class_name=page,
                 main_class="swiper-slide", is_percent=False
-            )
-                for spent in time_spent)
-        )
+            ) for spent in time_spent))
 
         cards.insert(1, spent_container)
-
         gap = "3px"
 
         first_row = expanding_row(
@@ -225,9 +223,9 @@ class ViewDashboard:
             style=dict(gap=gap, justifyContent="center")
         )
 
-        pies = dmc.Skeleton(dmc.Tabs([dmc.TabsList(
+        pies = dmc.Skeleton(dmc.Tabs(dmc.TabsList(
                 [dmc.Tab("Rating", value="Rating"), dmc.Tab("Media Type", value="Media Type")]
-            ), dmc.TabsPanel(value="Rating"), dmc.TabsPanel(value="Media Type")], color="orange", orientation="vertical", id=view_dashboard.pies_in_overview,
+            ), color="orange", className="save", orientation="vertical", id=view_dashboard.pies_in_overview,
             value="Rating"), id=view_dashboard.pies, className=graph_class, visible=False)
 
         fourth_row = expanding_row(
@@ -243,7 +241,7 @@ class ViewDashboard:
                 position="flexStart", no_wrap=True
             ),
             status_for_airing_ones_in_list,
-            style=dict(alignItems="center", gap=gap, justifyContent="center")
+            style=dict(alignItems="center", gap=gap)
         )
 
         return [
@@ -263,9 +261,9 @@ class ViewDashboard:
         user_name = page_settings.get("user_name", "")
 
         charts = [
+            "weekly-progress-recently-view",
             "daily-weightage",
             "quick-update-history",
-            "weekly-progress-recently-view",
         ]
 
         row_1 = expanding_row(
@@ -277,11 +275,9 @@ class ViewDashboard:
         race = html.Div(id=charts[2], className=graph_class)
 
         return expanding_layout(
+            special_results_for_recent_animes(data.get("special_results"), user_name),
             row_1,
-            expanding_row(
-                race, special_results_for_recent_animes(data.get("special_results"), user_name),
-                style=dict(alignItems="center")
-            ),
+            race,
             spacing="sm"
         )
 
@@ -313,20 +309,8 @@ class ViewDashboard:
 
             fav = number_comp(fav, False, "light", class_name, size="xs")
 
-            progress = dmc.Progress(
-                animate=status == "watching",
-                striped=True,
-                sections=[
-                    dict(
-                        value=100 if not total else ((watched / total) * 100),
-                        color=getattr(status_colors, status),
-                        tooltip=expanding_layout(
-                            dmc.Text(f"Time Spent: {spent} hr{'s' if int(spent) > 1 else ''}"),
-                            dmc.Text(f"Status: {getattr(status_labels, status)}"),
-                            dmc.Text(f"Progress: {watched} / {total if total else 'NA'}")
-                        )
-                    )
-                ]
+            progress = progress_bar_from_status(
+                watched, total, status, extra=f"Time Spent: {spent} hr{'s' if int(spent) > 1 else ''}"
             )
 
             cards.append(
@@ -345,9 +329,7 @@ class ViewDashboard:
             "special_belt", *cards
         )
 
-    def currently_airing_details(self, data, user_name, index):
-        prefix, class_name = self.tab_details(index)
-
+    def currently_airing_details(self, data, user_name):
         currently_airing = json.loads(data.get("currently_airing_animes", "{}"))
 
         if not currently_airing.get("data", ""):
@@ -369,20 +351,9 @@ class ViewDashboard:
 
         inside_hover = expanding_layout(
             dmc.Divider(color="orange", size="lg", label="Currently Airing Animes ~ Recent 10", labelPosition="center"),
-            expanding_row(
-                *(
-                    set_tooltip(
-                        dmc.Button(
-                            "".join([__[0].upper() for __ in _.split("_")]), color=getattr(status_colors, _), size="xs",
-                            compact=True, id=dict(
-                                index=status_map[_], section=view_dashboard.clickToGoCards
-                            )),
-                        label=_
-                    )
-                    for _ in status_map
-                )
-            )
-        )
+            expanding_row(*(set_tooltip(dmc.Button(label, color=list_status_color[label].value, size="xs",
+                            compact=True, id=dict(index=status_map[label], section=view_dashboard.clickToGoCards)),
+                label=label) for label in status_map)))
 
         return dmc.HoverCard(
             [
@@ -413,9 +384,9 @@ def status_dist(data, page):
 
     return expanding_row(*(
         number_card_format_1(
-            number=number, is_percent=True, label=getattr(status_labels, index).capitalize(),
+            number=number, is_percent=True, label=index,
             class_name=page, another=exact,
-            color=getattr(status_colors, index)
+            color=list_status_color[index].value
         ) for index, (exact, number) in zip(row_2.get("index", []), row_2.get("data"))
     ), style=dict(gap="3px", justifyContent="center"))
 

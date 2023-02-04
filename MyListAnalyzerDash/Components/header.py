@@ -8,7 +8,7 @@ from MyListAnalyzerDash.Components.collection import search_user_modal
 from MyListAnalyzerDash.Components.layout import expanding_layout
 from MyListAnalyzerDash.Components.table import MakeTable
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
-from MyListAnalyzerDash.mappings.enums import view_header, header_menu_items, mla_stores, recent_anime_list
+from MyListAnalyzerDash.mappings.enums import ViewHeaderEnum, header_menu_items, mla_stores, recent_anime_list
 
 
 class CommonHeaderComponent:
@@ -38,13 +38,13 @@ class ViewHeaderComponent(CommonHeaderComponent):
     def __init__(self):
         super().__init__()
 
-        self.queries = view_header
+        self.queries = ViewHeaderEnum
 
     def handle_callbacks(self):
-        make_modal_alive(view_header.stampsModal)
+        make_modal_alive(ViewHeaderEnum.stampsModal)
         modal_first = search_user_modal(add=True)
         [timestamp_from_store(
-            _, Input(get_modal_id(view_header.stampsModal), "opened"), add=True
+            _, Input(get_modal_id(ViewHeaderEnum.stampsModal), "opened"), add=True
         ) for _ in (mla_stores.anime_list, mla_stores.recent_anime_list)]
 
         return modal_first
@@ -68,18 +68,11 @@ class ViewHeaderComponent(CommonHeaderComponent):
         ]
 
         return dmc.Badge(
-            dmc.Anchor(user_name, id=view_header.show_name, target="_blank", href="", color="orange"), color="orange"), dmc.Menu(
-            [dmc.MenuTarget(
-                icon_butt_img(
-                    "https://api.iconify.design/line-md/close-to-menu-transition.svg?color=darkorange",
-                    "_sample"
-                )
-            ),
-                dmc.MenuDropdown(menu_items)], withArrow=True
-        ),  icon_butt_img(
-                    view_header.timeStamp,
-                    view_header.stampsModal
-                )
+            dmc.Anchor(user_name, id=ViewHeaderEnum.show_name, target="_blank", href="", color="orange"), color="orange"), dmc.Menu(
+            (dmc.MenuTarget(icon_butt_img(
+                    "https://api.iconify.design/line-md/close-to-menu-transition.svg?color=darkorange", "_sample")
+            ), dmc.MenuDropdown(menu_items)), withArrow=True),\
+            icon_butt_img(ViewHeaderEnum.timeStamp, ViewHeaderEnum.stampsModal)
 
 
 def header_link(title, short, url, version=__version__):
@@ -127,7 +120,7 @@ def timestamps_modal():
         draft.make_row()
 
     return get_modal(
-        view_header.stampsModal,
+        ViewHeaderEnum.stampsModal,
         "Time Stamps",
         draft(),
         size="xs", opacity=1, blur=0, ease_close=False

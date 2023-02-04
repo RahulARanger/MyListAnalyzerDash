@@ -1,24 +1,26 @@
 from collections import namedtuple
+from enum import Enum
 
-main_app = namedtuple("MainApplication", [
-    "loadApp", "loadingProps", "about", "repo", "body", "me"
-])(
-    "__app_load", {"variant": "bars", "color": "orange", "size": "xl"},
-    "_about_mal-r", "https://github.com/RahulARanger/MyListAnalyzer", "dashboard-body", "logged-in-user"
-)
 
-home_page = namedtuple("HomePage", [
-    "url", "name", "description", "github_logo", "greet", "apps", "home"
-])(
-    "/MLA/", "Home", "Home Page of the MyListAnalyzer, please check the Test Cases tab",
-    "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", "Allow MyListAnalyzer to access your,",
-    [
-        ["View Dashboard", "/MLA/view/", "Dashboard for MyAnimeList Users"],
-        ["View - Recently Dashboard", "/MLA/view-recently/", "Dashboard for the Recent Added Animes for Users"]
-    ], "mal-home"
-)
+class AppEnum(Enum):
+    loadingProps = dict(variant="bars", color="orange", size="xl")
+    repo = "https://github.com/RahulARanger/MyListAnalyzer"
 
-view_header = namedtuple(
+
+class HomeEnum(str, Enum):
+    url = "/MLA/"
+    name = "Home"
+    description = "Welcome Page for the MyListAnalyzer"
+    greet = "Allow MyListAnalyzer to access your,"
+
+
+# class ViewHeaderEnum(str, Enum):
+#     settings = "view-settings"
+#     askName = "ask-user-name"
+#     getName = "get-user-name"
+#     genres
+
+ViewHeaderEnum = namedtuple(
     "ViewHeader",
     [
         "settings", "askName", "getName", "requestDetails",
@@ -104,15 +106,14 @@ css_classes = namedtuple(
     "need_to_time_format"
 )
 
-_status_map = namedtuple(
+list_status_color = Enum(
     "Status", [
-        "watching", "plan_to_watch", "completed", "on_hold", "dropped"
+        ("Watching", "blue"), ("Planned", "indigo"), ("Completed", "green"),
+        ("On Hold", "yellow"),
+        ("Dropped", "red")
     ]
 )
 
-status_colors = _status_map("blue", "indigo", "green", "yellow", "red")
-status_light_colors = _status_map("#2B4F60", "#FF8243", "#FFCB42", "#FFE300", "#E64848")
-status_labels = _status_map("Watching", "Planned to Watch", "Watched", "Paused", "Stopped")
 recent_status = namedtuple(
     "Status", [
         "Watching", "Completed", "Hold", "Dropped"
@@ -148,13 +149,11 @@ mla_stores = namedtuple(
     ]
 )("user-anime-list-mla-view", "user-recent-anime-list-mla-view", "temp-user-anime-list")
 
-
 recent_anime_list = header_menu_item(
     "_", "Recent Anime List",
     header_menu_items[2].image_src,
     "User's list of Animes that were updated recently"
 )
-
 
 helper = namedtuple(
     "HelperIcon", [
@@ -166,7 +165,6 @@ helper = namedtuple(
     "https://api.iconify.design/ic/round-info.svg?color=lightblue"
 )
 
-
 special_card_for_anime = namedtuple(
     "SpecialAnimeCard",
     [
@@ -174,11 +172,9 @@ special_card_for_anime = namedtuple(
     ], defaults=dict(color="yellow")
 )
 
-overview_cards = [
-    special_card_for_anime("pop", "Popular Anime", "yellow"),
-    special_card_for_anime("recent", "Most Recently Updated", "orange"),
-    special_card_for_anime("top", "Top Scoring Anime", "gray"),
-    special_card_for_anime("oldest", "Oldest Anime", "grape"),
-    special_card_for_anime("recently_completed_movie", "Recent Movie Completed", "indigo"),
+overview_cards = special_card_for_anime("pop", "Popular Anime", "yellow"), \
+    special_card_for_anime("recent", "Most Recently Updated", "orange"), \
+    special_card_for_anime("top", "Top Scoring Anime", "gray"), \
+    special_card_for_anime("oldest", "Oldest Anime", "grape"), \
+    special_card_for_anime("recently_completed_movie", "Recent Movie Completed", "indigo"), \
     special_card_for_anime("longest_spent", "Longest Time Spent", "blue")
-]

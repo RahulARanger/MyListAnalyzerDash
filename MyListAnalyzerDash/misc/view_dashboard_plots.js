@@ -43,7 +43,7 @@ class ConstructEChartOption{
     return this;
   }
   setTooltip(triggeredFor, options){
-    this.raw.tooltip = {trigger: triggeredFor, ...(options || {})}  // trigger: item / axis
+    this.raw.tooltip = {trigger: triggeredFor, backgroundColor: "#222222", textStyle: {color: "#fff"}, ...(options || {})}  // trigger: item / axis
     return this;
   }
   visualMap(leftText, rightText, min, max){
@@ -95,8 +95,8 @@ class ConstructEChartOption{
 
 // for creating Echart
 function createEChart(id, on) {
-  if(view_e_charts_mla[id]) return view_e_charts_mla[id];
   const element = document.getElementById(id);
+  if(view_e_charts_mla[id]) disposePlot(view_e_charts_mla[id], element);
   const chart = echarts.init(element, "essos", { renderer: on || 'svg' });
   view_e_charts_mla[id] = chart;
   new ResizeObserver(() => chart.resize()).observe(element);
@@ -104,10 +104,10 @@ function createEChart(id, on) {
 }
 
 // for disposing plots
-function disposePlots(...plots) {
-  plots.forEach((plot) => {
-    view_e_charts_mla[plot]?.dispose();
-  });
+function disposePlot(plot, element) {
+  const save_them = Array(...element.querySelectorAll(".save")).map((e) => {element.removeChild(e); return e;});
+  plot?.dispose();
+  save_them.forEach((e) => element.appendChild(e));
 }
 
 
@@ -132,10 +132,10 @@ function ep_range_dist_plot(data) {
   const values = Object.values(data);
   const keys = Object.keys(data);
   return (new ConstructEChartOption()).initSeries().barSeries(values).setTitle("Range of Anime Episodes", 16, true)
-  .setAxis(true, "category", "Episode Range", false, {data: keys})
+  .setAxis(true, "category", "Episode Range", false, {data: keys, nameLocation: "center", nameGap: 23})
   .setAxis(false, "value", "Freq.", false).setTooltip("axis", {axisPointer: {type: "shadow"}})
   .visualMap("Mostly Seen", "Least Ones", Math.min(...values), Math.max(...values))
-  .toolBox(false, false, true, true, false).raw;
+  .setGrid(false, {left: 40}).toolBox(false, false, true, true, false).raw;
 }
 
 
@@ -143,8 +143,8 @@ function plotPiesDist(data) {
   const ratings = Object.keys(data);
   const meta_x = ratings.map(function (label) { return { value: data[label], name: label }; });
   const opt = (new ConstructEChartOption()).initSeries().pieSeries(meta_x, "Rating")
-  .setTitle("Age Rating Over Animes", 16, true, {top: "90%"}).setTooltip("item", {formatter: "{a} ({c} | {d}%)<br/>{b}"})
-  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}, "vertical").raw;
+  .setTitle("Age Rating Over Animes", 16, true).setTooltip("item", {formatter: "{a} ({c} | {d}%)<br/>{b}"})
+  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}).raw;
   opt.meta_x = meta_x; return opt;
 }
 
@@ -155,14 +155,13 @@ function plotForOverviewTab(_, data, page_settings) {
 
   const ep_range_plot = "ep_dist_overview_mla";
   // DESTROYING PLOTS
-  // disposePlots(ep_range_plot, pies_for_dist);
   // INIT PLOTS
   const ep_range = createEChart(ep_range_plot);
   ep_range.setOption(ep_range_dist_plot(JSON.parse(data?.ep_range) || {}));
 
   const dist_pie_plot = createEChart(pies_for_dist);
   const media_dist = JSON.parse(data?.media_dist);
-  dist_pie_plot.setOption({meta: Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}}), ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); dist_pie_plot.setOption({legend: {top: 45, right: 0}});
+  dist_pie_plot.setOption({meta: Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}}), ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); dist_pie_plot.setOption({legend: {bottom: 2, left: 130}});
   return no;
 }
 
