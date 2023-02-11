@@ -5,7 +5,7 @@ from dash import html
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
-from MyListAnalyzerDash.mappings.enums import css_classes, recent_status_color, helper, list_status_color
+from MyListAnalyzerDash.mappings.enums import css_classes, Icons, list_status_color
 from MyListAnalyzerDash.utils import ellipsis_part, anime_link
 
 
@@ -136,7 +136,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
                        *parameters, class_name=""):
     info = floating_tooltip(
         dmc.ActionIcon(
-            dmc.Image(src=helper.info), size="xs"
+            dmc.Image(src=Icons.info), size="xs"
         ),
         label=_info,
         multiline=True, width=190
@@ -176,7 +176,7 @@ def relative_color(value, full):
     return "green.9" if relative > 0.89 else "teal.5" if relative > 0.85 else "lime.3" if relative > 0.75 else "yellow" if relative <= .69 else "orange.6" if relative <= 5 else "red.9"
 
 
-def progress_bar_from_status(watched, total, status, extra):
+def progress_bar_from_status(watched, total, status, *extra):
     progressed = ((watched / total) * 1e2) if total and total > 0 else 100
     common = [dmc.Text(f"Status: {status}"), dmc.Text(f"Watched: {watched}"), dmc.Text(f"Total: {total}"), *extra]
     value = dict(
@@ -218,9 +218,7 @@ def currently_airing_card(
             dmc.Text(cell[1], size="xs", weight="bold"),
             spacing=.5, align="flexStart", position="left", no_wrap=True
         ) for cell in cells),
-        progress_bar_from_status(
-            watched, total, status, list_status_color[status].value
-        ), no_wrap=True
+        progress_bar_from_status(watched, total, status), no_wrap=True
     )
 
     footer = expanding_row(
@@ -265,7 +263,7 @@ def number_card_format_3(
         size="xs"
     ), *extra]
 
-    set_tooltip(badges.append(dmc.Badge(status, color=getattr(recent_status_color, status), size="sm")), label="Status") if status_badge else ...
+    set_tooltip(badges.append(dmc.Badge(status, color=list_status_color[status].value, size="sm")), label="Status") if status_badge else ...
 
     return expanding_layout(
         set_tooltip(

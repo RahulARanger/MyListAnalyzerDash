@@ -54,7 +54,7 @@ view_dashboard = namedtuple(
         "row_1_colors", "tab_names",
         "no_data", "loadingNote", "time_spent_color", "process_again",
         "currently_airing", "clickToGoCards",
-        "pies", "ep_dist", "pies_in_overview"
+        "pies_in_overview", "ep_dist", "plot_switch", "know_more"
     ]
 )(
     "user-view-location", "user-view-ask",
@@ -65,8 +65,13 @@ view_dashboard = namedtuple(
     "loading-user-details-view",
     "indigo.5", "run-process-job-again-view-mla",
     "currently_airing_cards", "currently-airing-cards-swiped-to",
-    "pie_dist_overview_mla", "ep_dist_overview_mla", "overview_pies"
+    "pie_dist_overview_mla", "ep_dist_overview_mla", "user-view-plot-switch", "animes_on_day"
 )
+
+
+class RecentAnimeDashboard(str, Enum):
+    filterForDate = "filter-for-date-view"
+
 
 creds_modal = namedtuple(
     "CredsModal", [
@@ -114,13 +119,6 @@ list_status_color = Enum(
     ]
 )
 
-recent_status = namedtuple(
-    "Status", [
-        "Watching", "Completed", "Hold", "Dropped"
-    ])
-
-recent_status_color = recent_status("blue.6", "lime.6", "yellow.5", "red.6")
-
 header_menu_item = namedtuple("MenuItem", [
     "id", "title", "image_src", "desc"
 ])
@@ -154,16 +152,10 @@ recent_anime_list = header_menu_item(
     header_menu_items[2].image_src,
     "User's list of Animes that were updated recently"
 )
+class Icons(str, Enum):
+    redirect = "https://api.iconify.design/material-symbols/open-in-new.svg?color=dodgerblue"
+    info = "https://api.iconify.design/ic/round-info.svg?color=lightblue"
 
-helper = namedtuple(
-    "HelperIcon", [
-        "open",
-        "info"
-    ]
-)(
-    "https://api.iconify.design/material-symbols/open-in-new-sharp.svg?color=gray",
-    "https://api.iconify.design/ic/round-info.svg?color=lightblue"
-)
 
 special_card_for_anime = namedtuple(
     "SpecialAnimeCard",

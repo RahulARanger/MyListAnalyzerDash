@@ -2,12 +2,15 @@ import json
 import dash_mantine_components as dmc
 from dash import dcc, callback, Output, State, Input, MATCH, clientside_callback, ClientsideFunction, ALL, \
     html
+from MyListAnalyzerDash.Components.buttons import icon_butt_img
 from MyListAnalyzerDash.Components.cards import number_card_format_1, no_data, error_card, card_format_4, \
-    relative_color, special_anime_card, number_comp, currently_airing_card, number_card_format_3,\
+    relative_color, special_anime_card, number_comp, currently_airing_card, number_card_format_3, \
     progress_bar_from_status
 from MyListAnalyzerDash.Components.layout import expanding_row, expanding_layout
 from MyListAnalyzerDash.Components.tooltip import set_tooltip
-from MyListAnalyzerDash.mappings.enums import view_dashboard, list_status_color, mla_stores, overview_cards
+from MyListAnalyzerDash.Components.ModalManager import get_modal_id, make_modal_alive
+from MyListAnalyzerDash.mappings.enums import view_dashboard, list_status_color, mla_stores, overview_cards, Icons, \
+    RecentAnimeDashboard
 from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure, anime_link
 
 
@@ -92,7 +95,11 @@ class ViewDashboard:
                 function_name="plotForRecentlyTab",
                 namespace="MLAPlots"
             ),
-            Output(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "id"),
+            [
+                Output(RecentAnimeDashboard.filterForDate, "minDate"),
+                Output(RecentAnimeDashboard.filterForDate, "maxDate"),
+                Output(RecentAnimeDashboard.filterForDate, "value"),
+            ],
             Input(dict(type=prefix, index=view_dashboard.tab_names[1]), "children"),
             [
                 State(dict(type=view_dashboard.tabs, index=view_dashboard.tab_names[1]), "data"),
@@ -116,11 +123,25 @@ class ViewDashboard:
 
         clientside_callback(
             ClientsideFunction(
-                function_name="changeThePiesInOverviewTab",
+                function_name="switchThePlots",
                 namespace="MLAPlots"
             ),
-            Output(view_dashboard.pies, "id"),
-            Input(view_dashboard.pies_in_overview, "value")
+            Output(dict(group=view_dashboard.plot_switch, plot=MATCH), "id"),
+            Input(dict(group=view_dashboard.plot_switch, plot=MATCH), "value"),
+            State(dict(group=view_dashboard.plot_switch, plot=MATCH), "id"),
+        )
+        make_modal_alive(view_dashboard.know_more)
+
+        clientside_callback(
+            ClientsideFunction(
+                function_name="drawThePlot",
+                namespace="MLAPlots"
+            ),
+            Output(view_dashboard.know_more, "id"),
+            [
+                Input(get_modal_id(view_dashboard.know_more), "opened"),
+                Input(RecentAnimeDashboard.filterForDate, "value")
+            ], State(mla_stores.recent_anime_list, "data")
         )
 
     def layout(self, page_settings):
@@ -223,10 +244,12 @@ class ViewDashboard:
             style=dict(gap=gap, justifyContent="center")
         )
 
-        pies = dmc.Skeleton(dmc.Tabs(dmc.TabsList(
-                [dmc.Tab("Rating", value="Rating"), dmc.Tab("Media Type", value="Media Type")]
-            ), color="orange", className="save", orientation="vertical", id=view_dashboard.pies_in_overview,
-            value="Rating"), id=view_dashboard.pies, className=graph_class, visible=False)
+        pies = dmc.Skeleton(dmc.SegmentedControl(
+            data=[dict(label="Rating", value=0), dict(label="Media Type", value=1)],
+            value=0, orientation="vertical", className="save", color="orange",
+            style=dict(backgroundColor="transparent", position="absolute", bottom="10px"),
+            id=dict(group=view_dashboard.plot_switch, plot=view_dashboard.pies_in_overview)),
+            id=view_dashboard.pies_in_overview, className=graph_class, visible=False)
 
         fourth_row = expanding_row(
             html.Article(id=view_dashboard.ep_dist, className=graph_class),
@@ -263,22 +286,43 @@ class ViewDashboard:
         charts = [
             "weekly-progress-recently-view",
             "daily-weightage",
+            "when-did-they-watch",
             "quick-update-history",
         ]
 
+        past_14_days_to_all = dmc.SegmentedControl(
+            [dict(label="All", value=0), dict(label="Past 14 days", value=1)], color="orange",
+            style=dict(backgroundColor="transparent", position="absolute", right="1px"),
+            className="save", value=0, id=dict(group=view_dashboard.plot_switch, plot=charts[1])
+        )
+
+        know_more = set_tooltip(
+            icon_butt_img(
+                Icons.redirect, view_dashboard.know_more,
+                style=dict(backgroundColor="transparent", position="absolute", left="1px", zIndex=2)),
+            label="For more Info. on particular date", class_name="save"
+        )
+
         row_1 = expanding_row(
             html.Div(id=charts[0], className=graph_class),
-            html.Div(id=charts[1], className=graph_class),
+            html.Div([past_14_days_to_all, know_more], id=charts[1], className=graph_class),
             style=dict(gap="3px")
         )
 
-        race = html.Div(id=charts[2], className=graph_class)
+        race = dmc.Drawer(
+            html.Div(id=charts[-1]),
+            position="top", trapFocus=False, size="md", id=get_modal_id(view_dashboard.know_more),
+            title=dmc.DatePicker(
+                label="Quick History", id=RecentAnimeDashboard.filterForDate, className="save",
+                description="Select the date to see the progress made on that day", shadow="xl", size="sm",
+                style=dict(marginLeft="6px"))
+        )
+
+        when = html.Div(id=charts[2], className=graph_class)
 
         return expanding_layout(
             special_results_for_recent_animes(data.get("special_results"), user_name),
-            row_1,
-            race,
-            spacing="sm"
+            row_1, when, race, spacing="sm"
         )
 
     def special_anime_belt_in_overview(self, data, index, user_name):
@@ -310,7 +354,7 @@ class ViewDashboard:
             fav = number_comp(fav, False, "light", class_name, size="xs")
 
             progress = progress_bar_from_status(
-                watched, total, status, extra=f"Time Spent: {spent} hr{'s' if int(spent) > 1 else ''}"
+                watched, total, status, f"Time Spent: {spent} hr{'s' if int(spent) > 1 else ''}"
             )
 
             cards.append(
@@ -352,8 +396,9 @@ class ViewDashboard:
         inside_hover = expanding_layout(
             dmc.Divider(color="orange", size="lg", label="Currently Airing Animes ~ Recent 10", labelPosition="center"),
             expanding_row(*(set_tooltip(dmc.Button(label, color=list_status_color[label].value, size="xs",
-                            compact=True, id=dict(index=status_map[label], section=view_dashboard.clickToGoCards)),
-                label=label) for label in status_map)))
+                                                   compact=True, id=dict(index=status_map[label],
+                                                                         section=view_dashboard.clickToGoCards)),
+                                        label=label) for label in status_map)))
 
         return dmc.HoverCard(
             [

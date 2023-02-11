@@ -1,10 +1,10 @@
 import dash_mantine_components as dmc
 
 
-def set_tooltip(inside, label, pos="bottom", zIndex=1, color="dark"):
+def set_tooltip(inside, label, pos="bottom", zIndex=1, color="dark", class_name=None):
     return dmc.Tooltip(
         inside,
-        color=color, label=label, position=pos, zIndex=zIndex
+        color=color, label=label, position=pos, zIndex=zIndex, className=class_name
     )
 
 

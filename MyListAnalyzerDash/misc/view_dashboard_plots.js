@@ -1,6 +1,7 @@
 const view_e_charts_mla = {}; // be a good boy
 const pies_for_dist = "pie_dist_overview_mla";
-const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB", "Hold": "#FCE883"}
+const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB", "On Hold": "#FCE883"}
+const week_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // // HELPER FUNCTIONS
 
@@ -62,21 +63,25 @@ class ConstructEChartOption{
       data, type: 'bar', name, ...(options || {})
     }); return this;
   }
-  pieSeries(data, name, selectedMode, radius, center){
+  pieSeries(data, name, selectedMode, radius, center, options){
     this.raw.series.push({
-      type: 'pie',
-      radius: radius || '65%',
-      name,
-      center: center || ['50%', '50%'],
-      selectedMode: selectedMode || 'multiple',
-      data
+      type: 'pie', radius: radius || '65%', name,
+      center: center || ['50%', '50%'], selectedMode: selectedMode || 'multiple', data, ...(options || {})
     }); return this;
   }
   lineSeries(name, data, smooth, options){
     this.raw.series.push({type: "line", name, data, smooth, ...(options || {})}); return this;
   }
+  scatterSeries(data, name, ptExtendSize, options){
+    this.raw.series.push({name, type: 'scatter', data, symbolSize: function (dataItem) {return dataItem[1] * (ptExtendSize || 20);}, ...(options || {})}); return this; 
+  }
   setLegend(data, options, orient, x, type){
     this.raw.legend = { orient: orient || 'horizontal', x: x || 'left', data, type: type || "scroll", ...(options || {})}; return this;
+  }
+  picBarSeries(data, symbol, z, options){
+    this.raw.series.push(
+      {type: "pictorialBar", symbol, symbolRepeat: 'fixed', symbolMargin: '5%', symbolClip: true,  symbolSize: 20, data, z, ...(options || {})}
+    ); return this;
   }
   label(color, labelLineColor, labelLine){
     this.raw.label = {color: color || this.light};
@@ -90,9 +95,10 @@ class ConstructEChartOption{
   setGrid(containLabel, options){
     this.raw.grid = {containLabel, ...options}; return this;
   }
+  setDataSet(options){
+    this.raw.dataset = options; return this;
+  }
 }
-
-
 // for creating Echart
 function createEChart(id, on) {
   const element = document.getElementById(id);
@@ -102,15 +108,12 @@ function createEChart(id, on) {
   new ResizeObserver(() => chart.resize()).observe(element);
   return chart
 }
-
 // for disposing plots
 function disposePlot(plot, element) {
   const save_them = Array(...element.querySelectorAll(".save")).map((e) => {element.removeChild(e); return e;});
   plot?.dispose();
   save_them.forEach((e) => element.appendChild(e));
 }
-
-
 // common toolbox
 function generalToolBox() {
   return {
@@ -118,8 +121,6 @@ function generalToolBox() {
     feature: { mark: { show: true }, magicType: { show: true, type: ['line', 'bar'] }, restore: { show: true }, saveAsImage: { show: true } }
   }
 }
-
-
 function week_js_to_pandas(week_day, otherWay) {
   // pandas say 0 is Monday but for js it is sunday
   if (otherWay) return week_day === 6 ? 0 : (week_day + 1);
@@ -127,7 +128,6 @@ function week_js_to_pandas(week_day, otherWay) {
 }
 
 // // OVERVIEW TAB
-
 function ep_range_dist_plot(data) {
   const values = Object.values(data);
   const keys = Object.keys(data);
@@ -139,13 +139,13 @@ function ep_range_dist_plot(data) {
 }
 
 
-function plotPiesDist(data) {
-  const ratings = Object.keys(data);
-  const meta_x = ratings.map(function (label) { return { value: data[label], name: label }; });
-  const opt = (new ConstructEChartOption()).initSeries().pieSeries(meta_x, "Rating")
-  .setTitle("Age Rating Over Animes", 16, true).setTooltip("item", {formatter: "{a} ({c} | {d}%)<br/>{b}"})
+function plotPiesDist(dataset) {
+  const _ratings = dataset[0].source; const ratings = []; const _media = dataset[1].source;
+  dataset[0].source = Object.keys(_ratings).map((key) => {ratings.push(key); return {name: key, value: _ratings[key]}}),
+  dataset[1].source = Object.keys(_media).map((key) => {return {name: key, value: _media[key]}})
+  return (new ConstructEChartOption()).initSeries().setDataSet(dataset).pieSeries(null, "Rating", null, null, null, {datasetIndex: 0})
+  .setTitle ("Age Rating Over Animes", 16, true).setTooltip("item", {formatter: (params) =>  `<b>${params.seriesName}:</b> ${params.value.name}<br>${params.percent}% | ${params.value.value}`})
   .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}).raw;
-  opt.meta_x = meta_x; return opt;
 }
 
 
@@ -160,8 +160,11 @@ function plotForOverviewTab(_, data, page_settings) {
   ep_range.setOption(ep_range_dist_plot(JSON.parse(data?.ep_range) || {}));
 
   const dist_pie_plot = createEChart(pies_for_dist);
-  const media_dist = JSON.parse(data?.media_dist);
-  dist_pie_plot.setOption({meta: Object.keys(media_dist).map((key) => {return {name: key, value: media_dist[key]}}), ...plotPiesDist(JSON.parse(data?.rating_dist) || {})}); dist_pie_plot.setOption({legend: {bottom: 2, left: 130}});
+  dist_pie_plot.setOption(
+    plotPiesDist([
+      {id: "Age Rating over Animes", source: JSON.parse(data?.rating_dist), name: "Rating"},
+      {id: "Media Types of Animes", source: JSON.parse(data?.media_dist) || {}, name: "Media Type"}
+    ])); dist_pie_plot.setOption({legend: {bottom: 2, left: 130}});
   return no;
 }
 
@@ -170,7 +173,7 @@ function plotForOverviewTab(_, data, page_settings) {
 function weeklyDist(eps_watched_per_week, total_week_days) {
   const max_day = Math.max(...eps_watched_per_week);
   const avg_s = eps_watched_per_week.map((eps_watched, week_index) => {
-    const value = eps_watched / total_week_days[week_index];
+    const value = (eps_watched / total_week_days[week_index]).toFixed(2);
 
     eps_watched_per_week[week_index] = eps_watched === max_day ? { value: eps_watched, itemStyle: { color: '#e7a4b6' } } : eps_watched
     return eps_watched === max_day ? { value: value, itemStyle: { color: '#e7a4b6' } } : value
@@ -180,10 +183,10 @@ function weeklyDist(eps_watched_per_week, total_week_days) {
   const onHover = { itemStyle: { color: '#f3cec9' } }
   return (new ConstructEChartOption()).initSeries().barSeries(eps_watched_per_week, "Number of Episodes", {itemStyle, emphasis: onHover})
   .lineSeries("Average", avg_s, true, {yAxisIndex: 1 })
-  .setAxis(true, "category", "Week", false, {nameLocation: "middle", data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], axisPointer: {type: "shadow"}, axisTick: {alignWithLabel: true}})
+  .setAxis(true, "category", "Week", false, {nameLocation: "middle", nameGap: 23, data: week_names, axisPointer: {type: "shadow"}, axisTick: {alignWithLabel: true}})
   .setAxis(false, "value", "No. of Eps.", false, {axisLabel: {formatter: "{value} eps"}})
   .setAxis(false, "value", "Eps / Per wk", false, {axisLabel: {formatter: "{value} / wk"}})
-  .setGrid(true, {top: 54, left: 10, height: "69%"})
+  .setGrid(true, {top: 54, left: 10, height: "63%"})
   .setTitle("Weekly Frequency", 14, true)
   .setTooltip("axis", {axisPointer: { type: "shadow" }})
   .toolBox(false, true, false, true).raw;
@@ -191,93 +194,40 @@ function weeklyDist(eps_watched_per_week, total_week_days) {
 
 
 function dailyWeightage(dailyTable) {
-  const x = dailyTable.columns.map(function (date) {
-    return new Date(Date.parse(`${date[0]}-${date[1]}-${date[2]}`));
-  });
+  // do not consider time else diff in days will be wrong while rounding off.
+  const today = new Date(new Date().toDateString()); const today_s_date = today.getDate();
+  const past_14_days = Array(15).fill(true).map((_, index) => [new Date(new Date().setDate(today_s_date - index)), 0]);
   const y = dailyTable?.data[2];
-  return (new ConstructEChartOption()).initSeries().lineSeries(
-    "Day wise Frequency", y.map((y_, _) => { return [x[_], y_] }), true)
-    .setAxis(true, "time", "Date", false)
-    .setAxis(false, "value", "Freq.", false).setTooltip("axis").setGrid(false)
-    .setTitle("Day Wise Distribution", 14, true).raw;
-}
+  const x = dailyTable.columns.map(function (date, index) {
+    const const_date = new Date(Date.parse(`${date[0]}-${date[1]}-${date[2]}`));
+    const past = Math.round((today - const_date) / (1000 * 60 * 60 * 24));
+    if(past < 14) past_14_days[past][1] = y[index];
+    return const_date;
+  });
 
-
-function quickHistory(raw) {
+  const data_sets = [{id: "Day Wise Distribution", source: y.map((y_, _) => [x[_], y_]), name: "Date"},
+    {id: "Day Wise Distri. - Past 14 days", source: past_14_days, name: "Date"}]
   
-  return {
-    grid: {
-      left: 200
-    },
-    animationDuration: 1e3,
-    animation: true,
-    _raw: raw,
-    title: {text: "Watch History of the User", left: "center", textStyle: { fontSize: 14 }},
-    tooltip: {
-      order: "valueDesc",
-      trigger: "axis"
-    },
-    xAxis: {
-      // max: 'dataMax',
-      splitLine: {
-        show: false
-      },
-    },
-    yAxis: {
-      type: 'category',
-      inverse: true,
-       max: 10,
-      // axisLine: { show: false },
-      // axisLabel: { show: false },
-      // axisTick: { show: false },
-      splitLine: { show: false },
-      },  
-    toolbox: {
-      show: true,
-      feature: { mark: { show: true }, restore: { show: true }, saveAsImage: { show: true } }
-    },
-    series: [
-      {
-        name: "Eps. Watched",
-        // realtimeSort: true,
-        seriesLayoutBy: 'column',
-        type: 'bar',
-        encode: {
-          x: 4,
-          y: 1
-        },
-        itemStyle: {
-          color: function (param) {
-            return status_colors[param.value[2]] ?? "grey";
-          }
-        },
-        label: {
-          show: true,
-          position: 'right',
-          valueAnimation: true,
-          color: "wheat"
-        }
-      }
-    ],
-    graphic: {
-      elements: [
-        {
-          type: 'text',
-          right: 10,
-          top: 40,
-          style: {
-            text: "...",
-            font: '12px monospace',
-            fill: '#fff'
-          },
-          z: 100
-        }
-      ]
-    }
-  };  
+  return (new ConstructEChartOption()).initSeries().lineSeries(
+    "Day wise Frequency", null, true, {datasetIndex: 0}).setDataSet(data_sets)
+    .setAxis(true, "time", "Date", false, {axisPointer: {value: today, snap: true, label: {backgroundColor: "#222222", color: "#fff", show: true,formatter: (params) => new Date(params.value).toDateString()}}})
+    .setAxis(false, "value", "Freq.", false).setTooltip("axis").setGrid(false, {bottom: 30, left: 45}).setTitle("Day Wise Distribution", 14, true).raw;
 }
 
 
+function timelyScatter(dataset){
+  const stamps = [];
+  const _options = new ConstructEChartOption().initSeries().setTooltip("item").setTitle("At What Time", 10).setLegend(week_names);
+  for(let i=0;i<7;i++){_options.scatterSeries([], week_names[i], 10, {singleAxisIndex: 0, coordinateSystem: 'singleAxis'});} const options = _options.raw;
+  dataset.index.map((value, index) => {
+    stamps.push(value[1]); options.series[value[0]].data.push([value[1], dataset.data[index][0]]);
+  })
+  options.singleAxis = [{left: 25, type: 'category', boundaryGap: false, height: 75 + '%', data: stamps.sort()}];
+  const axis_labels = options.singleAxis[0].data;
+  const textStyle = {fontWeight: "bold", fontSize: 16};
+  axis_labels[0] = {value: axis_labels[0], textStyle}; axis_labels[axis_labels.length - 1] = {value: axis_labels[axis_labels.length - 1], textStyle}; 
+  return options;
+}
 
 function plotForRecentlyTab(_, data, page_settings, recent_animes) {
   const no = say_no(1)[0];
@@ -288,21 +238,16 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
 
   // DATA POINTS 
   const frame = new Frame(recent_animes);
-  // const stamps = frame.col(5).map((stamp) => new Date(stamp));
 
   // PLOTS
   const daily_weightage = "daily-weightage"
   const week_plot = "weekly-progress-recently-view";
-  const bar_race = "quick-update-history"
-
-  // DESTROYING PLOTS
-  // disposePlots(daily_weightage, week_plot, bar_race);
+  const time_went = "when-did-they-watch"
 
   // INIT PLOTS
   const daily_wise = createEChart(daily_weightage);
   const weekly_plot = createEChart(week_plot);
-  const bar_race_plot = createEChart(bar_race);
-
+  const when_did = createEChart(time_went);
 
   daily_wise.setOption(
     dailyWeightage(JSON.parse(data.recently_updated_day_wise || "[]"))
@@ -312,8 +257,9 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
     weeklyDist(JSON.parse(data.week_dist || "[]"), data.week_days || [])
   );
 
-  bar_race_plot.setOption(quickHistory(frame.rows(0, 1, 2, 3, 4, 5))); // Id, Anime Name, Status, up_until, total
-
+  when_did.setOption(
+    timelyScatter(JSON.parse(data.when))
+  )
   daily_wise.on("mouseover", function (line_data) {
     const date = line_data.data[0];
     if (!date) return;
@@ -325,74 +271,77 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
   });
 
   weekly_plot.on("click", { seriesIndex: 0 }, function (bar_data) {
-    const selectedDay = week_js_to_pandas(bar_data.dataIndex, true);
-    const current_series = daily_wise.getOption().series[0];
-
-    const markers = [];
-
-
-    current_series.data.forEach((raw) => {
+    const markers = []; const selectedDay = week_js_to_pandas(bar_data.dataIndex, true); const selected = week_names[bar_data.dataIndex];
+    const _op = daily_wise.getOption(); const current_series = _op.dataset[_op.series[0].datasetIndex];
+    current_series.source.forEach((raw) => {
       if (raw[0].getDay() !== selectedDay) return;
-
-      markers.push(
-        {
-          coord: [raw[0], raw[1]],
-          label: { formatter: `${raw[1]}`, color: "#fff" }
-        }
-      )
-
-    })
-
-    current_series["markPoint"] = { data: markers };
-    daily_wise.setOption({ series: [current_series] })
+      markers.push({coord: [raw[0], raw[1]], label: { formatter: `${raw[1]}`, color: "#fff" }})})
+    daily_wise.setOption({ series: {markPoint: { data: markers }} })
+    when_did.setOption({legend: {selected: week_names.map((_name) => {return {[_name]: selected === _name}})}});
   })
 
-  weekly_plot.on("dblclick", { seriesIndex: 0 }, function (bar_data) {
+  weekly_plot.on("dblclick", { seriesIndex: 0 }, function () {
     // clearing the selected with the double click
-    const current_series = daily_wise.getOption().series[0];
-
-    const markers = [];
+    const current_series = daily_wise.getOption().series[0]; const markers = [];
     current_series["markPoint"] = { data: markers };
     daily_wise.setOption({ series: [current_series] })
+    when_did.setOption({legend: {selected: week_names.map((_name) => {return {[_name]: true}})}});
   })
 
-  
-const template = function(index){
-  const raw_option = bar_race_plot.getOption();
-  const raw = raw_option._raw;
-  if(index >= raw.length) return
-
-  const series_index = 0;
-  const series_data = raw_option.series[0].data ?? [];
-  
-  if(index) raw_option.series[series_index].data = [raw[index], ...series_data.filter((row) => row[0] !== raw[index][0])]
-  else raw_option.series[series_index].data = [];
-  
-  index && (raw_option.graphic[0].elements[0].style.text = new Date(raw[index][5]).toLocaleString());
-  bar_race_plot.setOption(raw_option);
-  setTimeout(() => template(index + 1), 1e3);
+  const first_record = new Date(data.first_record * 1e3); const last_record = new Date(data.recent_record * 1e3);
+  return [first_record.toDateString(), last_record.toDateString(), last_record.toDateString()];
 }
 
-template(0);
+function switchThePlots(for_called, switch_id){
+  const no = say_no(1)[0]; const index = Number(for_called);
+  const chart = view_e_charts_mla[switch_id.plot];
+  if(!chart || dash_clientside.callback_context.triggered.length === 0 || Number.isNaN(index)) return no;
+  const option = chart.getOption(); const title = option["dataset"][index].id; option.title[0].text = title; option.series[0].datasetIndex = index;
+  option.legend.length && (option.legend[0].data = option.dataset[index].source.map((o) => o.name));
+  chart.setOption(option); return no;
+}
+
+function searchForTheDate(raw, date){
+  const records = [["id", "title", "List Status", "Total", "Completed", "Updated at", "progress"]]; const today = new Date(date); const time = today.getTime(); const date_string = today.toDateString(); const length = raw.length; let left = 0, right = length - 1; let last_found;
+  while(left <= right){
+    const mid = Math.ceil((left + right) / 2); const value = raw[mid];
+    if(time > value[5]){ left = mid + 1; continue;}
+    if(date_string === new Date(value[5]).toDateString()) last_found = mid;
+    right = mid - 1;
+  }
+  if(Number.isNaN(last_found)) return false;
+  for(value of raw.slice(last_found)){
+    const stamp = new Date(value[5]); if(stamp.toDateString() !== date_string) break;
+    const slice = value.slice(0, 7); slice[5] = formateTime(value[5]); records.push(slice);
+  } return [records, date_string];
+}
+
+function drawThePlot(opened, askedFor, recent_animes){
+  const no = say_no(1)[0]; if(!(opened && askedFor)) return no;
+  const asked = "quick-update-history"; const chart = createEChart(asked);
+  chart.showLoading();
+  const [dataset, date_string] = searchForTheDate(JSON.parse(recent_animes), askedFor);
+  if(dataset.length > 1) chart.setOption((new ConstructEChartOption().initSeries().setTitle(`Animes watched on ${date_string}`)
+    .barSeries(null, "Completed", {encode: {y: "title", x: "Completed", tooltip: ["List Status", "Completed", "Total"]}, stack: "anime", emphasis: {focus: "series"}})
+    .barSeries(null, "Updated", {encode: {y: "title", x: "progress", tooltip: ["Updated at"]}, stack: "anime", emphasis: {focus: "series"}})
+    .setGrid(false, {left: "120px"}).setTooltip("item").setDataSet({source: dataset}).setAxis(true, "value", "Episodes", false).setAxis(false, "category", "Animes", false, {axisLabel: {width: 100, overflow: "truncate"}})).raw);
+  else chart.setOption({graphic: {elements: [{type: 'text', left: 'center', top: 'center',
+    style: {text: `No Animes were updated on the date: ${askedFor}`, fontSize: "1rem",
+            lineDash: [0, 200], lineDashOffset: 0,
+            stroke: '#696969', lineWidth: 1, fill: "coral"}
+        }]}})
+  chart.hideLoading();
   return no;
 }
 
-function changeThePiesInOverviewTab(for_called){
-  const no = say_no(1)[0];
-  const chart = view_e_charts_mla[pies_for_dist];
-  if(!chart || dash_clientside.callback_context.triggered.length === 0) return no;
-
-  const option = chart.getOption(); const is_rating = for_called === "Rating"; const title = is_rating ? "Age Rating Over Animes" : "Media Type Freq."; const refer = is_rating ? option.meta_x : option.meta;
-  option.title[0].text = title; option.legend[0].data = refer.map((obj) => obj.name); option.series[0].data = refer;
-  chart.setOption(option); return no;
-}
 
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
   "MLAPlots": {
     plotForRecentlyTab,
     plotForOverviewTab,
-    changeThePiesInOverviewTab
+    switchThePlots,
+    drawThePlot
   }
 });
 

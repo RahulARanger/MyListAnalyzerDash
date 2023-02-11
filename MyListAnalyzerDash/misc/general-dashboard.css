@@ -121,12 +121,6 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
     box-shadow: var(--hard-chocolate);
 }
 
-#overview_pies{
-    z-index: 1;
-    position: absolute;
-    bottom: 10px;
-}
-
 /* Swiper Cards are slow in FireFox, below makes some what better like 20% but there's an issue, TODO: to resolve this issue*/
 .swiper-wrapper,
 .swiper-slide{
@@ -136,3 +130,8 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
    transform-style: flat;
 }
 
+
+#daily-weightage{flex-grow: 3e3; width: calc(200px + 2vw);height: 208px;}
+#weekly-progress-recently-view{width: calc(150px + 30vw);height: 208px; flex-grow: 1;}
+#when-did-they-watch{height: 135px;}
+#quick-update-history{width: 98%; margin-left: 1%; height: 65%;}
