@@ -5,9 +5,9 @@
 
 ## 👤 User View Dashboard
 
-* [👋 Introduction](user-view-dashboard/introduction.md)
+* [👋 Searching a User](user-view-dashboard/introduction.md)
 * [🏗 Processes](user-view-dashboard/processes.md)
-* [🎆 Reports](user-view-dashboard/reports/README.md)
+* [🎆 User View Dashboard](user-view-dashboard/reports/README.md)
   * [Reports - Overview](user-view-dashboard/reports/reports-overview.md)
   * [Reports - Recently](user-view-dashboard/reports/reports-recently.md)
 

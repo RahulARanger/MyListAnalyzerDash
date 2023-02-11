@@ -21,11 +21,11 @@ This report generates the summary of the User's Animelist, which will clear some
 
 
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Cards that answer above questions</p></figcaption></figure>
+<figure><img src="broken-reference" alt=""><figcaption><p>Cards that answer above questions</p></figcaption></figure>
 {% endtab %}
 
 {% tab title="Subset of Animes" %}
-<figure><img src="../../.gitbook/assets/cards.gif" alt=""><figcaption><p>Swiper Cards</p></figcaption></figure>
+<figure><img src="broken-reference" alt=""><figcaption><p>Swiper Cards</p></figcaption></figure>
 
 1. What animes did the user add to his / her list which are Currently airing&#x20;
 2. Oldest Anime

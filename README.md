@@ -27,7 +27,7 @@ Steps to Login
 
 You could log in from the [Home Page](https://rahularanger.vercel.app/MLA/).
 
-<figure><img src=".gitbook/assets/logged_in.gif" alt=""><figcaption><p>Logging in from the Home Page</p></figcaption></figure>
+<figure><img src=".gitbook/assets/Intro-SearchUser.gif" alt="Logging in your MyAnimeList Account from Home Page"><figcaption><p>Logging in your MyAnimeList Account from Home Page</p></figcaption></figure>
 
 {% hint style="info" %}
 The above instruction was recorded in version 0.6.2 and is valid even for the above releases. if not, it will be replaced.
@@ -37,12 +37,9 @@ The above instruction was recorded in version 0.6.2 and is valid even for the ab
 
 Currently, View-Dashboard is the only dashboard prepared but I will try to increase the scope if possible.
 
-#### User View Dashboard
+#### [User View Dashboard](user-view-dashboard/reports/)
 
 There are no prerequisites to view the dashboard. If you are familiar with any user or have the username handy, you can directly view the dashboard in the following ways:
 
 1. [https://rahularanger.vercel.app/MLA/view/](https://rahularanger.vercel.app/MLA/view/RahulARanger)\{{user\_name\}}&#x20;
 2. [https://rahularanger.vercel.app/MLA/view](https://rahularanger.vercel.app/MLA/view/) after reaching the URL, you will be prompted to enter the username.
-
-<figure><img src=".gitbook/assets/searched (1).gif" alt=""><figcaption><p>Searching a User</p></figcaption></figure>
-

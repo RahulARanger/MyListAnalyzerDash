@@ -2,17 +2,13 @@
 description: Dashboard for any public user in MyAnimeList
 ---
 
-# 👋 Introduction
+# 👋 Searching a User
 
-This is a Dashboard mostly used for gaining some information about the user's AnimeList. we can expect that after searching for a required user, you could understand how the user rates animes or picks them on their list and what has the user been up to recently, etc... you can directly jump to [reports ](reports/)for more detailed results.
+We may need to input the User name in order to fetch the right details, you can go through the various process seen below. Similar processes are followed in various dashboards.
 
-{% hint style="info" %}
-You can directly visit this dashboard through this [URL](https://rahularanger.vercel.app/MLA/view/).
-{% endhint %}
+### Searching a User - Manually
 
-### Searching a User
-
-![](<../.gitbook/assets/image (2) (1).png>)
+<figure><img src="../.gitbook/assets/UserView-SearchUser.gif" alt=""><figcaption><p>Searching a User Manually, Applicable wherever User Name is required</p></figcaption></figure>
 
 Every User has a name in their MyAnimeList, you can use that name here. you even have a provision to auto-search your user name given that you have already logged in with your MyAnimeList Account.
 
