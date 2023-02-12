@@ -242,9 +242,8 @@ def currently_airing_card(
                 dmc.Image(src=img_url, height=210, fit="cover", width=90),
                 rows, style=dict(gap="10px")
             ), footer
-        )), dmc.HoverCardDropdown(dmc.Text(title))), withArrow=True, withinPortal=True, className="swiper-slide",
-        position="left"
-    ), status
+        )), dmc.HoverCardDropdown(dmc.Text(title))), withArrow=True, withinPortal=True, className="swiper-slide"),\
+        status
 
 
 def number_card_format_3(

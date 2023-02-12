@@ -292,16 +292,7 @@ async function validate_and_fetch_anime_list(
     const no = say_no(1)[0];
     const user_name = who_triggered_it ? typedName : pageSettings?.user_name;
     
-    const output_template = {
-        closeable: no,
-        location: no,
-        pageSettings: no,
-        modalOpened: no,
-        show_name: no,
-        show_name_url: no,
-        error: no,
-        rawList: no
-    }
+    const output_template = {closeable: no, location: no, pageSettings: no, modalOpened: no, show_name: no, show_name_url: no, error: no, rawList: no}
 
     const return_me = () => [
         output_template.closeable, output_template.location, output_template.pageSettings,
@@ -486,22 +477,14 @@ async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, cl
     alert_title.textContent = `Fetching Anime List for the User ${user_name}`
     alert_body.textContent = "Preparing Request";
     
-
-    if(use_token)
-        headers["token"] = malAuthToken();
+    if(use_token) headers["token"] = malAuthToken();
     headers["nsfw"] = is_nsfw;
 
-    const incase = async (reason, expected) => {
-        why = expected ? (await reason.text()) : reason;
-        return true;
-    }
+    const incase = async (reason, expected) => {why = expected ? (await reason.text()) : reason; return true;}
 
     if(use_token){
         // we need to get the user name in case we are fetching the user list by the user name
-        const req = new Request(
-            `${pipe}/MLA/validateUser`, {method: "GET", headers: headers}
-        );
-
+        const req = new Request(`${pipe}/MLA/validateUser`, {method: "GET", headers: headers});
         failed = await fetch(req).then(async (resp) => {
             const ans = await resp.json();
             if(!(resp.ok && ans?.passed)) return Promise.reject(ans?.reason, true);
@@ -553,6 +536,7 @@ function clickToGoCardIndex(_, called_index, swiper_cards_id){
     return no;
 }
 
+// BUG: User cannot search for themselves [Logged in] for the Recent Anime List Dashboard
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
     "MLA": {

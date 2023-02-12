@@ -5,13 +5,6 @@ const week_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // // HELPER FUNCTIONS
 
-// UPDATING THEME
-fetch('/MLA/assets/theme.json')
-  .then(r => r.json())
-  .then(theme => {
-    echarts.registerTheme('essos', theme);
-  });
-
 // USE this if and only if you need to use whole row or column or TABLE
 // not for particular cell
 class Frame {
@@ -100,14 +93,16 @@ class ConstructEChartOption{
   }
 }
 // for creating Echart
-function createEChart(id, on) {
+function createEChart(id, theme, on) {
   const element = document.getElementById(id);
   if(view_e_charts_mla[id]) disposePlot(view_e_charts_mla[id], element);
-  const chart = echarts.init(element, "essos", { renderer: on || 'svg' });
+  // fruit, red-velvet, 
+  const chart = echarts.init(element, theme || "cold", { renderer: on || 'svg' });
   view_e_charts_mla[id] = chart;
   new ResizeObserver(() => chart.resize()).observe(element);
   return chart
 }
+
 // for disposing plots
 function disposePlot(plot, element) {
   const save_them = Array(...element.querySelectorAll(".save")).map((e) => {element.removeChild(e); return e;});
