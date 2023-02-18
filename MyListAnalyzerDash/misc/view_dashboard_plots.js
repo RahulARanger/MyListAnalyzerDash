@@ -229,8 +229,8 @@ function timelyScatter(dataset){
     seriesMap[week_day].data.push([fake, dataset.data[index][0]]);
   }); // though the date is fake but the time inside of it is valid
   const _options = new ConstructEChartOption().initSeries().setTooltip("item").setLegend(week_names).setTooltip("item").setGrid(true, {bottom: "10px"}).raw;
-  _options.singleAxis = [{type: 'time', boundaryGap: false, height: "65%", width: "90%", splitNumber: 12,
-   axisLabel: {formatter: "{HH}:{mm}", showMinLabel: true, showMaxLabel: true}, min: am, max: pm,
+  _options.singleAxis = [{type: 'time', boundaryGap: false, height: "65%", width: "90%", splitNumber: 24,
+   axisLabel: {hideOverlap: true, formatter: "{HH}:{mm}", showMinLabel: true, showMaxLabel: true}, min: am, max: pm,
    name: "Update Time", nameLocation: "center", nameGap: "22"
   }]; _options.tooltip.formatter = function(value){
     return `${value.marker} ${value.seriesName}<br>${new String(value.data[0].getHours()).padStart(2, "0")}:${new String(value.data[0].getMinutes()).padStart(2, "0")} - <b>${value.data[1]}</b>`
