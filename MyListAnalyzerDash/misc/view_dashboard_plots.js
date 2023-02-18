@@ -1,10 +1,14 @@
+const theme = ["inspired", "cool"][Math.floor(Math.random() * 2)];
+const script = document.createElement('script');
+script.type = 'text/javascript'; script.src = `https://cdn.jsdelivr.net/npm/echarts@5.4.1/theme/${theme}.min.js`;
+document.querySelector("head").appendChild(script);
+
 const view_e_charts_mla = {}; // be a good boy
 const pies_for_dist = "pie_dist_overview_mla";
 const status_colors = {"Completed": "#90EE90", "Watching": "#87CEEB", "Dropped": "#FFCCCB", "On Hold": "#FCE883"}
 const week_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 // // HELPER FUNCTIONS
-
 // USE this if and only if you need to use whole row or column or TABLE
 // not for particular cell
 class Frame {
@@ -19,10 +23,10 @@ class ConstructEChartOption{
   raw = {}
   light = "rgba(255, 255, 255, 0.3)"
   setTitle(text, size, center, options){
-    this.raw.title = { text, textStyle: { fontSize: size }, left: "center", ...(options || {})}; return this;
+    this.raw.title = { text, textStyle: { fontSize: size, color: "#fffffd"}, left: center, ...(options || {})}; return this;
   }
   setAxis(isX, type, name, showLines, options){
-    const option = {type, name, splitLine: { show: showLines }, ...(options || {})};
+    const option = {type, name, splitLine: { show: showLines }, textStyle: {color: "#fffffd"}, ...(options || {})};
     if(isX) this.raw.xAxis ? this.raw.xAxis.push(option) : (this.raw.xAxis = [option]);
     else this.raw.yAxis ? this.raw.yAxis.push(option) : (this.raw.yAxis = [option]);
     return this;
@@ -43,7 +47,7 @@ class ConstructEChartOption{
   visualMap(leftText, rightText, min, max){
     this.raw.visualMap = {
       orient: "horizontal", left: "center", min, max, text: [leftText, rightText],
-      dimension: 1,
+      dimension: 1, textStyle: {color: "#fffffd"}
     }
     return this;
   }
@@ -69,7 +73,7 @@ class ConstructEChartOption{
     this.raw.series.push({name, type: 'scatter', data, symbolSize: function (dataItem) {return dataItem[1] * (ptExtendSize || 20);}, ...(options || {})}); return this; 
   }
   setLegend(data, options, orient, x, type){
-    this.raw.legend = { orient: orient || 'horizontal', x: x || 'left', data, type: type || "scroll", ...(options || {})}; return this;
+    this.raw.legend = { orient: orient || 'horizontal', x: x || 'left', data, type: type || "scroll", inactiveColor: "#333", textStyle: {color: "#fffffd"}, ...(options || {})}; return this;
   }
   picBarSeries(data, symbol, z, options){
     this.raw.series.push(
@@ -93,11 +97,10 @@ class ConstructEChartOption{
   }
 }
 // for creating Echart
-function createEChart(id, theme, on) {
+function createEChart(id, on) {
   const element = document.getElementById(id);
   if(view_e_charts_mla[id]) disposePlot(view_e_charts_mla[id], element);
-  // fruit, red-velvet, 
-  const chart = echarts.init(element, theme || "cold", { renderer: on || 'svg' });
+  const chart = echarts.init(element, theme, { renderer: on || 'svg' });
   view_e_charts_mla[id] = chart;
   new ResizeObserver(() => chart.resize()).observe(element);
   return chart
@@ -126,7 +129,7 @@ function week_js_to_pandas(week_day, otherWay) {
 function ep_range_dist_plot(data) {
   const values = Object.values(data);
   const keys = Object.keys(data);
-  return (new ConstructEChartOption()).initSeries().barSeries(values).setTitle("Range of Anime Episodes", 16, true)
+  return (new ConstructEChartOption()).initSeries().barSeries(values).setTitle("Range of Anime Episodes", 16, "2px")
   .setAxis(true, "category", "Episode Range", false, {data: keys, nameLocation: "center", nameGap: 23})
   .setAxis(false, "value", "Freq.", false).setTooltip("axis", {axisPointer: {type: "shadow"}})
   .visualMap("Mostly Seen", "Least Ones", Math.min(...values), Math.max(...values))
@@ -140,7 +143,7 @@ function plotPiesDist(dataset) {
   dataset[1].source = Object.keys(_media).map((key) => {return {name: key, value: _media[key]}})
   return (new ConstructEChartOption()).initSeries().setDataSet(dataset).pieSeries(null, "Rating", null, null, null, {datasetIndex: 0})
   .setTitle ("Age Rating Over Animes", 16, true).setTooltip("item", {formatter: (params) =>  `<b>${params.seriesName}:</b> ${params.value.name}<br>${params.percent}% | ${params.value.value}`})
-  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}).raw;
+  .label().pieEmphasis().toolBox(false, false, false, true).setLegend(ratings, {selected: {TV: false, Unknown: false}}).setGrid(true, {top: 15}).raw;
 }
 
 
@@ -206,22 +209,33 @@ function dailyWeightage(dailyTable) {
   return (new ConstructEChartOption()).initSeries().lineSeries(
     "Day wise Frequency", null, true, {datasetIndex: 0}).setDataSet(data_sets)
     .setAxis(true, "time", "Date", false, {axisPointer: {value: today, snap: true, label: {backgroundColor: "#222222", color: "#fff", show: true,formatter: (params) => new Date(params.value).toDateString()}}})
-    .setAxis(false, "value", "Freq.", false).setTooltip("axis").setGrid(false, {bottom: 30, left: 45}).setTitle("Day Wise Distribution", 14, true).raw;
+    .setAxis(false, "value", "Freq.", false).setTooltip("axis").setGrid(false, {bottom: 45, left: 45}).setTitle("Day Wise Distribution", 14, "2px").raw;
 }
 
 
 function timelyScatter(dataset){
-  const stamps = [];
-  const _options = new ConstructEChartOption().initSeries().setTooltip("item").setTitle("At What Time", 10).setLegend(week_names);
-  for(let i=0;i<7;i++){_options.scatterSeries([], week_names[i], 10, {singleAxisIndex: 0, coordinateSystem: 'singleAxis'});} const options = _options.raw;
-  dataset.index.map((value, index) => {
-    stamps.push(value[1]); options.series[value[0]].data.push([value[1], dataset.data[index][0]]);
-  })
-  options.singleAxis = [{left: 25, type: 'category', boundaryGap: false, height: 75 + '%', data: stamps.sort()}];
-  const axis_labels = options.singleAxis[0].data;
-  const textStyle = {fontWeight: "bold", fontSize: 16};
-  axis_labels[0] = {value: axis_labels[0], textStyle}; axis_labels[axis_labels.length - 1] = {value: axis_labels[axis_labels.length - 1], textStyle}; 
-  return options;
+  const seriesMap = week_names.map(
+    function (week_day) {
+      return {
+        name: week_day, singleAxisIndex: 0, coordinateSystem: "singleAxis", type: "scatter",
+        emphasis: {focus: "series"},
+        data: [],
+        symbolSize: function (dataItem) {return dataItem[1] * 10;}};
+  });
+  const fake_date = new Date(); const am = new Date(fake_date); const pm = new Date(fake_date);
+  am.setHours(0); am.setMinutes(0); pm.setHours(23); pm.setMinutes(59);
+  dataset.index.forEach(function ([week_day, hr, min], index) {
+    const fake = new Date(fake_date); fake.setHours(hr); fake.setMinutes(min); 
+    seriesMap[week_day].data.push([fake, dataset.data[index][0]]);
+  }); // though the date is fake but the time inside of it is valid
+  const _options = new ConstructEChartOption().initSeries().setTooltip("item").setLegend(week_names).setTooltip("item").setGrid(true, {bottom: "10px"}).raw;
+  _options.singleAxis = [{type: 'time', boundaryGap: false, height: "65%", width: "90%", splitNumber: 12,
+   axisLabel: {formatter: "{HH}:{mm}", showMinLabel: true, showMaxLabel: true}, min: am, max: pm,
+   name: "Update Time", nameLocation: "center", nameGap: "22"
+  }]; _options.tooltip.formatter = function(value){
+    return `${value.marker} ${value.seriesName}<br>${new String(value.data[0].getHours()).padStart(2, "0")}:${new String(value.data[0].getMinutes()).padStart(2, "0")} - <b>${value.data[1]}</b>`
+  }; _options.series = seriesMap;
+  return _options;
 }
 
 function plotForRecentlyTab(_, data, page_settings, recent_animes) {
@@ -271,12 +285,11 @@ function plotForRecentlyTab(_, data, page_settings, recent_animes) {
     current_series.source.forEach((raw) => {
       if (raw[0].getDay() !== selectedDay) return;
       markers.push({coord: [raw[0], raw[1]], label: { formatter: `${raw[1]}`, color: "#fff" }})})
-    daily_wise.setOption({ series: {markPoint: { data: markers }} })
-    when_did.setOption({legend: {selected: week_names.map((_name) => {return {[_name]: selected === _name}})}});
+    daily_wise.setOption({ series: {markPoint: { data: markers }} }); const weeks = {};
+    for(let week_name of week_names){weeks[week_name] = week_name === selected;} when_did.setOption({legend: {selected: weeks}});
   })
 
-  weekly_plot.on("dblclick", { seriesIndex: 0 }, function () {
-    // clearing the selected with the double click
+  weekly_plot.on("dblclick", { seriesIndex: 0 }, function () { // clearing the selected with the double click
     const current_series = daily_wise.getOption().series[0]; const markers = [];
     current_series["markPoint"] = { data: markers };
     daily_wise.setOption({ series: [current_series] })
@@ -328,8 +341,6 @@ function drawThePlot(opened, askedFor, recent_animes){
   chart.hideLoading();
   return no;
 }
-
-
 
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
   "MLAPlots": {

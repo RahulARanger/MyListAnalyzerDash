@@ -5,14 +5,14 @@ from dash import html
 from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_calc_in_good_way
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
-from MyListAnalyzerDash.mappings.enums import css_classes, Icons, list_status_color
+from MyListAnalyzerDash.mappings.enums import CSSClasses, Icons, list_status_color
 from MyListAnalyzerDash.utils import ellipsis_part, anime_link
 
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
     return dmc.Paper(
         expanding_layout(*children, **__),
-        className=as_card if as_card else css_classes.home_card
+        className=as_card if as_card else CSSClasses.home_card
     )
 
 
@@ -51,10 +51,10 @@ def sign(number, reference, className=""):
 
 def number_comp(number, is_percent, color, class_name, size="lg"):
     exact_value = f"{number:.2f}%" if is_percent else str(number)
-    class_name_added = f"{css_classes.number_counter} {class_name}"
+    class_name_added = f"{CSSClasses.number_counter} {class_name}"
 
     if is_percent:
-        class_name_added += f" {css_classes.as_percent}"
+        class_name_added += f" {CSSClasses.as_percent}"
 
     return dmc.Text(
         floating_tooltip(html.Span(
@@ -86,7 +86,7 @@ def number_card_format_1(
     references.append(floating_tooltip(
         html.Sub([
             "[", html.Span(
-                another, className=f"{css_classes.number_counter} {class_name}", **{"data-value": another}), "]"]
+                another, className=f"{CSSClasses.number_counter} {class_name}", **{"data-value": another}), "]"]
         ), label=another
     )) if another >= 0 else ...
 
@@ -144,7 +144,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
 
     return expanding_layout(
         expanding_row(
-            dmc.Image(src=picture, width=70, height=102, fit="contain"),
+            dmc.Image(src=picture, width=70, height=102, fit="contain", className=CSSClasses.to_zoom),
             expanding_layout(
                 set_tooltip(
                     dmc.Anchor(
@@ -203,7 +203,7 @@ def currently_airing_card(
         _id, title, img_url, user_started,
         watched, total, updated_at,
         source, status, started_week, started_time, started_date,
-        class_name=css_classes.time_format
+        class_name=CSSClasses.time_format
 ):
     cells = [
         ("Broadcast Started at", started_date),
@@ -239,7 +239,7 @@ def currently_airing_card(
     return dmc.HoverCard(
         (dmc.HoverCardTarget(expanding_layout(
             expanding_row(
-                dmc.Image(src=img_url, height=210, fit="cover", width=90),
+                dmc.Image(src=img_url, height=210, fit="cover", width=90, className=CSSClasses.to_zoom),
                 rows, style=dict(gap="10px")
             ), footer
         )), dmc.HoverCardDropdown(dmc.Text(title))), withArrow=True, withinPortal=True, className="swiper-slide"),\

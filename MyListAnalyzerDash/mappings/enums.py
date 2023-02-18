@@ -101,15 +101,16 @@ mal_creds_modal = creds_modal(
         "logo": "https://image.myanimelist.net/ui/OK6W_koKDTOqqqLDbIoPAiC8a86sHufn_jOI-JGtoCQ"
     })
 
-css_classes = namedtuple(
-    "CSSClasses",
-    [
-        "jump", "customButton", "home_card", "request_details", "number_counter", "as_percent",
-        "time_format"
-    ])(
-    "do-jump", "custom-butt", "home_card", "request-details", "count-number", "percent-number",
-    "need_to_time_format"
-)
+
+class CSSClasses(str, Enum):
+    jump = "do-jump"
+    home_card = "home_card"
+    time_format = "need_to_time_format"
+    to_zoom = "to-zoom"
+    number_counter = "count-number"
+    as_percent = "percent-number"
+    customButton = "custom-butt"
+
 
 list_status_color = Enum(
     "Status", [
@@ -152,6 +153,8 @@ recent_anime_list = header_menu_item(
     header_menu_items[2].image_src,
     "User's list of Animes that were updated recently"
 )
+
+
 class Icons(str, Enum):
     redirect = "https://api.iconify.design/material-symbols/open-in-new.svg?color=dodgerblue"
     info = "https://api.iconify.design/ic/round-info.svg?color=lightblue"

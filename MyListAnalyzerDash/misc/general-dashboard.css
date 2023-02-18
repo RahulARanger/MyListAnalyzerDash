@@ -4,25 +4,6 @@
 
 .scroll-board{height: calc(97% - 20px) !important; flex-shrink: 1;}
 
-.number-card{
-    width: calc(1.5vw + 96px);
-    padding: 13px;
-    height: 45px;
-}
-
-.number-card, #time_spent{
-    margin: 0.4%;
-    max-width: 225px;
-    flex-flow: column nowrap !important;
-    justify-content: flex-start !important;
-    background-color: transparent;
-    flex-grow: 1;
-    align-items: center;
-    align-content: center;
-}
-
-#time_spent{width: calc(10vw + 100px);}
-#time_spent .swiper-slide{width: 80%; height: 45px;}
 
 .number-card-label{
     font-size: 0.69rem;
@@ -70,14 +51,14 @@ article.expanding-row{
 #special_belt_for_recent_animes, #special_belt{padding: 6px; height: 135px; width: calc(100vw - 40px);}
 
 .anime_card, .Overview-graphs, .number-card, .recent_anime, .Recently-graphs {
-  border: 1px solid rgba(150, 150, 150, 0.2);
+  border: 1px ridge var(--dark-black);
   border-radius: 5px;
   transition: var(--standard-transition);
   margin-right: 0px;
   box-shadow: var(--hard-chocolate);
 }
 
-div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-graphs:hover, .recent_anime:hover{
+.number-card:hover, .anime_card:hover, .recent_anime:hover{
     background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1), transparent);
     box-shadow: inset 5px 5px 20px rgba(255, 255, 255, 0.1);
 }
@@ -130,8 +111,19 @@ div.Overview-graphs:hover, .number-card:hover, .anime_card:hover, .Recently-grap
    transform-style: flat;
 }
 
-
 #daily-weightage{flex-grow: 3e3; width: calc(200px + 2vw);height: 208px;}
 #weekly-progress-recently-view{width: calc(150px + 30vw);height: 208px; flex-grow: 1;}
 #when-did-they-watch{height: 135px;}
 #quick-update-history{width: 98%; margin-left: 1%; height: 65%;}
+.number-card{width: calc(1.5vw + 96px);padding: 13px;}
+.number-card, #time_spent{
+    max-width: 225px;
+    flex-flow: column nowrap !important;
+    justify-content: flex-start !important;
+    background-color: transparent;
+    flex-grow: 1;
+    align-items: center;
+    align-content: center;
+}
+#time_spent{width: calc(1.5vw + 120px); padding: .5px 0px;}
+#time_spent .swiper-slide{height: 100%; width: 81.69%;}

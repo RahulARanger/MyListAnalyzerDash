@@ -264,7 +264,7 @@ class ViewDashboard:
                 position="flexStart", no_wrap=True
             ),
             status_for_airing_ones_in_list,
-            style=dict(alignItems="center", gap=gap)
+            style=dict(justifyContent="center", gap=gap)
         )
 
         return [
@@ -290,8 +290,9 @@ class ViewDashboard:
             "quick-update-history",
         ]
 
+        labels = "All", "Past 14 days"
         past_14_days_to_all = dmc.SegmentedControl(
-            [dict(label="All", value=0), dict(label="Past 14 days", value=1)], color="orange",
+            [dict(label=val, value=index) for index, val in enumerate(labels)], color="orange",
             style=dict(backgroundColor="transparent", position="absolute", right="1px"),
             className="save", value=0, id=dict(group=view_dashboard.plot_switch, plot=charts[1])
         )
@@ -299,7 +300,7 @@ class ViewDashboard:
         know_more = set_tooltip(
             icon_butt_img(
                 Icons.redirect, view_dashboard.know_more,
-                style=dict(backgroundColor="transparent", position="absolute", left="1px", zIndex=2)),
+                style=dict(backgroundColor="transparent", position="absolute", bottom="1px", left="1px", zIndex=2)),
             label="For more Info. on particular date", class_name="save"
         )
 
@@ -457,7 +458,7 @@ def special_results_for_recent_animes(raw, user_name):
 
     longest = json.loads(raw["longest"]["anime"])
     diff = set_tooltip(
-        dmc.Badge(f"Total: {longest[3]} Eps.", color="pink.4"),
+        dmc.Badge(f"Total: {longest[2]} Eps.", color="pink.4"),
         label=f"Total Number of Episodes for this show"
     )
     rows.append(

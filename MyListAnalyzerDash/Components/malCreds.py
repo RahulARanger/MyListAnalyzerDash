@@ -2,7 +2,7 @@ import typing
 from MyListAnalyzerDash.mappings.callback_proto import AuthAction
 from dash import no_update, html, Input, Output, State, ctx, callback, clientside_callback
 import dash_mantine_components as dmc
-from MyListAnalyzerDash.mappings.enums import mal_creds_modal, css_classes
+from MyListAnalyzerDash.mappings.enums import mal_creds_modal, CSSClasses
 from MyListAnalyzerDash.mal_api_handler import VerySimpleMALSession
 from MyListAnalyzerDash.Components.notifications import show_notifications
 from MyListAnalyzerDash.utils import CookieHandler, get_a_proper_url
@@ -92,7 +92,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
             action.note = self.logout()
             action.location = location
             action.pic = action.client_name = ""
-            action.trigger = css_classes.jump
+            action.trigger = CSSClasses.jump
         else:
             location = get_a_proper_url(location)
             action.location = self.authenticate(location) if login_clicked else action.location
@@ -111,7 +111,7 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
         is_code = self.code in self.cookies
 
         if is_error or is_code:
-            action.trigger = css_classes.jump
+            action.trigger = CSSClasses.jump
 
         if is_error:
             action.note = show_notifications(
@@ -150,10 +150,10 @@ class MalCredsModal(CookieHandler, VerySimpleMALSession):
                 f"There's a lot you could do when logged in with your {abt} account. Here's the ",
                 html.A("Reference", href=""), auto_close=3000, color="yellow"
             )
-            action.trigger = css_classes.jump
+            action.trigger = CSSClasses.jump
             return
 
-        action.trigger = css_classes.customButton
+        action.trigger = CSSClasses.customButton
         try:
             formatted = float(response["asked"]) if "asked" in response else 0
         except TypeError:

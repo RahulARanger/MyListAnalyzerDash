@@ -1,7 +1,7 @@
 import dash_mantine_components as dmc
 from dash import ClientsideFunction, Input, Output, State, get_app, clientside_callback, html
 
-from MyListAnalyzerDash.mappings.enums import css_classes
+from MyListAnalyzerDash.mappings.enums import CSSClasses
 
 
 def modal_basic_check(clicked, is_opened):
@@ -39,7 +39,7 @@ def get_modal(id_, title, *children, closeable=True, ease_close=True, size="md",
     )
 
 
-def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=css_classes.time_format, size="sm", isMS=False, isNotUTC=False):
+def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, default="", class_name=CSSClasses.time_format, size="sm", isMS=False, isNotUTC=False):
     if add_callback:
         inputs = Input(id_, "data-time-stamp")
 
@@ -72,7 +72,7 @@ def relative_time_stamp_but_calc_in_good_way(id_, *args, add_callback=False, def
     )
 
 
-def timestamp_from_store(store_id, *args, class_name=css_classes.time_format, add=False):
+def timestamp_from_store(store_id, *args, class_name=CSSClasses.time_format, add=False):
     stamp_id = store_id + "time-stamp"
     if add:
         relative_time_stamp_but_calc_in_good_way(stamp_id, *args, add_callback=True)

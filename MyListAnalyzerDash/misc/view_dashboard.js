@@ -33,6 +33,30 @@ function refreshTab(_, label_id, soft_refresh){
     return say_no(1)[0];
 }
 
+class SetSwiper{
+    raw={};
+    constructor(loop, speed, effect, freeMode, slidesPerView, spaceBetween){
+        this.raw = {speed, loop, effect, slidesPerView, spaceBetween, grabCursor: true, freeMode: freeMode, navigation: {enabled: false}}; return this;
+    }
+    setAutoPlay(delay){
+        if(navigator.userAgent.indexOf("Firefox") !== -1) return this;
+        // autoplay in firefox is very slow and buggy 
+        this.raw.autoplay = {delay, disableOnInteraction: false, pauseOnMouseEnter: true}; return this;
+    }
+    on(init){
+        this.raw.on = {init}; return this;
+    }
+    fullWidthBreakPoints(endWith){
+        this.raw.breakpoints = {3e2: {slidesPerView: endWith - 2.5},
+        430: {slidesPerView: endWith - 2.25},
+        5.25e2: {slidesPerView: endWith - 2},
+        720: {slidesPerView: endWith - 1.5},
+        860: {slidesPerView: endWith - 1},
+        1e3: {slidesPerView: endWith - .5},
+        12e2: {slidesPerView: endWith}}; return this;
+    }
+}
+
 
 function set_view_url_after_search(page_settings, url){
     const user_name = page_settings?.user_name ?? "";
@@ -159,16 +183,8 @@ class ProcessUserDetails{
     async decide_what_to_fetch(){
         // fetch User Anime List, fetch Recent Anime List
         switch(this.tab_name){
-            case true: {
-                return [true, true];
-            }
-            case "Overview": { // overview
-                return [true, false];
-            }
-
-            case "Recently": { // recently
-                return [false, true];
-            }
+            case "Overview": return [true, false];
+            case "Recently": return [false, true];
         }
     }
 }
@@ -352,97 +368,15 @@ async function validate_and_fetch_anime_list(
 }
 
 const swiper_options = {
-    time_spent: {
-        loop: true,
-        grabCursor: true,
-        speed: 5e2,
-        autoplay: {
-            delay: 2.5e3,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true
-        },
-        navigation: {enabled: false},
-        slidesPerView: "auto",
-        effect: "coverflow",
-        on: {
-            init: function(){
-                animateCounters(); // some clones also needs to be counted
-            }
-        }
-    },
-    
-    special_belt: {
-        loop: true,
-        grabCursor: true,
-        speed: 10e3,
-        autoplay: {
-            delay: 0,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true
-        },
-        navigation: {enabled: false},
-        slidesPerView: 1,
-        spaceBetween: 10,
-        freeMode: true,
-        breakpoints: {
-            3e2: {slidesPerView: 1},
-            430: {slidesPerView: 1.25},
-            5.25e2: {slidesPerView: 1.5},
-            720: {slidesPerView: 2},
-            860: {slidesPerView: 2.5},
-            1e3: {slidesPerView: 3},
-            12e2: {slidesPerView: 3.5}
-        },
-        on: {
-            init: function(){
-                animateCounters();
-            }
-        }
-    },
-    currently_airing_cards: {
-        loop: true,
-        grabCursor: true,
-        speed: 5e2,
-        autoplay: {
-            delay: 2.5e3,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true
-        },
-        navigation: {enabled: false},
-        slidesPerView: "auto",
-        effect: "cards",
-        on: {
-            init: function(){
-                animateCounters(); // some clones also needs to be counted
-            }
-        }
-    },
-    special_belt_for_recent_animes:  {
-        loop: true,
-        grabCursor: true,
-        speed: 10e3,
-        autoplay: {
-            delay: 0,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true
-        },
-        navigation: {enabled: false},
-        slidesPerView: 2,
-        spaceBetween: 10,
-        freeMode: true,
-        breakpoints: {
-            3e2: {slidesPerView: 1},
-            430: {slidesPerView: 1.25},
-            5.25e2: {slidesPerView: 1.5},
-            720: {slidesPerView: 2},
-            860: {slidesPerView: 2.5},
-            1e3: {slidesPerView: 3},
-            12e2: {slidesPerView: 3.5}
-        }
-    }
+    time_spent: (new SetSwiper(false, 5e2, "coverflow", false, "auto", null).
+    setAutoPlay(2.5e3)).on(() => {animateCounters()}).raw,
+    special_belt: (new SetSwiper(false, 10e3, "slide", true, 1, 10)
+    .setAutoPlay(0).fullWidthBreakPoints(3.5).on(() => {animateCounters()})).raw,
+    currently_airing_cards: (new SetSwiper(false, 5e2, "cards", false, "auto", null).
+    setAutoPlay(2.5e3)).on(() => {animateCounters()}).raw,
+    special_belt_for_recent_animes: (new SetSwiper(false, 10e3, "slide", true, 1, 10)
+    .setAutoPlay(0).fullWidthBreakPoints(3.5)).raw
 }
-
-
 
 function enable_swiper_for_view_dashboard(soft_refresh){
     document.querySelectorAll(".swiper").forEach(
@@ -454,9 +388,7 @@ function enable_swiper_for_view_dashboard(soft_refresh){
                 if(!element.nextElementSibling) element.insertAdjacentElement("afterbegin", document.createElement("div", {className: "swiper-lazy-preloader"}))
             });
             new Swiper(element, swiper_options[element.id]);
-        }
-    );
-}
+});}
 
 
 async function fetchRawUserAnimeList(pipe, user_name, use_token, title, body, closeWhile, is_nsfw){
