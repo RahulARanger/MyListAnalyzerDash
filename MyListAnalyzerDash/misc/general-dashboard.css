@@ -1,9 +1,7 @@
 @import url("/MLA/assets/user-view.css");
 @import url("https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css");
 
-
 .scroll-board{height: calc(97% - 20px) !important; flex-shrink: 1;}
-
 
 .number-card-label{
     font-size: 0.69rem;
@@ -13,7 +11,6 @@
   
 .percent-number {font: 690 20px system-ui;}
 .indicator-number{font-size: 0.6rem;}
-
 
 .Overview-graphs:hover, .number-card:hover, .Recently-graphs:hover{
     border: 1px ridge white;
@@ -30,7 +27,6 @@ article.expanding-row{
     column-gap: 3px;
     align-content: center;
 }
-
 
 .number-card, .Overview-graphs{
     border: var(--card-border);
@@ -115,6 +111,7 @@ article.expanding-row{
 #weekly-progress-recently-view{width: calc(150px + 30vw);height: 208px; flex-grow: 1;}
 #when-did-they-watch{height: 135px;}
 #quick-update-history{width: 98%; margin-left: 1%; height: 65%;}
+
 .number-card{padding: 13px;}
 .number-card, #time_spent{
     min-width: 120px;
@@ -128,4 +125,4 @@ article.expanding-row{
     align-content: center;
 }
 #time_spent{height: 100%; padding: 2px;}
-#time_spent .swiper-slide{max-width: 81.69%}
+#time_spent .swiper-slide{max-width:86.69% !important;}
