@@ -368,7 +368,7 @@ async function validate_and_fetch_anime_list(
 }
 
 const swiper_options = {
-    time_spent: (new SetSwiper(false, 5e2, "coverflow", false, "auto", 0.e-2).
+    time_spent: (new SetSwiper(false, 5e2, "coverflow", false, "auto", 0).
     setAutoPlay(2.5e3)).on(() => {animateCounters()}).raw,
     special_belt: (new SetSwiper(false, 10e3, "slide", true, 1, 10)
     .setAutoPlay(0).fullWidthBreakPoints(3.5).on(() => {animateCounters()})).raw,

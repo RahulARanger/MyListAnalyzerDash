@@ -115,3 +115,17 @@ article.expanding-row{
 #weekly-progress-recently-view{width: calc(150px + 30vw);height: 208px; flex-grow: 1;}
 #when-did-they-watch{height: 135px;}
 #quick-update-history{width: 98%; margin-left: 1%; height: 65%;}
+.number-card{padding: 13px;}
+.number-card, #time_spent{
+    min-width: 120px;
+    flex-grow: 1;
+    width: calc(1.5vw + 96px); 
+    max-width: 225px;
+    flex-flow: column nowrap !important;
+    justify-content: flex-start !important;
+    background-color: transparent;
+    align-items: center;
+    align-content: center;
+}
+#time_spent{height: 100%; padding: 2px;}
+#time_spent .swiper-slide{max-width: 81.69%}
