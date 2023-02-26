@@ -11,7 +11,7 @@ from MyListAnalyzerDash.Components.tooltip import set_tooltip
 from MyListAnalyzerDash.Components.ModalManager import get_modal_id, make_modal_alive
 from MyListAnalyzerDash.mappings.enums import view_dashboard, list_status_color, mla_stores, overview_cards, Icons, \
     RecentAnimeDashboard
-from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure, anime_link
+from MyListAnalyzerDash.utils import genre_link, studio_link, basic_swiper_structure
 
 
 class ViewDashboard:
@@ -267,10 +267,7 @@ class ViewDashboard:
             style=dict(justifyContent="center", gap=gap)
         )
 
-        return [
-            __ for _ in (belt, rows, fourth_row) for __ in
-            [_, dmc.Space(h=2.5), dmc.Divider(color="gray.8"), dmc.Space(h=2.5)]
-        ]
+        return belt, rows, fourth_row
 
     def process_recently_data(self, data, page_settings):
         if not data:
@@ -360,7 +357,7 @@ class ViewDashboard:
 
             cards.append(
                 special_anime_card(
-                    name, anime_link(_id), pic,
+                    name, _id, pic,
                     card.label, card.color,
                     progress,
                     about, special_value,

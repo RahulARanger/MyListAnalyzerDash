@@ -1,12 +1,11 @@
 import datetime
 import json
+import math
 import pathlib
 import urllib.parse
 from collections import namedtuple
 from datetime import datetime, timezone
-
 import dash_mantine_components as dmc
-import math
 from dash import callback_context, dcc, html
 from flask import request
 
@@ -116,7 +115,7 @@ def basic_swiper_structure(id_, *slides, class_name=""):
     )
 
 
-def anime_link(id_):
+def anime_href(id_):
     return f"https://myanimelist.net/anime/{id_}"
 
 
@@ -126,4 +125,3 @@ def ellipsis_part(width):
 
 def format_stamp(date, also_for_time=False):
     return date.strftime("%b %d, %Y" if not also_for_time else "%b %d, %Y %H:%M")
-

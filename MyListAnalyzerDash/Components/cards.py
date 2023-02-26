@@ -6,7 +6,7 @@ from MyListAnalyzerDash.Components.ModalManager import relative_time_stamp_but_c
 from MyListAnalyzerDash.Components.layout import expanding_layout, expanding_row
 from MyListAnalyzerDash.Components.tooltip import floating_tooltip, set_tooltip
 from MyListAnalyzerDash.mappings.enums import CSSClasses, Icons, list_status_color
-from MyListAnalyzerDash.utils import ellipsis_part, anime_link
+from MyListAnalyzerDash.Components.buttons import anime_link
 
 
 def home_card(*children, as_card: typing.Union[str, bool] = False, **__):
@@ -78,9 +78,9 @@ def _divider(label: str = "", color: str = "gray"):
 
 
 def number_card_format_1(
-        number=0, label="...", another=-1, color="green", class_name=None, is_percent=True,
+        number=0, label="...", another=-1, color="green", class_name="", is_percent=True,
         ref_number=-1, ref_another=-1,
-        main_class=None
+        main_class=""
 ):
     references = []
     references.append(floating_tooltip(
@@ -132,7 +132,7 @@ def special_divider(special_label, special_color):
         color=special_color, labelPosition="center", size="md")
 
 
-def special_anime_card(name, url, picture, special_label, special_color, progress, special_about, special_value, _info,
+def special_anime_card(name, _id, picture, special_label, special_color, progress, special_about, special_value, _info,
                        *parameters, class_name=""):
     info = floating_tooltip(
         dmc.ActionIcon(
@@ -146,12 +146,7 @@ def special_anime_card(name, url, picture, special_label, special_color, progres
         expanding_row(
             dmc.Image(src=picture, width=70, height=102, fit="contain", className=CSSClasses.to_zoom),
             expanding_layout(
-                set_tooltip(
-                    dmc.Anchor(
-                        name, href=url, size="sm", target="_blank",
-                        style=ellipsis_part(220), color="blue.4"
-                    ), label=name
-                ),
+                anime_link(name, _id),
                 progress,
                 expanding_row(
                     *(expanding_layout(
@@ -222,10 +217,7 @@ def currently_airing_card(
     )
 
     footer = expanding_row(
-        set_tooltip(
-            dmc.Anchor(title, href=anime_link(_id), style=ellipsis_part(150), size="sm"),
-            title
-        ),
+        anime_link(title, _id),
         set_tooltip(
             dmc.Badge(source, color="orange", size="xs"),
             "Source"
@@ -265,12 +257,7 @@ def number_card_format_3(
     set_tooltip(badges.append(dmc.Badge(status, color=list_status_color[status].value, size="sm")), label="Status") if status_badge else ...
 
     return expanding_layout(
-        set_tooltip(
-            dmc.Anchor(
-                anime_name, href=anime_link(anime_id), size="sm", target="_blank",
-                style=ellipsis_part(250), color="orange.3"
-            ), label=anime_name
-        ),
+        anime_link(anime_name, anime_id),
         expanding_row(
             *badges, style=dict(alignItems="center")
         ),
