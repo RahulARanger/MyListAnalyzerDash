@@ -303,7 +303,7 @@ class ViewDashboard:
 
         row_1 = expanding_row(
             html.Div(id=charts[0], className=graph_class),
-            html.Div([past_14_days_to_all, know_more], id=charts[1], className=graph_class),
+            html.Div([past_14_days_to_all], id=charts[1], className=graph_class),
             style=dict(gap="3px")
         )
 
