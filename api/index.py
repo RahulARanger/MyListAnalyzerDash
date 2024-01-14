@@ -50,5 +50,5 @@ class MainApplication:
 
 if __name__ == "__main__":
     Application = MainApplication()
-    Application.app.renderer = (pathlib.Path(__file__).parent / "migrator.js").read_text()
+    Application.app.renderer = (pathlib.Path(__file__).parent.parent / "migrator.js").read_text()
     Application.app.run(port=6969, dev_tools_ui=True, debug=True, host="127.0.0.1")
