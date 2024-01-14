@@ -1,6 +1,7 @@
 dash==2.8.1
-dash_mantine_components==0.11.1
+dash_mantine_components==0.12.0
 requests==2.28.2
 Flask==2.2.3
-plotly==5.13.0
+plotly==5.13.1
 Werkzeug==2.2.3
+python-dotenv==1.0.0
